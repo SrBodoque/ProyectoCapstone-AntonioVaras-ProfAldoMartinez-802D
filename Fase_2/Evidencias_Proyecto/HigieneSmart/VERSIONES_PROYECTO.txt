@@ -1,0 +1,46 @@
+==================================================
+HIGIENESMART - VERSIONES DEL PROYECTO
+==================================================
+
+ENTORNO DE DESARROLLO
+
+Python:
+3.14.4
+
+pip:
+26.2.1
+
+Django:
+5.2.17
+
+psycopg:
+3.3.5
+
+python-dotenv:
+1.2.3
+
+FRONTEND
+
+HTML5
+CSS3
+JavaScript
+Django Templates
+
+
+BASE DE DATOS
+
+Motor:
+PostgreSQL 18.6
+
+Puerto utilizado:
+5432
+
+
+CONTROL DE VERSIONES
+
+Git + GitHub
+
+
+DOCKER
+
+Opcional / no utilizado actualmente.

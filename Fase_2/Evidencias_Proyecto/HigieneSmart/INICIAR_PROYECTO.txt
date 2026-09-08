@@ -1,0 +1,210 @@
+==================================================
+HIGIENESMART - INSTRUCCIONES DE EJECUCIÓN
+==================================================
+
+REQUISITOS
+
+- Python 3.14.4
+- PostgreSQL 18.6
+- Git
+- Visual Studio Code recomendado
+
+
+==================================================
+1. ENTRAR A LA CARPETA DEL PROYECTO
+==================================================
+
+Desde la raíz del repositorio:
+
+cd .\Fase_2\Evidencias_Proyecto\HigieneSmart\
+
+
+==================================================
+2. CREAR EL ENTORNO VIRTUAL
+==================================================
+
+Solo es necesario la primera vez:
+
+python -m venv .venv
+
+
+==================================================
+3. ACTIVAR EL ENTORNO VIRTUAL
+==================================================
+
+PowerShell:
+
+.\.venv\Scripts\Activate.ps1
+
+La terminal debería mostrar:
+
+(.venv)
+
+
+==================================================
+4. INSTALAR LAS DEPENDENCIAS
+==================================================
+
+Solo la primera vez o cuando requirements.txt cambie:
+
+pip install -r requirements.txt
+
+
+==================================================
+5. CONFIGURAR POSTGRESQL
+==================================================
+
+PostgreSQL debe estar instalado y funcionando.
+
+Versión utilizada:
+PostgreSQL 18.6
+
+Puerto:
+5432
+
+La aplicación utiliza:
+
+Base de datos:
+capstone_db
+
+Usuario:
+capstone_user
+
+IMPORTANTE:
+La contraseña no se encuentra en GitHub.
+
+
+==================================================
+6. CREAR USUARIO Y BASE DE DATOS EN POSTGRESQL
+==================================================
+
+Este paso solo se realiza la primera vez en cada computador.
+
+Abrir una terminal y ejecutar:
+
+psql -U postgres
+
+Ingresar la contraseña del usuario administrador "postgres"
+definida durante la instalación de PostgreSQL.
+
+Una vez dentro de PostgreSQL aparecerá algo similar a:
+
+postgres=#
+
+Crear el usuario utilizado por Django:
+
+CREATE USER capstone_user WITH PASSWORD 'CONTRASEÑA_LOCAL';
+
+IMPORTANTE:
+Cada integrante puede definir su propia contraseña local.
+Esta contraseña no debe subirse a GitHub.
+
+Crear la base de datos y asignarla al usuario:
+
+CREATE DATABASE capstone_db OWNER capstone_user;
+
+Salir de PostgreSQL:
+
+\q
+
+
+==================================================
+7. VERIFICAR ACCESO A LA BASE DE DATOS
+==================================================
+
+Probar la conexión con el usuario creado:
+
+psql -U capstone_user -d capstone_db -h localhost
+
+Ingresar la contraseña definida para capstone_user.
+
+Si la conexión funciona correctamente debería aparecer:
+
+capstone_db=>
+
+Para salir:
+
+\q
+
+==================================================
+8. CONFIGURAR VARIABLES DE ENTORNO
+==================================================
+
+En la raíz del proyecto debe existir un archivo llamado:
+
+.env
+
+Este archivo contiene la configuración local necesaria para
+conectar Django con PostgreSQL.
+
+Puede utilizarse el archivo:
+
+.env.example
+
+como referencia.
+
+El archivo .env debe contener:
+
+DB_NAME=capstone_db
+DB_USER=capstone_user
+DB_PASSWORD=CONTRASEÑA_LOCAL
+DB_HOST=localhost
+DB_PORT=5432
+
+IMPORTANTE:
+
+- DB_PASSWORD debe contener la contraseña que cada integrante
+  haya definido para capstone_user en su propio computador.
+
+- El archivo .env contiene información local y no debe subirse
+  al repositorio de GitHub.
+
+- El archivo .env.example sí puede mantenerse en GitHub, pero
+  no debe contener contraseñas reales.
+
+==================================================
+9. COMPROBAR DJANGO
+==================================================
+
+python manage.py check
+
+El resultado esperado es:
+
+System check identified no issues (0 silenced).
+
+
+==================================================
+10. APLICAR MIGRACIONES
+==================================================
+
+python manage.py migrate
+
+
+==================================================
+11. INICIAR EL SERVIDOR
+==================================================
+
+python manage.py runserver
+
+
+==================================================
+12. ABRIR LA APLICACIÓN
+==================================================
+
+Abrir en el navegador:
+
+http://127.0.0.1:8000/
+
+
+==================================================
+13. DETENER EL SERVIDOR
+==================================================
+
+CTRL + C
+
+
+==================================================
+14. DESACTIVAR EL ENTORNO VIRTUAL
+==================================================
+
+deactivate
