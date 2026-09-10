@@ -1,0 +1,23 @@
+:root {
+    /* Colores principales */
+    --color-primary: #2f4795;
+    --color-primary-hover: #263b7d;
+
+    /* Fondos */
+    --color-background: #f6f8fc;
+    --color-surface: #ffffff;
+    --color-input-background: #f7f9fc;
+
+    /* Texto */
+    --color-text-primary: #141b2d;
+    --color-text-secondary: #697386;
+
+    /* Bordes */
+    --color-border: #dfe4ec;
+
+    /* Estados */
+    --color-error: #c94040;
+    --color-error-background: #fde2e2;
+    --color-success: #2e7d4f;
+    --color-warning: #b7791f;
+}
