@@ -1,0 +1,84 @@
+{% load static %}
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Gestión de baños</title>
+
+    <link rel="stylesheet" href="{% static 'css/compartido/variables.css' %}" />
+
+    <link rel="stylesheet" href="{% static 'css/supervisor/banos.css' %}" />
+  </head>
+
+  <body>
+    <main class="banos-container">
+      <header class="banos-header">
+        <div>
+          <h1>Gestión de baños</h1>
+          <p>Administra los servicios higiénicos registrados en el sistema.</p>
+        </div>
+
+        <a href="{% url 'crear_bano' %}" class="btn-primary"> Agregar baño </a>
+      </header>
+
+      <div class="banos-actions">
+        <a href="{% url 'inicio_supervisor' %}" class="volver-link">
+          ← Volver al inicio
+        </a>
+      </div>
+
+      <section class="banos-card">
+        {% if banos %}
+
+        <table class="banos-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Ubicación</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for bano in banos %}
+
+            <tr>
+              <td>{{ bano.id }}</td>
+              <td>{{ bano.nombre }}</td>
+              <td>{{ bano.ubicacion }}</td>
+
+              <td>
+                {% if bano.activo %}
+                <span class="estado estado-activo"> Activo </span>
+                {% else %}
+                <span class="estado estado-inactivo"> Inactivo </span>
+                {% endif %}
+              </td>
+
+              <td>
+                <a href="{% url 'editar_bano' bano.id %}" class="btn-editar">
+                  Editar
+                </a>
+              </td>
+            </tr>
+
+            {% endfor %}
+          </tbody>
+        </table>
+
+        {% else %}
+
+        <div class="sin-registros">
+          <p>No existen baños registrados.</p>
+        </div>
+
+        {% endif %}
+      </section>
+    </main>
+  </body>
+</html>

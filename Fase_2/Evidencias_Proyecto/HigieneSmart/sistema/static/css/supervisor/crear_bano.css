@@ -1,0 +1,233 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
+
+    font-family: Arial, sans-serif;
+}
+
+.crear-bano-container {
+    width: 100%;
+    max-width: 700px;
+
+    margin: 0 auto;
+    padding: 50px 25px;
+}
+
+.crear-bano-header {
+    margin-bottom: 25px;
+}
+
+.crear-bano-header h1 {
+    margin-bottom: 6px;
+
+    font-size: 28px;
+}
+
+.crear-bano-header p {
+    color: var(--color-text-secondary);
+
+    font-size: 15px;
+}
+
+.crear-bano-card {
+    padding: 30px;
+
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+
+    background-color: var(--color-surface);
+
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+}
+
+.crear-bano-form {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.form-group input[type="text"] {
+    width: 100%;
+    height: 46px;
+
+    padding: 0 14px;
+
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+
+    background-color: var(--color-input-background);
+    color: var(--color-text-primary);
+
+    font-size: 14px;
+
+    outline: none;
+}
+
+.form-group input[type="text"]:focus {
+    border-color: var(--color-primary);
+}
+
+.form-checkbox {
+    flex-direction: row;
+    align-items: center;
+
+    gap: 10px;
+}
+
+.form-checkbox input {
+    width: 16px;
+    height: 16px;
+
+    accent-color: var(--color-primary);
+}
+
+.form-error {
+    color: var(--color-error);
+
+    font-size: 13px;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+
+    gap: 12px;
+
+    margin-top: 8px;
+}
+
+.btn-primary,
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 44px;
+
+    padding: 0 20px;
+
+    border-radius: 8px;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    text-decoration: none;
+
+    cursor: pointer;
+}
+
+.btn-primary {
+    border: none;
+
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--color-primary-hover);
+}
+
+.btn-secondary {
+    border: 1px solid var(--color-border);
+
+    background-color: var(--color-surface);
+    color: var(--color-text-primary);
+}
+
+.btn-secondary:hover {
+    background-color: var(--color-input-background);
+}
+
+.info-tooltip {
+    position: relative;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 18px;
+    height: 18px;
+
+    border: 1px solid var(--color-text-secondary);
+    border-radius: 50%;
+
+    color: var(--color-text-secondary);
+
+    font-size: 12px;
+    font-weight: 700;
+
+    cursor: help;
+}
+
+.tooltip-text {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+
+    width: 260px;
+    padding: 10px 12px;
+
+    transform: translateX(-50%);
+
+    border-radius: 8px;
+
+    background-color: var(--color-text-primary);
+    color: white;
+
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.4;
+
+    visibility: hidden;
+    opacity: 0;
+
+    transition: opacity 0.2s ease;
+
+    z-index: 10;
+}
+
+.info-tooltip:hover .tooltip-text,
+.info-tooltip:focus .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
+@media (max-width: 600px) {
+
+    .crear-bano-container {
+        padding: 25px 15px;
+    }
+
+    .crear-bano-card {
+        padding: 22px;
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        width: 100%;
+    }
+}
+

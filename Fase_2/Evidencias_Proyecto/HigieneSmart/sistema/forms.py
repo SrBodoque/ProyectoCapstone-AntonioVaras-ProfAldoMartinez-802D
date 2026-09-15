@@ -1,4 +1,5 @@
 from django import forms
+from .models import Bano
 
 
 class LoginForm(forms.Form):
@@ -18,3 +19,14 @@ class LoginForm(forms.Form):
             "required": "Debes ingresar tu contraseña.",
         },
     )
+
+class BanoForm(forms.ModelForm):
+    class Meta:
+        model = Bano
+        fields = ["nombre", "ubicacion", "activo"]
+
+        labels = {
+            "nombre": "Nombre del baño",
+            "ubicacion": "Ubicación",
+            "activo": "Baño activo",
+        }

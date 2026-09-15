@@ -1,0 +1,74 @@
+{% load static %}
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Agregar baño</title>
+
+    <link rel="stylesheet" href="{% static 'css/compartido/variables.css' %}" />
+
+    <link
+      rel="stylesheet"
+      href="{% static 'css/supervisor/crear_bano.css' %}"
+    />
+  </head>
+
+  <body>
+    <main class="crear-bano-container">
+      <div class="crear-bano-header">
+        <h1>Agregar baño</h1>
+        <p>Registra un nuevo servicio higiénico en el sistema.</p>
+      </div>
+
+      <section class="crear-bano-card">
+        <form method="POST" class="crear-bano-form">
+          {% csrf_token %}
+
+          <div class="form-group">
+            <label for="{{ form.nombre.id_for_label }}">
+              Nombre del baño
+            </label>
+
+            {{ form.nombre }} {% if form.nombre.errors %}
+            <div class="form-error">{{ form.nombre.errors }}</div>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label for="{{ form.ubicacion.id_for_label }}"> Ubicación </label>
+
+            {{ form.ubicacion }} {% if form.ubicacion.errors %}
+            <div class="form-error">{{ form.ubicacion.errors }}</div>
+            {% endif %}
+          </div>
+
+          <div class="form-group form-checkbox">
+            {{ form.activo }}
+
+            <label for="{{ form.activo.id_for_label }}"> Baño activo </label>
+
+            <span class="info-tooltip" tabindex="0">
+              !
+              <span class="tooltip-text">
+                Indica si el baño se encuentra habilitado para operar en el
+                sistema. Desmárcalo si está temporalmente fuera de servicio, por
+                ejemplo por mantención.
+              </span>
+            </span>
+          </div>
+
+          <div class="form-actions">
+            <a href="{% url 'gestion_banos' %}" class="btn-secondary">
+              Cancelar
+            </a>
+
+            <button type="submit" class="btn-primary">Guardar baño</button>
+          </div>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,11 +1,11 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from usuarios.models import Usuario
-from .forms import LoginForm
-
+from .forms import LoginForm, BanoForm
+from .models import Bano
 
 
 
@@ -56,6 +56,68 @@ def inicio_supervisor(request):
         return redirect("inicio_trabajador")
 
     return render(request, "supervisor/inicio_supervisor.html")
+
+@login_required(login_url="login")
+def gestion_banos(request):
+    if request.user.rol != Usuario.Rol.SUPERVISOR:
+        return redirect("inicio_trabajador")
+
+    banos = Bano.objects.all().order_by("id")
+
+    return render(
+        request,
+        "supervisor/banos.html",
+        {
+            "banos": banos,
+        },
+    )
+
+@login_required(login_url="login")
+def crear_bano(request):
+    if request.user.rol != Usuario.Rol.SUPERVISOR:
+        return redirect("inicio_trabajador")
+
+    if request.method == "POST":
+        form = BanoForm(request.POST)
+
+        if form.is_valid():
+            form.save()
+            return redirect("gestion_banos")
+    else:
+        form = BanoForm()
+
+    return render(
+        request,
+        "supervisor/crear_bano.html",
+        {
+            "form": form,
+        },
+    )
+
+@login_required(login_url="login")
+def editar_bano(request, bano_id):
+    if request.user.rol != Usuario.Rol.SUPERVISOR:
+        return redirect("inicio_trabajador")
+
+    bano = get_object_or_404(Bano, id=bano_id)
+
+    if request.method == "POST":
+        form = BanoForm(request.POST, instance=bano)
+
+        if form.is_valid():
+            form.save()
+            return redirect("gestion_banos")
+    else:
+        form = BanoForm(instance=bano)
+
+    return render(
+        request,
+        "supervisor/editar_bano.html",
+        {
+            "form": form,
+            "bano": bano,
+        },
+    )
 
 
 @login_required(login_url="login")

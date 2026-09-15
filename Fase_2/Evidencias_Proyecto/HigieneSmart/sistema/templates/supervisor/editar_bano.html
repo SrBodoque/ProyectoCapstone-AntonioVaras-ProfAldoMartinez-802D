@@ -1,0 +1,74 @@
+{% load static %}
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Editar baño</title>
+
+    <link rel="stylesheet" href="{% static 'css/compartido/variables.css' %}" />
+
+    <link
+      rel="stylesheet"
+      href="{% static 'css/supervisor/editar_bano.css' %}"
+    />
+  </head>
+
+  <body>
+    <main class="editar-bano-container">
+      <div class="editar-bano-header">
+        <h1>Editar baño</h1>
+        <p>Modifica la información del servicio higiénico seleccionado.</p>
+      </div>
+
+      <section class="editar-bano-card">
+        <form method="POST" class="editar-bano-form">
+          {% csrf_token %}
+
+          <div class="form-group">
+            <label for="{{ form.nombre.id_for_label }}">
+              Nombre del baño
+            </label>
+
+            {{ form.nombre }} {% if form.nombre.errors %}
+            <div class="form-error">{{ form.nombre.errors }}</div>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label for="{{ form.ubicacion.id_for_label }}"> Ubicación </label>
+
+            {{ form.ubicacion }} {% if form.ubicacion.errors %}
+            <div class="form-error">{{ form.ubicacion.errors }}</div>
+            {% endif %}
+          </div>
+
+          <div class="form-group form-checkbox">
+            {{ form.activo }}
+
+            <label for="{{ form.activo.id_for_label }}"> Baño activo </label>
+
+            <span class="info-tooltip" tabindex="0">
+              !
+              <span class="tooltip-text">
+                Indica si el baño se encuentra habilitado para operar en el
+                sistema. Desmárcalo si está temporalmente fuera de servicio, por
+                ejemplo por mantención.
+              </span>
+            </span>
+          </div>
+
+          <div class="form-actions">
+            <a href="{% url 'gestion_banos' %}" class="btn-secondary">
+              Cancelar
+            </a>
+
+            <button type="submit" class="btn-primary">Guardar cambios</button>
+          </div>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>
