@@ -1,0 +1,42 @@
+{% load static %}
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Enlace de activación inválido</title>
+
+    <link rel="stylesheet" href="{% static 'css/compartido/variables.css' %}" />
+
+    <link
+      rel="stylesheet"
+      href="{% static 'css/compartido/activacion_invalida.css' %}"
+    />
+  </head>
+
+  <body>
+    <main class="activacion-invalida-container">
+      <section class="activacion-invalida-card">
+        <div class="activacion-invalida-icon">!</div>
+
+        <h1>Enlace no válido</h1>
+
+        <p>
+          Este enlace de activación no es válido, ha expirado o ya fue utilizado
+          anteriormente.
+        </p>
+
+        <p class="activacion-invalida-ayuda">
+          Si necesitas acceder al sistema, contacta con tu supervisor para
+          solicitar una nueva invitación.
+        </p>
+
+        <a href="{% url 'login' %}" class="btn-volver-login">
+          Volver al inicio de sesión
+        </a>
+      </section>
+    </main>
+  </body>
+</html>

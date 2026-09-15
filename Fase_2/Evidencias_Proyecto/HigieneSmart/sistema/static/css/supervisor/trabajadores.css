@@ -1,0 +1,262 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
+
+    font-family: Arial, sans-serif;
+}
+
+.trabajadores-container {
+    width: 100%;
+    max-width: 1200px;
+
+    margin: 0 auto;
+    padding: 40px 30px;
+}
+
+
+/* Encabezado */
+
+.trabajadores-header {
+    margin-bottom: 25px;
+}
+
+.trabajadores-header h1 {
+    margin-bottom: 6px;
+
+    font-size: 28px;
+}
+
+.trabajadores-header p {
+    color: var(--color-text-secondary);
+
+    font-size: 15px;
+}
+
+
+/* Navegación */
+
+.trabajadores-actions {
+    margin-bottom: 20px;
+}
+
+.volver-link {
+    color: var(--color-text-secondary);
+
+    font-size: 14px;
+
+    text-decoration: none;
+}
+
+.volver-link:hover {
+    color: var(--color-primary);
+}
+
+
+/* Tarjeta */
+
+.trabajadores-card {
+    overflow: hidden;
+
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+
+    background-color: var(--color-surface);
+
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+}
+
+
+/* Tabla */
+
+.trabajadores-table {
+    width: 100%;
+
+    border-collapse: collapse;
+}
+
+.trabajadores-table th,
+.trabajadores-table td {
+    padding: 16px 18px;
+
+    text-align: left;
+
+    border-bottom: 1px solid var(--color-border);
+}
+
+.trabajadores-table th {
+    background-color: var(--color-input-background);
+
+    color: var(--color-text-secondary);
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.trabajadores-table td {
+    font-size: 14px;
+}
+
+.trabajadores-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.trabajadores-table tbody tr:hover {
+    background-color: var(--color-input-background);
+}
+
+
+/* Estados */
+
+.estado {
+    display: inline-block;
+
+    padding: 5px 10px;
+
+    border-radius: 20px;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.estado-activo {
+    background-color: #e7f5ec;
+    color: var(--color-success);
+}
+
+.estado-inactivo {
+    background-color: var(--color-error-background);
+    color: var(--color-error);
+}
+
+
+/* Sin registros */
+
+.sin-registros {
+    padding: 40px;
+
+    color: var(--color-text-secondary);
+
+    text-align: center;
+}
+
+.estado-pendiente {
+    background-color: #fff4d6;
+    color: var(--color-warning);
+}
+
+.estado-form {
+    margin: 0;
+}
+
+.btn-estado {
+    min-height: 34px;
+
+    padding: 0 14px;
+
+    border-radius: 7px;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.btn-desactivar {
+    border: 1px solid var(--color-error);
+
+    background-color: var(--color-surface);
+    color: var(--color-error);
+}
+
+.btn-desactivar:hover {
+    background-color: var(--color-error-background);
+}
+
+.btn-reactivar {
+    border: 1px solid var(--color-success);
+
+    background-color: var(--color-surface);
+    color: var(--color-success);
+}
+
+.btn-reactivar:hover {
+    background-color: #e7f5ec;
+}
+
+.sin-accion {
+    color: var(--color-text-secondary);
+
+    font-size: 13px;
+}
+
+.trabajadores-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.btn-agregar-trabajador {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 42px;
+    padding: 0 18px;
+
+    border: none;
+    border-radius: 8px;
+
+    background-color: var(--color-primary);
+    color: #ffffff;
+
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition: background-color 0.2s ease;
+}
+
+.btn-agregar-trabajador:hover {
+    background-color: var(--color-primary-hover);
+}
+
+@media (max-width: 700px) {
+    .trabajadores-header {
+        flex-direction: column;
+    }
+
+    .btn-agregar-trabajador {
+        width: 100%;
+    }
+}
+/* Responsive */
+
+@media (max-width: 700px) {
+
+    .trabajadores-container {
+        padding: 25px 15px;
+    }
+
+    .trabajadores-card {
+        overflow-x: auto;
+    }
+
+    .trabajadores-table {
+        min-width: 650px;
+    }
+}

@@ -1,0 +1,125 @@
+{% load static %}
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Gestión de trabajadores</title>
+
+    <link rel="stylesheet" href="{% static 'css/compartido/variables.css' %}" />
+
+    <link
+      rel="stylesheet"
+      href="{% static 'css/supervisor/trabajadores.css' %}"
+    />
+  </head>
+
+  <body>
+    <main class="trabajadores-container">
+      <header class="trabajadores-header">
+        <div>
+          <h1>Gestión de trabajadores</h1>
+          <p>Administra los trabajadores registrados en el sistema.</p>
+        </div>
+
+        <a href="{% url 'agregar_trabajador' %}" class="btn-agregar-trabajador">
+          Agregar trabajador
+        </a>
+      </header>
+
+      <div class="trabajadores-actions">
+        <a href="{% url 'inicio_supervisor' %}" class="volver-link">
+          ← Volver al inicio
+        </a>
+      </div>
+
+      <section class="trabajadores-card">
+        {% if trabajadores %}
+
+        <table class="trabajadores-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Usuario</th>
+              <th>Correo electrónico</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for trabajador in trabajadores %}
+
+            <tr>
+              <td>{{ trabajador.id }}</td>
+
+              <td>{{ trabajador.username }}</td>
+
+              <td>{{ trabajador.email }}</td>
+
+              <td>
+                {% if not trabajador.has_usable_password %}
+
+                <span class="estado estado-pendiente">
+                  Pendiente de activación
+                </span>
+
+                {% elif trabajador.is_active %}
+
+                <span class="estado estado-activo"> Activo </span>
+
+                {% else %}
+
+                <span class="estado estado-inactivo"> Inactivo </span>
+
+                {% endif %}
+              </td>
+
+              <td>
+                {% if trabajador.has_usable_password %}
+
+                <form
+                  method="POST"
+                  action="{% url 'cambiar_estado_trabajador' trabajador.id %}"
+                  class="estado-form"
+                >
+                  {% csrf_token %} {% if trabajador.is_active %}
+
+                  <button type="submit" class="btn-estado btn-desactivar">
+                    Desactivar acceso
+                  </button>
+
+                  {% else %}
+
+                  <button type="submit" class="btn-estado btn-reactivar">
+                    Reactivar acceso
+                  </button>
+
+                  {% endif %}
+                </form>
+
+                {% else %}
+
+                <span class="sin-accion"> Esperando activación </span>
+
+                {% endif %}
+              </td>
+            </tr>
+
+            {% endfor %}
+          </tbody>
+        </table>
+
+        {% else %}
+
+        <div class="sin-registros">
+          <p>No existen trabajadores registrados.</p>
+        </div>
+
+        {% endif %}
+      </section>
+    </main>
+  </body>
+</html>

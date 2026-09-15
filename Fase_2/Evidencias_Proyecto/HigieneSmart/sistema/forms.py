@@ -1,5 +1,7 @@
 from django import forms
+from usuarios.models import Usuario
 from .models import Bano
+from django.contrib.auth.forms import SetPasswordForm
 
 
 class LoginForm(forms.Form):
@@ -30,3 +32,26 @@ class BanoForm(forms.ModelForm):
             "ubicacion": "Ubicación",
             "activo": "Baño activo",
         }
+
+class TrabajadorForm(forms.Form):
+    email = forms.EmailField(
+        label="Correo electrónico",
+        max_length=254,
+        error_messages={
+            "required": "Debes ingresar el correo electrónico del trabajador.",
+            "invalid": "Ingresa un correo electrónico válido.",
+        },
+    )
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].strip().lower()
+
+        if Usuario.objects.filter(email__iexact=email).exists():
+            raise forms.ValidationError(
+                "Ya existe un usuario registrado con este correo electrónico."
+            )
+
+        return email
+
+class ActivarCuentaForm(SetPasswordForm):
+    pass

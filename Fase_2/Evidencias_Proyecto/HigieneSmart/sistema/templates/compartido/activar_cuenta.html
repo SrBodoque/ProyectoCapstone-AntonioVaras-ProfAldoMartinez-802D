@@ -1,0 +1,112 @@
+{% load static %}
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Activar cuenta</title>
+
+    <link rel="stylesheet" href="{% static 'css/compartido/variables.css' %}" />
+
+    <link
+      rel="stylesheet"
+      href="{% static 'css/compartido/activar_cuenta.css' %}"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+  </head>
+
+  <body>
+    <main class="activar-cuenta-container">
+      <section class="activar-cuenta-card">
+        <header class="activar-cuenta-header">
+          <h1>Activa tu cuenta</h1>
+
+          <p>Configura una contraseña para comenzar a utilizar HigieneSmart.</p>
+        </header>
+
+        <div class="cuenta-info">
+          <span>Correo electrónico</span>
+          <strong>{{ usuario.email }}</strong>
+        </div>
+
+        <form method="POST" class="activar-cuenta-form">
+          {% csrf_token %}
+
+          <div class="form-group">
+            <label for="{{ form.new_password1.id_for_label }}">
+              Nueva contraseña
+            </label>
+
+            <div class="password-field">
+              {{ form.new_password1 }}
+
+              <button
+                type="button"
+                class="password-toggle"
+                data-target="{{ form.new_password1.id_for_label }}"
+                aria-label="Mostrar contraseña"
+              >
+                <i class="bi bi-eye-slash"></i>
+              </button>
+            </div>
+
+            {% if form.new_password1.errors %}
+            <div class="form-error">
+              {% for error in form.new_password1.errors %}
+              <p>{{ error }}</p>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label for="{{ form.new_password2.id_for_label }}">
+              Confirmar contraseña
+            </label>
+
+            <div class="password-field">
+              {{ form.new_password2 }}
+
+              <button
+                type="button"
+                class="password-toggle"
+                data-target="{{ form.new_password2.id_for_label }}"
+                aria-label="Mostrar contraseña"
+              >
+                <i class="bi bi-eye-slash"></i>
+              </button>
+            </div>
+
+            {% if form.new_password2.errors %}
+            <div class="form-error">
+              {% for error in form.new_password2.errors %}
+              <p>{{ error }}</p>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+
+          {% if form.non_field_errors %}
+          <div class="form-error">
+            {% for error in form.non_field_errors %}
+            <p>{{ error }}</p>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <button type="submit" class="btn-activar">
+            Crear contraseña y activar cuenta
+          </button>
+        </form>
+      </section>
+    </main>
+
+    <script src="{% static 'js/compartido/activar_cuenta.js' %}"></script>
+  </body>
+</html>
