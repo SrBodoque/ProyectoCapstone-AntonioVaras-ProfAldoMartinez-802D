@@ -7,10 +7,12 @@ from django.utils.encoding import force_str, force_bytes
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.core.mail import send_mail
 from django.urls import reverse
+from django.db import transaction
+from django.utils import timezone
 
 from usuarios.models import Usuario
 from .forms import LoginForm, BanoForm, TrabajadorForm, ActivarCuentaForm
-from .models import Bano
+from .models import Bano, AsignacionBano
 
 
 def login_view(request):
@@ -265,7 +267,190 @@ def inicio_trabajador(request):
     if request.user.rol != Usuario.Rol.TRABAJADOR:
         return redirect("inicio_supervisor")
 
-    return render(request, "trabajador/inicio_trabajador.html")
+    asignacion = (
+        AsignacionBano.objects
+        .filter(
+            trabajador=request.user,
+            activa=True,
+        )
+        .select_related("bano")
+        .first()
+    )
+
+    return render(
+        request,
+        "trabajador/inicio_trabajador.html",
+        {
+            "asignacion": asignacion,
+        },
+    )
+
+@login_required(login_url="login")
+def gestion_asignaciones(request):
+    if request.user.rol != Usuario.Rol.SUPERVISOR:
+        return redirect("inicio_trabajador")
+
+    trabajadores = Usuario.objects.filter(
+        rol=Usuario.Rol.TRABAJADOR,
+        is_active=True,
+    ).order_by("id")
+
+    banos = Bano.objects.filter(
+        activo=True,
+    ).order_by("id")
+
+    asignaciones_activas = AsignacionBano.objects.filter(
+        activa=True,
+    ).select_related(
+        "trabajador",
+        "bano",
+    )
+
+    asignaciones_por_trabajador = {
+        asignacion.trabajador_id: asignacion
+        for asignacion in asignaciones_activas
+    }
+
+    banos_ocupados = {
+        asignacion.bano_id: asignacion.trabajador
+        for asignacion in asignaciones_activas
+    }
+
+    filas_asignaciones = []
+
+    for trabajador in trabajadores:
+        asignacion_actual = asignaciones_por_trabajador.get(
+            trabajador.id
+        )
+
+        opciones_banos = []
+
+        for bano in banos:
+            ocupante = banos_ocupados.get(bano.id)
+
+            disponible = (
+                ocupante is None
+                or ocupante.id == trabajador.id
+            )
+
+            seleccionado = (
+                asignacion_actual is not None
+                and asignacion_actual.bano_id == bano.id
+            )
+
+            opciones_banos.append(
+                {
+                    "bano": bano,
+                    "disponible": disponible,
+                    "ocupante": ocupante,
+                    "seleccionado": seleccionado,
+                }
+            )
+
+        filas_asignaciones.append(
+            {
+                "trabajador": trabajador,
+                "asignacion": asignacion_actual,
+                "opciones_banos": opciones_banos,
+            }
+        )
+
+    return render(
+        request,
+        "supervisor/asignaciones.html",
+        {
+            "filas_asignaciones": filas_asignaciones,
+        },
+    )
+
+@require_POST
+@login_required(login_url="login")
+def guardar_asignacion(request, trabajador_id):
+    if request.user.rol != Usuario.Rol.SUPERVISOR:
+        return redirect("inicio_trabajador")
+
+    trabajador = get_object_or_404(
+        Usuario,
+        id=trabajador_id,
+        rol=Usuario.Rol.TRABAJADOR,
+        is_active=True,
+    )
+
+    bano_id = request.POST.get("bano_id")
+
+    with transaction.atomic():
+        asignacion_actual = (
+            AsignacionBano.objects
+            .select_for_update()
+            .filter(
+                trabajador=trabajador,
+                activa=True,
+            )
+            .first()
+        )
+
+        # El supervisor seleccionó "Sin asignar".
+        if not bano_id:
+            if asignacion_actual:
+                asignacion_actual.activa = False
+                asignacion_actual.fecha_fin = timezone.now()
+
+                asignacion_actual.save(
+                    update_fields=[
+                        "activa",
+                        "fecha_fin",
+                    ]
+                )
+
+            return redirect("gestion_asignaciones")
+
+        bano = get_object_or_404(
+            Bano.objects.select_for_update(),
+            id=bano_id,
+            activo=True,
+        )
+
+        # Si seleccionó nuevamente su mismo baño,
+        # no hay nada que modificar.
+        if (
+            asignacion_actual
+            and asignacion_actual.bano_id == bano.id
+        ):
+            return redirect("gestion_asignaciones")
+
+        # Comprobar en backend que otro trabajador
+        # no tenga actualmente ese baño.
+        bano_ocupado = AsignacionBano.objects.filter(
+            bano=bano,
+            activa=True,
+        ).exclude(
+            trabajador=trabajador,
+        ).exists()
+
+        if bano_ocupado:
+            return redirect("gestion_asignaciones")
+
+        # Cerramos la asignación anterior para conservar
+        # su historial.
+        if asignacion_actual:
+            asignacion_actual.activa = False
+            asignacion_actual.fecha_fin = timezone.now()
+
+            asignacion_actual.save(
+                update_fields=[
+                    "activa",
+                    "fecha_fin",
+                ]
+            )
+
+        # Creamos la nueva asignación.
+        AsignacionBano.objects.create(
+            trabajador=trabajador,
+            bano=bano,
+            activa=True,
+        )
+
+    return redirect("gestion_asignaciones")
 
 def activar_cuenta(request, uidb64, token):
     try:

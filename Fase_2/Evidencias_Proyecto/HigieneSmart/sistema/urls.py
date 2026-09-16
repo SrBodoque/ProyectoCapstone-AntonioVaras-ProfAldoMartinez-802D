@@ -11,6 +11,8 @@ urlpatterns = [
     path("supervisor/trabajadores/", views.gestion_trabajadores, name="gestion_trabajadores"),
     path("supervisor/trabajadores/agregar/", views.agregar_trabajador, name="agregar_trabajador"),
     path("supervisor/trabajadores/<int:trabajador_id>/estado/", views.cambiar_estado_trabajador, name="cambiar_estado_trabajador"),
+    path("supervisor/asignaciones/", views.gestion_asignaciones, name="gestion_asignaciones"),
+    path("supervisor/asignaciones/<int:trabajador_id>/guardar/", views.guardar_asignacion, name="guardar_asignacion"),
     path("trabajador/", views.inicio_trabajador, name="inicio_trabajador"),
     path("logout/", views.cerrar_sesion, name="cerrar_sesion"),
 ]

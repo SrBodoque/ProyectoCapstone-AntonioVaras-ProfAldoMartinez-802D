@@ -1,22 +1,50 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trabajador</title>
-</head>
-<body>
-
-    <h1>Vista Trabajador</h1>
-    <p>Inicio de sesión correcto.</p>
-
-    <form method="POST" action="{% url 'cerrar_sesion' %}">
-        {% csrf_token %}
-
-        <button type="submit">
-            Cerrar sesión
-        </button>
-    </form>
-
-</body>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Inicio trabajador</title>
+        <link rel="stylesheet" href="{% static 'css/compartido/variables.css' %}" />
+        <link rel="stylesheet"
+              href="{% static 'css/trabajador/inicio_trabajador.css' %}" />
+    </head>
+    <body>
+        <main class="trabajador-container">
+            <header class="trabajador-header">
+                <div>
+                    <h1>Inicio</h1>
+                    <p>Bienvenido, {{ request.user.email }}.</p>
+                </div>
+                <form method="post" action="{% url 'cerrar_sesion' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-cerrar-sesion">Cerrar sesión</button>
+                </form>
+            </header>
+            <section class="asignacion-section">
+                <div class="section-header">
+                    <h2>Baño asignado</h2>
+                    <p>Revisa el baño que tienes asignado actualmente.</p>
+                </div>
+                {% if asignacion %}
+                    <article class="bano-card">
+                        <div class="bano-info">
+                            <span class="bano-label">Baño</span>
+                            <h3>{{ asignacion.bano.nombre }}</h3>
+                            <p>{{ asignacion.bano.ubicacion }}</p>
+                        </div>
+                        <span class="estado-asignado">Asignado</span>
+                    </article>
+                {% else %}
+                    <div class="sin-asignacion">
+                        <h3>Sin baño asignado</h3>
+                        <p>
+                            Actualmente no tienes un baño asignado.
+                            Consulta con tu supervisor si necesitas una asignación.
+                        </p>
+                    </div>
+                {% endif %}
+            </section>
+        </main>
+    </body>
 </html>

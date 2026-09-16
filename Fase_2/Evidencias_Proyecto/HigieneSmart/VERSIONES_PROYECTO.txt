@@ -19,6 +19,9 @@ psycopg:
 python-dotenv:
 1.2.3
 
+djLint:
+1.36.4
+
 FRONTEND
 
 HTML5

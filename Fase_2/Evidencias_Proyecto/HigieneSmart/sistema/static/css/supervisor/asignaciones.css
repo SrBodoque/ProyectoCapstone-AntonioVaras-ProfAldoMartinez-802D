@@ -1,0 +1,241 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
+
+    font-family: Arial, sans-serif;
+}
+
+.asignaciones-container {
+    width: 100%;
+    max-width: 1160px;
+
+    margin: 0 auto;
+    padding: 32px 24px;
+}
+
+.asignaciones-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    margin-bottom: 20px;
+}
+
+.asignaciones-header h1 {
+    margin-bottom: 5px;
+
+    font-size: 28px;
+}
+
+.asignaciones-header p {
+    color: var(--color-text-secondary);
+
+    font-size: 15px;
+}
+
+.asignaciones-actions {
+    margin-bottom: 22px;
+}
+
+.volver-link {
+    color: var(--color-text-secondary);
+
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.volver-link:hover {
+    color: var(--color-primary);
+}
+
+.asignaciones-card {
+    overflow: hidden;
+
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+
+    background-color: var(--color-surface);
+
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+}
+
+.asignaciones-table {
+    width: 100%;
+
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+/* Ancho fijo de cada columna */
+.asignaciones-table th:nth-child(1),
+.asignaciones-table td:nth-child(1) {
+    width: 7%;
+}
+
+.asignaciones-table th:nth-child(2),
+.asignaciones-table td:nth-child(2) {
+    width: 20%;
+}
+
+.asignaciones-table th:nth-child(3),
+.asignaciones-table td:nth-child(3) {
+    width: 27%;
+}
+
+.asignaciones-table th:nth-child(4),
+.asignaciones-table td:nth-child(4) {
+    width: 46%;
+}
+
+.asignaciones-table thead {
+    background-color: var(--color-input-background);
+}
+
+.asignaciones-table th,
+.asignaciones-table td {
+    padding: 16px 18px;
+
+    text-align: left;
+    vertical-align: middle;
+
+    border-bottom: 1px solid var(--color-border);
+
+    font-size: 14px;
+}
+
+.asignaciones-table th {
+    color: var(--color-text-secondary);
+
+    font-weight: 600;
+}
+
+.asignaciones-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.asignaciones-table tbody tr:hover {
+    background-color: #fafbfe;
+}
+
+.asignaciones-table td {
+    overflow: hidden;
+}
+
+.asignaciones-table td:nth-child(2),
+.asignaciones-table td:nth-child(3) {
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sin-registros {
+    padding: 36px 20px;
+
+    text-align: center;
+}
+
+.sin-registros p {
+    color: var(--color-text-secondary);
+
+    font-size: 14px;
+}
+
+.asignacion-form {
+    display: flex;
+    align-items: center;
+
+    width: 100%;
+
+    gap: 10px;
+}
+
+.bano-select {
+    flex: 1;
+
+    width: 100%;
+    min-width: 0;
+    height: 40px;
+
+    padding: 0 36px 0 12px;
+
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+
+    background-color: var(--color-surface);
+    color: var(--color-text-primary);
+
+    font-size: 14px;
+
+    cursor: pointer;
+    outline: none;
+}
+
+.bano-select:focus {
+    border-color: var(--color-primary);
+
+    box-shadow: 0 0 0 3px rgba(47, 71, 149, 0.1);
+}
+
+.bano-select option:disabled {
+    color: var(--color-text-secondary);
+}
+
+.btn-guardar-asignacion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    min-width: 88px;
+    height: 40px;
+
+    padding: 0 16px;
+
+    border: none;
+    border-radius: 8px;
+
+    background-color: var(--color-primary);
+    color: #ffffff;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: background-color 0.2s ease;
+}
+
+.btn-guardar-asignacion:hover {
+    background-color: var(--color-primary-hover);
+}
+
+.btn-guardar-asignacion:focus-visible {
+    outline: 3px solid rgba(47, 71, 149, 0.2);
+    outline-offset: 2px;
+}
+
+@media (max-width: 800px) {
+    .asignaciones-container {
+        padding: 24px 15px;
+    }
+
+    .asignaciones-card {
+        overflow-x: auto;
+    }
+
+    .asignaciones-table {
+        min-width: 900px;
+    }
+}
