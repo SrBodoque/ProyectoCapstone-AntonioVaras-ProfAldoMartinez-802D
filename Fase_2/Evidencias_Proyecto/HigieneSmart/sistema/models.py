@@ -55,3 +55,93 @@ class AsignacionBano(models.Model):
 
     def __str__(self):
         return f"{self.trabajador.email} → {self.bano.nombre}"
+
+class Alerta(models.Model):
+    class Estado(models.TextChoices):
+        PENDIENTE = "PENDIENTE", "Pendiente"
+        EN_PROCESO = "EN_PROCESO", "En proceso"
+        ATENDIDA = "ATENDIDA", "Atendida"
+
+    bano = models.ForeignKey(
+        Bano,
+        on_delete=models.PROTECT,
+        related_name="alertas",
+    )
+
+    motivo = models.CharField(
+        max_length=200,
+        default="Umbral de uso alcanzado",
+    )
+
+    estado = models.CharField(
+        max_length=20,
+        choices=Estado.choices,
+        default=Estado.PENDIENTE,
+    )
+
+    fecha_creacion = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    class Meta:
+        ordering = ["-fecha_creacion"]
+
+    def __str__(self):
+        return (
+            f"{self.bano.nombre} - "
+            f"{self.get_estado_display()}"
+        )
+
+class IntervencionLimpieza(models.Model):
+    alerta = models.OneToOneField(
+        Alerta,
+        on_delete=models.PROTECT,
+        related_name="intervencion",
+    )
+
+    trabajador = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="intervenciones_limpieza",
+        limit_choices_to={
+            "rol": "TRABAJADOR",
+            "is_active": True,
+        },
+    )
+
+    bano = models.ForeignKey(
+        Bano,
+        on_delete=models.PROTECT,
+        related_name="intervenciones_limpieza",
+    )
+
+    fecha_inicio = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    fecha_fin = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    evidencia = models.ImageField(
+        upload_to="evidencias_limpieza/%Y/%m/%d/",
+        null=True,
+        blank=True,
+    )
+
+    class Meta:
+        ordering = ["-fecha_inicio"]
+
+    @property
+    def duracion(self):
+        if self.fecha_fin is not None:
+            return self.fecha_fin - self.fecha_inicio
+
+        return None
+
+    def __str__(self):
+        return (
+            f"{self.trabajador.email} - "
+            f"{self.bano.nombre}"
+        )

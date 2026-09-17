@@ -55,3 +55,30 @@ class TrabajadorForm(forms.Form):
 
 class ActivarCuentaForm(SetPasswordForm):
     pass
+
+class FinalizarLimpiezaForm(forms.Form):
+    evidencia = forms.ImageField(
+        label="Evidencia fotográfica",
+        required=True,
+        widget=forms.ClearableFileInput(
+            attrs={
+                "accept": "image/*",
+            }
+        ),
+        error_messages={
+            "required": "Debes adjuntar una fotografía antes de finalizar la limpieza.",
+            "invalid_image": "El archivo seleccionado debe ser una imagen válida.",
+        },
+    )
+
+    def clean_evidencia(self):
+        evidencia = self.cleaned_data["evidencia"]
+
+        max_size = 5 * 1024 * 1024  # 5 MB
+
+        if evidencia.size > max_size:
+            raise forms.ValidationError(
+                "La fotografía no puede superar los 5 MB."
+            )
+
+        return evidencia

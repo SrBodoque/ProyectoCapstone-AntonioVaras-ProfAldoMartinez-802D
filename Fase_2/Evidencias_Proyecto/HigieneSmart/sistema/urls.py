@@ -14,5 +14,7 @@ urlpatterns = [
     path("supervisor/asignaciones/", views.gestion_asignaciones, name="gestion_asignaciones"),
     path("supervisor/asignaciones/<int:trabajador_id>/guardar/", views.guardar_asignacion, name="guardar_asignacion"),
     path("trabajador/", views.inicio_trabajador, name="inicio_trabajador"),
+    path("trabajador/alertas/<int:alerta_id>/iniciar/", views.iniciar_limpieza, name="iniciar_limpieza"),
+    path("trabajador/limpiezas/<int:intervencion_id>/finalizar/", views.finalizar_limpieza, name="finalizar_limpieza"),
     path("logout/", views.cerrar_sesion, name="cerrar_sesion"),
 ]

@@ -45,7 +45,8 @@
                       <select name="bano_id"
                               id="bano-{{ fila.trabajador.id }}"
                               class="bano-select"
-                              autocomplete="off">
+                              autocomplete="off"
+                              {% if fila.limpieza_en_curso %}disabled{% endif %}>
                         {% if fila.asignacion %}
                           <option value="">Sin asignar</option>
                         {% else %}
@@ -55,24 +56,30 @@
                           <option value="{{ opcion.bano.id }}"
                                   {% if opcion.seleccionado %}selected{% endif %}
                                   {% if not opcion.disponible %}disabled{% endif %}>
-                            {{ opcion.bano.nombre }} {% if not opcion.disponible %} —
-                            asignado a {{ opcion.ocupante.username }} {% endif %}
-                        </option>
+                            {{ opcion.bano.nombre }}
+                            {% if not opcion.disponible %}
+                              — asignado a {{ opcion.ocupante.username }}
+                            {% endif %}
+                          </option>
+                        {% endfor %}
+                      </select>
+                      {% if fila.limpieza_en_curso %}
+                        <span class="estado-limpieza-curso">Limpieza en curso</span>
+                      {% else %}
+                        <button type="submit" class="btn-guardar-asignacion">Guardar</button>
+                      {% endif %}
+                    </form>
+                  </td>
+                </tr>
               {% endfor %}
-            </select>
-            <button type="submit" class="btn-guardar-asignacion">Guardar</button>
-          </form>
-          </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% else %}
-    <div class="sin-registros">
-      <p>No existen trabajadores activos disponibles para asignación.</p>
-    </div>
-  {% endif %}
-</section>
-</main>
-</body>
+            </tbody>
+          </table>
+        {% else %}
+          <div class="sin-registros">
+            <p>No existen trabajadores activos disponibles para asignación.</p>
+          </div>
+        {% endif %}
+      </section>
+    </main>
+  </body>
 </html>

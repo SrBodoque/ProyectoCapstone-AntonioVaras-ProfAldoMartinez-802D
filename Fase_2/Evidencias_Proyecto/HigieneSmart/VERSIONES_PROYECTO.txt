@@ -22,6 +22,9 @@ python-dotenv:
 djLint:
 1.36.4
 
+Pillow:
+12.3.0
+
 FRONTEND
 
 HTML5

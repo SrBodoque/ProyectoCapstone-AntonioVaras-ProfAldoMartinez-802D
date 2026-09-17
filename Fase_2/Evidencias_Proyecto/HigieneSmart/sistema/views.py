@@ -11,8 +11,8 @@ from django.db import transaction
 from django.utils import timezone
 
 from usuarios.models import Usuario
-from .forms import LoginForm, BanoForm, TrabajadorForm, ActivarCuentaForm
-from .models import Bano, AsignacionBano
+from .forms import LoginForm, BanoForm, TrabajadorForm, ActivarCuentaForm, FinalizarLimpiezaForm
+from .models import Bano, AsignacionBano, Alerta, IntervencionLimpieza
 
 
 def login_view(request):
@@ -277,11 +277,40 @@ def inicio_trabajador(request):
         .first()
     )
 
+    alerta_pendiente = None
+
+    if asignacion is not None:
+        alerta_pendiente = (
+            Alerta.objects
+            .filter(
+                bano=asignacion.bano,
+                estado=Alerta.Estado.PENDIENTE,
+            )
+            .order_by("fecha_creacion")
+            .first()
+        )
+
+    intervencion_activa = (
+        IntervencionLimpieza.objects
+        .filter(
+            trabajador=request.user,
+            fecha_fin__isnull=True,
+            alerta__estado=Alerta.Estado.EN_PROCESO,
+        )
+        .select_related(
+            "alerta",
+            "bano",
+        )
+        .first()
+    )
+
     return render(
         request,
         "trabajador/inicio_trabajador.html",
         {
             "asignacion": asignacion,
+            "alerta_pendiente": alerta_pendiente,
+            "intervencion_activa": intervencion_activa,
         },
     )
 
@@ -315,6 +344,16 @@ def gestion_asignaciones(request):
         asignacion.bano_id: asignacion.trabajador
         for asignacion in asignaciones_activas
     }
+
+    trabajadores_con_limpieza = set(
+        IntervencionLimpieza.objects.filter(
+            fecha_fin__isnull=True,
+            alerta__estado=Alerta.Estado.EN_PROCESO,
+        ).values_list(
+            "trabajador_id",
+            flat=True,
+        )
+    )
 
     filas_asignaciones = []
 
@@ -352,6 +391,9 @@ def gestion_asignaciones(request):
                 "trabajador": trabajador,
                 "asignacion": asignacion_actual,
                 "opciones_banos": opciones_banos,
+                "limpieza_en_curso": (
+                    trabajador.id in trabajadores_con_limpieza
+                ),
             }
         )
 
@@ -375,6 +417,15 @@ def guardar_asignacion(request, trabajador_id):
         rol=Usuario.Rol.TRABAJADOR,
         is_active=True,
     )
+
+    intervencion_en_curso = IntervencionLimpieza.objects.filter(
+        trabajador=trabajador,
+        fecha_fin__isnull=True,
+        alerta__estado=Alerta.Estado.EN_PROCESO,
+    ).exists()
+
+    if intervencion_en_curso:
+        return redirect("gestion_asignaciones")
 
     bano_id = request.POST.get("bano_id")
 
@@ -498,6 +549,112 @@ def activar_cuenta(request, uidb64, token):
             "usuario": usuario,
         },
     )
+
+@require_POST
+@login_required(login_url="login")
+def iniciar_limpieza(request, alerta_id):
+    if request.user.rol != Usuario.Rol.TRABAJADOR:
+        return redirect("inicio_supervisor")
+
+    with transaction.atomic():
+        alerta = get_object_or_404(
+            Alerta.objects.select_for_update(),
+            id=alerta_id,
+            estado=Alerta.Estado.PENDIENTE,
+        )
+
+        asignacion = (
+            AsignacionBano.objects
+            .select_for_update()
+            .filter(
+                trabajador=request.user,
+                bano=alerta.bano,
+                activa=True,
+            )
+            .first()
+        )
+
+        # El trabajador solo puede iniciar una limpieza
+        # del baño que tiene actualmente asignado.
+        if asignacion is None:
+            return redirect("inicio_trabajador")
+
+        # Evita crear más de una intervención
+        # para la misma alerta.
+        if IntervencionLimpieza.objects.filter(
+            alerta=alerta
+        ).exists():
+            return redirect("inicio_trabajador")
+
+        IntervencionLimpieza.objects.create(
+            alerta=alerta,
+            trabajador=request.user,
+            bano=alerta.bano,
+        )
+
+        alerta.estado = Alerta.Estado.EN_PROCESO
+        alerta.save(
+            update_fields=["estado"]
+        )
+
+    return redirect("inicio_trabajador")
+
+@require_POST
+@login_required(login_url="login")
+def finalizar_limpieza(request, intervencion_id):
+    if request.user.rol != Usuario.Rol.TRABAJADOR:
+        return redirect("inicio_supervisor")
+
+    intervencion = get_object_or_404(
+        IntervencionLimpieza.objects.select_related(
+            "alerta",
+            "bano",
+        ),
+        id=intervencion_id,
+        trabajador=request.user,
+        fecha_fin__isnull=True,
+        alerta__estado=Alerta.Estado.EN_PROCESO,
+    )
+
+    form = FinalizarLimpiezaForm(
+        request.POST,
+        request.FILES,
+    )
+
+    if not form.is_valid():
+        return redirect("inicio_trabajador")
+
+    with transaction.atomic():
+        intervencion = (
+            IntervencionLimpieza.objects
+            .select_for_update()
+            .select_related("alerta")
+            .get(
+                id=intervencion.id,
+                trabajador=request.user,
+                fecha_fin__isnull=True,
+                alerta__estado=Alerta.Estado.EN_PROCESO,
+            )
+        )
+
+        intervencion.evidencia = form.cleaned_data["evidencia"]
+        intervencion.fecha_fin = timezone.now()
+
+        intervencion.save(
+            update_fields=[
+                "evidencia",
+                "fecha_fin",
+            ]
+        )
+
+        alerta = intervencion.alerta
+        alerta.estado = Alerta.Estado.ATENDIDA
+
+        alerta.save(
+            update_fields=["estado"]
+        )
+
+    return redirect("inicio_trabajador")
 
 @require_POST
 def cerrar_sesion(request):

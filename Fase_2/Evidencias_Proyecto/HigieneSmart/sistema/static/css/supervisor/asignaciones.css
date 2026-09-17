@@ -226,6 +226,35 @@ body {
     outline-offset: 2px;
 }
 
+.bano-select:disabled {
+    background-color: var(--color-input-background);
+    color: var(--color-text-secondary);
+
+    cursor: not-allowed;
+}
+
+.estado-limpieza-curso {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    min-height: 40px;
+
+    padding: 0 14px;
+
+    border-radius: 8px;
+
+    background-color: #e5ebfb;
+    color: var(--color-primary);
+
+    font-size: 12px;
+    font-weight: 600;
+
+    white-space: nowrap;
+}
+
 @media (max-width: 800px) {
     .asignaciones-container {
         padding: 24px 15px;
