@@ -26,6 +26,7 @@ cd .\Fase_2\Evidencias_Proyecto\HigieneSmart\
 Solo es necesario la primera vez:
 
 python -m venv .venv
+py -3.13 -m venv .venv
 
 
 ==================================================
