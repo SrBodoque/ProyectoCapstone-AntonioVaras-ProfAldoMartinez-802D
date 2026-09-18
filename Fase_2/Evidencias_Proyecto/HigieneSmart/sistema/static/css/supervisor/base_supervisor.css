@@ -1,0 +1,317 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
+
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.supervisor-layout {
+    display: flex;
+
+    min-height: 100vh;
+}
+
+/* =========================
+   SIDEBAR
+   ========================= */
+
+.sidebar {
+    position: fixed;
+
+    top: 0;
+    left: 0;
+    bottom: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    width: 270px;
+
+    padding: 28px 22px 22px;
+
+    border-right: 1px solid #dce3ef;
+
+    background-color: #f9fbff;
+}
+
+/* =========================
+   MARCA SUPERIOR
+   ========================= */
+
+.sidebar-header {
+    padding: 0 4px 30px;
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+}
+
+.sidebar-brand-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    width: 42px;
+    height: 42px;
+
+    border-radius: 11px;
+
+    background-color: var(--color-primary);
+    color: #ffffff;
+
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.sidebar-brand-text {
+    display: flex;
+    flex-direction: column;
+
+    min-width: 0;
+
+    gap: 3px;
+}
+
+.sidebar-logo {
+    color: #101828;
+
+    font-size: 20px;
+    font-weight: 700;
+
+    letter-spacing: -0.02em;
+}
+
+.sidebar-rol {
+    color: #667085;
+
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* =========================
+   NAVEGACIÓN
+   ========================= */
+
+.sidebar-nav {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+
+    gap: 28px;
+
+    overflow-y: auto;
+
+    padding-right: 2px;
+}
+
+.sidebar-section {
+    display: flex;
+    flex-direction: column;
+
+    gap: 6px;
+}
+
+.sidebar-section-title {
+    padding: 0 12px 7px;
+
+    color: #667085;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+}
+
+.sidebar-link {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+
+    min-height: 44px;
+
+    padding: 0 14px;
+
+    border-radius: 9px;
+
+    color: #273044;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    text-decoration: none;
+
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.sidebar-link:hover {
+    background-color: #eef2fb;
+    color: var(--color-primary);
+}
+
+/* OPCIÓN ACTUAL */
+
+.sidebar-link-active {
+    background-color: #e9eefc;
+    color: var(--color-primary);
+
+    font-weight: 700;
+}
+
+.sidebar-link-active::before {
+    position: absolute;
+
+    top: 10px;
+    left: 0;
+
+    width: 3px;
+    height: 24px;
+
+    border-radius: 0 4px 4px 0;
+
+    background-color: var(--color-primary);
+
+    content: "";
+}
+
+/* =========================
+   USUARIO
+   ========================= */
+
+.sidebar-footer {
+    display: flex;
+    flex-direction: column;
+
+    gap: 14px;
+
+    margin-top: 24px;
+    padding: 20px 4px 0;
+
+    border-top: 1px solid #dce3ef;
+}
+
+.sidebar-user {
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+
+    padding: 12px 13px;
+
+    border: 1px solid #e1e7f0;
+    border-radius: 9px;
+
+    background-color: #ffffff;
+}
+
+.sidebar-user-label {
+    color: #667085;
+
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.sidebar-user-email {
+    overflow: hidden;
+
+    color: #182230;
+
+    font-size: 12px;
+    font-weight: 650;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.btn-sidebar-logout {
+    width: 100%;
+    min-height: 42px;
+
+    padding: 0 14px;
+
+    border: 1px solid #d7deea;
+    border-radius: 9px;
+
+    background-color: #ffffff;
+    color: #344054;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.btn-sidebar-logout:hover {
+    border-color: #bcc7d8;
+
+    background-color: #f2f5fa;
+    color: var(--color-primary);
+}
+
+/* =========================
+   CONTENIDO PRINCIPAL
+   ========================= */
+
+.supervisor-content {
+    width: calc(100% - 270px);
+
+    margin-left: 270px;
+    padding: 34px 38px;
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 850px) {
+    .sidebar {
+        position: static;
+
+        width: 100%;
+
+        padding: 22px 18px;
+
+        border-right: none;
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .sidebar-header {
+        padding-bottom: 22px;
+    }
+
+    .sidebar-nav {
+        gap: 20px;
+    }
+
+    .supervisor-layout {
+        flex-direction: column;
+    }
+
+    .supervisor-content {
+        width: 100%;
+
+        margin-left: 0;
+        padding: 24px 16px;
+    }
+}

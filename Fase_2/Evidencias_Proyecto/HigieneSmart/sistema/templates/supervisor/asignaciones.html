@@ -1,85 +1,79 @@
+{% extends "supervisor/base_supervisor.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Asignación de baños</title>
-    <link rel="stylesheet" href="{% static 'css/compartido/variables.css' %}" />
-    <link rel="stylesheet"
-          href="{% static 'css/supervisor/asignaciones.css' %}" />
-  </head>
-  <body>
-    <main class="asignaciones-container">
-      <header class="asignaciones-header">
-        <div>
-          <h1>Asignación de baños</h1>
-          <p>Administra los baños asignados a cada trabajador.</p>
-        </div>
-      </header>
-      <div class="asignaciones-actions">
-        <a href="{% url 'inicio_supervisor' %}" class="volver-link">← Volver al inicio</a>
+{% block title %}
+  Asignación de baños - HigieneSmart
+{% endblock %}
+{% block extra_css %}
+  <link rel="stylesheet"
+        href="{% static 'css/supervisor/asignaciones.css' %}" />
+{% endblock %}
+{% block content %}
+  <main class="asignaciones-container">
+    <header class="asignaciones-header">
+      <div>
+        <h1>Asignación de baños</h1>
+        <p>Administra los baños asignados a cada trabajador.</p>
       </div>
-      <section class="asignaciones-card">
-        {% if filas_asignaciones %}
-          <table class="asignaciones-table">
-            <thead>
+    </header>
+    <section class="asignaciones-card">
+      {% if filas_asignaciones %}
+        <table class="asignaciones-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Trabajador</th>
+              <th>Correo electrónico</th>
+              <th>Baño asignado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for fila in filas_asignaciones %}
               <tr>
-                <th>ID</th>
-                <th>Trabajador</th>
-                <th>Correo electrónico</th>
-                <th>Baño asignado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for fila in filas_asignaciones %}
-                <tr>
-                  <td>{{ fila.trabajador.id }}</td>
-                  <td>{{ fila.trabajador.username }}</td>
-                  <td>{{ fila.trabajador.email }}</td>
-                  <td>
-                    <form method="post"
-                          action="{% url 'guardar_asignacion' fila.trabajador.id %}"
-                          class="asignacion-form">
-                      {% csrf_token %}
-                      <select name="bano_id"
-                              id="bano-{{ fila.trabajador.id }}"
-                              class="bano-select"
-                              autocomplete="off"
-                              {% if fila.limpieza_en_curso %}disabled{% endif %}>
-                        {% if fila.asignacion %}
-                          <option value="">Sin asignar</option>
-                        {% else %}
-                          <option value="" selected>Sin asignar</option>
-                        {% endif %}
-                        {% for opcion in fila.opciones_banos %}
-                          <option value="{{ opcion.bano.id }}"
-                                  {% if opcion.seleccionado %}selected{% endif %}
-                                  {% if not opcion.disponible %}disabled{% endif %}>
-                            {{ opcion.bano.nombre }}
-                            {% if not opcion.disponible %}
-                              — asignado a {{ opcion.ocupante.username }}
-                            {% endif %}
-                          </option>
-                        {% endfor %}
-                      </select>
-                      {% if fila.limpieza_en_curso %}
-                        <span class="estado-limpieza-curso">Limpieza en curso</span>
+                <td>{{ fila.trabajador.id }}</td>
+                <td>{{ fila.trabajador.username }}</td>
+                <td>{{ fila.trabajador.email }}</td>
+                <td>
+                  <form method="post"
+                        action="{% url 'guardar_asignacion' fila.trabajador.id %}"
+                        class="asignacion-form">
+                    {% csrf_token %}
+                    <select name="bano_id"
+                            id="bano-{{ fila.trabajador.id }}"
+                            class="bano-select"
+                            autocomplete="off"
+                            {% if fila.limpieza_en_curso %}disabled{% endif %}>
+                      {% if fila.asignacion %}
+                        <option value="">Sin asignar</option>
                       {% else %}
-                        <button type="submit" class="btn-guardar-asignacion">Guardar</button>
+                        <option value="" selected>Sin asignar</option>
                       {% endif %}
-                    </form>
-                  </td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        {% else %}
-          <div class="sin-registros">
-            <p>No existen trabajadores activos disponibles para asignación.</p>
-          </div>
-        {% endif %}
-      </section>
-    </main>
-  </body>
-</html>
+                      {% for opcion in fila.opciones_banos %}
+                        <option value="{{ opcion.bano.id }}"
+                                {% if opcion.seleccionado %}selected{% endif %}
+                                {% if not opcion.disponible %}disabled{% endif %}>
+                          {{ opcion.bano.nombre }}
+                          {% if not opcion.disponible %}
+                            — asignado a {{ opcion.ocupante.username }}
+                          {% endif %}
+                        </option>
+                      {% endfor %}
+                    </select>
+                    {% if fila.limpieza_en_curso %}
+                      <span class="estado-limpieza-curso">Limpieza en curso</span>
+                    {% else %}
+                      <button type="submit" class="btn-guardar-asignacion">Guardar</button>
+                    {% endif %}
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="sin-registros">
+          <p>No existen trabajadores activos disponibles para asignación.</p>
+        </div>
+      {% endif %}
+    </section>
+  </main>
+{% endblock %}

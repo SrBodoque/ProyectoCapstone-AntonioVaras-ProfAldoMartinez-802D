@@ -1,0 +1,135 @@
+{% extends "supervisor/base_supervisor.html" %}
+{% load static %}
+{% block title %}
+    Historial de limpiezas - HigieneSmart
+{% endblock %}
+{% block extra_css %}
+    <link rel="stylesheet"
+          href="{% static 'css/supervisor/historial_limpiezas.css' %}" />
+{% endblock %}
+{% block content %}
+    <main class="historial-container">
+        <header class="historial-header">
+            <div>
+                <h1>Historial de limpiezas</h1>
+                <p>Revisa las intervenciones de limpieza registradas en el sistema.</p>
+            </div>
+        </header>
+        <form method="get"
+              action="{% url 'historial_limpiezas' %}"
+              class="filtros-form">
+            <div class="filtro-grupo">
+                <label for="filtro-trabajador">Trabajador</label>
+                <select name="trabajador" id="filtro-trabajador" class="filtro-select">
+                    <option value="">Todos los trabajadores</option>
+                    {% for trabajador in trabajadores %}
+                        <option value="{{ trabajador.id }}"
+                                {% if filtro_trabajador == trabajador.id|stringformat:"s" %}selected{% endif %}>
+                            {{ trabajador.email }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filtro-grupo">
+                <label for="filtro-bano">Baño</label>
+                <select name="bano" id="filtro-bano" class="filtro-select">
+                    <option value="">Todos los baños</option>
+                    {% for bano in banos %}
+                        <option value="{{ bano.id }}"
+                                {% if filtro_bano == bano.id|stringformat:"s" %}selected{% endif %}>
+                            {{ bano.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filtro-grupo">
+                <label for="filtro-estado">Estado</label>
+                <select name="estado" id="filtro-estado" class="filtro-select">
+                    <option value="">Todos los estados</option>
+                    <option value="FINALIZADA"
+                            {% if filtro_estado == "FINALIZADA" %}selected{% endif %}>Finalizada</option>
+                    <option value="EN_PROCESO"
+                            {% if filtro_estado == "EN_PROCESO" %}selected{% endif %}>En proceso</option>
+                </select>
+            </div>
+            <div class="filtro-grupo">
+                <label for="filtro-fecha-desde">Desde</label>
+                <input type="date"
+                       name="fecha_desde"
+                       id="filtro-fecha-desde"
+                       class="filtro-input"
+                       value="{{ filtro_fecha_desde }}" />
+            </div>
+            <div class="filtro-grupo">
+                <label for="filtro-fecha-hasta">Hasta</label>
+                <input type="date"
+                       name="fecha_hasta"
+                       id="filtro-fecha-hasta"
+                       class="filtro-input"
+                       value="{{ filtro_fecha_hasta }}" />
+            </div>
+            <div class="filtros-acciones">
+                <button type="submit" class="btn-filtrar">Filtrar</button>
+                <a href="{% url 'historial_limpiezas' %}" class="btn-limpiar">Limpiar</a>
+            </div>
+        </form>
+        <section class="historial-card">
+            {% if intervenciones %}
+                <table class="historial-table">
+                    <thead>
+                        <tr>
+                            <th>Trabajador</th>
+                            <th>Baño</th>
+                            <th>Inicio</th>
+                            <th>Fin</th>
+                            <th>Duración</th>
+                            <th>Estado</th>
+                            <th>Evidencia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for intervencion in intervenciones %}
+                            <tr>
+                                <td>{{ intervencion.trabajador.email }}</td>
+                                <td>
+                                    <strong>{{ intervencion.bano.nombre }}</strong>
+                                    <span class="ubicacion-bano">{{ intervencion.bano.ubicacion }}</span>
+                                </td>
+                                <td>{{ intervencion.fecha_inicio|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    {% if intervencion.fecha_fin %}
+                                        {{ intervencion.fecha_fin|date:"d/m/Y H:i" }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td>{{ intervencion.duracion_formateada }}</td>
+                                <td>
+                                    {% if intervencion.fecha_fin %}
+                                        <span class="estado estado-finalizada">Finalizada</span>
+                                    {% else %}
+                                        <span class="estado estado-en-proceso">En proceso</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if intervencion.evidencia %}
+                                        <a href="{{ intervencion.evidencia.url }}"
+                                           target="_blank"
+                                           rel="noopener noreferrer"
+                                           class="evidencia-link">Ver evidencia</a>
+                                    {% else %}
+                                        <span class="sin-evidencia">Sin evidencia</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="sin-registros">
+                    <p>No se encontraron intervenciones que coincidan con los filtros seleccionados.</p>
+                </div>
+            {% endif %}
+        </section>
+    </main>
+{% endblock %}

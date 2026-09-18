@@ -13,6 +13,7 @@ urlpatterns = [
     path("supervisor/trabajadores/<int:trabajador_id>/estado/", views.cambiar_estado_trabajador, name="cambiar_estado_trabajador"),
     path("supervisor/asignaciones/", views.gestion_asignaciones, name="gestion_asignaciones"),
     path("supervisor/asignaciones/<int:trabajador_id>/guardar/", views.guardar_asignacion, name="guardar_asignacion"),
+    path("supervisor/historial/", views.historial_limpiezas, name="historial_limpiezas"),
     path("trabajador/", views.inicio_trabajador, name="inicio_trabajador"),
     path("trabajador/alertas/<int:alerta_id>/iniciar/", views.iniciar_limpieza, name="iniciar_limpieza"),
     path("trabajador/limpiezas/<int:intervencion_id>/finalizar/", views.finalizar_limpieza, name="finalizar_limpieza"),

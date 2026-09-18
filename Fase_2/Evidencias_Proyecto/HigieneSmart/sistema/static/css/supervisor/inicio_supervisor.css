@@ -1,0 +1,260 @@
+.dashboard-header {
+    margin-bottom: 26px;
+}
+
+.dashboard-header h1 {
+    margin-bottom: 6px;
+
+    font-size: 30px;
+}
+
+.dashboard-header p {
+    color: var(--color-text-secondary);
+
+    font-size: 15px;
+}
+
+/* =========================
+   TARJETAS RESUMEN
+   ========================= */
+
+.resumen-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+
+    gap: 16px;
+
+    margin-bottom: 34px;
+}
+
+.resumen-card {
+    display: flex;
+    flex-direction: column;
+
+    min-height: 150px;
+
+    padding: 20px;
+
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+
+    background-color: var(--color-surface);
+
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+}
+
+.resumen-label {
+    margin-bottom: 14px;
+
+    color: var(--color-text-secondary);
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.resumen-valor {
+    margin-bottom: 12px;
+
+    font-size: 32px;
+    line-height: 1;
+}
+
+.resumen-link,
+.resumen-descripcion {
+    margin-top: auto;
+
+    font-size: 12px;
+}
+
+.resumen-link {
+    color: var(--color-primary);
+
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.resumen-link:hover {
+    text-decoration: underline;
+}
+
+.resumen-descripcion {
+    color: var(--color-text-secondary);
+}
+
+/* =========================
+   SECCIÓN INFERIOR
+   ========================= */
+
+.dashboard-section {
+    width: 100%;
+}
+
+.dashboard-section-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    margin-bottom: 16px;
+}
+
+.dashboard-section-header h2 {
+    margin-bottom: 5px;
+
+    font-size: 22px;
+}
+
+.dashboard-section-header p {
+    color: var(--color-text-secondary);
+
+    font-size: 14px;
+}
+
+.ver-todo-link {
+    color: var(--color-primary);
+
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+
+    white-space: nowrap;
+}
+
+.ver-todo-link:hover {
+    text-decoration: underline;
+}
+
+/* =========================
+   TABLA ÚLTIMAS INTERVENCIONES
+   ========================= */
+
+.intervenciones-card {
+    overflow: hidden;
+
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+
+    background-color: var(--color-surface);
+
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+}
+
+.intervenciones-table {
+    width: 100%;
+
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+.intervenciones-table thead {
+    background-color: var(--color-input-background);
+}
+
+.intervenciones-table th,
+.intervenciones-table td {
+    padding: 15px 16px;
+
+    text-align: left;
+    vertical-align: middle;
+
+    border-bottom: 1px solid var(--color-border);
+
+    font-size: 13px;
+}
+
+.intervenciones-table th {
+    color: var(--color-text-secondary);
+
+    font-weight: 600;
+}
+
+.intervenciones-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.intervenciones-table tbody tr:hover {
+    background-color: #fafbfe;
+}
+
+.intervenciones-table th:nth-child(1),
+.intervenciones-table td:nth-child(1) {
+    width: 30%;
+}
+
+.intervenciones-table th:nth-child(2),
+.intervenciones-table td:nth-child(2) {
+    width: 30%;
+}
+
+.intervenciones-table th:nth-child(3),
+.intervenciones-table td:nth-child(3) {
+    width: 22%;
+}
+
+.intervenciones-table th:nth-child(4),
+.intervenciones-table td:nth-child(4) {
+    width: 18%;
+}
+
+.intervencion-ubicacion {
+    display: block;
+
+    margin-top: 4px;
+
+    color: var(--color-text-secondary);
+
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.sin-intervenciones {
+    padding: 34px 20px;
+
+    text-align: center;
+}
+
+.sin-intervenciones p {
+    color: var(--color-text-secondary);
+
+    font-size: 14px;
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 1200px) {
+    .resumen-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 850px) {
+    .resumen-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dashboard-section-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .intervenciones-card {
+        overflow-x: auto;
+    }
+
+    .intervenciones-table {
+        min-width: 760px;
+    }
+}
+
+@media (max-width: 560px) {
+    .resumen-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .resumen-card {
+        min-height: 130px;
+    }
+}

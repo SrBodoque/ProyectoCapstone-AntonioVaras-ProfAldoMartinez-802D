@@ -1,6 +1,12 @@
 from django.contrib import admin
 
-from .models import AsignacionBano, Bano, Alerta, IntervencionLimpieza
+from .models import (
+    Alerta,
+    AsignacionBano,
+    Bano,
+    EventoConteo,
+    IntervencionLimpieza,
+)
 
 
 @admin.register(Bano)
@@ -37,6 +43,7 @@ class AsignacionBanoAdmin(admin.ModelAdmin):
         "fecha_asignacion",
     )
 
+
 @admin.register(Alerta)
 class AlertaAdmin(admin.ModelAdmin):
     list_display = (
@@ -61,6 +68,7 @@ class AlertaAdmin(admin.ModelAdmin):
     readonly_fields = (
         "fecha_creacion",
     )
+
 
 @admin.register(IntervencionLimpieza)
 class IntervencionLimpiezaAdmin(admin.ModelAdmin):
@@ -104,3 +112,36 @@ class IntervencionLimpiezaAdmin(admin.ModelAdmin):
             return f"{horas} h {minutos} min"
 
         return f"{minutos} min {segundos} s"
+
+
+@admin.register(EventoConteo)
+class EventoConteoAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "bano",
+        "tipo",
+        "fecha_evento",
+        "origen",
+        "referencia_externa",
+        "fecha_registro",
+    )
+
+    list_filter = (
+        "tipo",
+        "origen",
+        "bano",
+    )
+
+    search_fields = (
+        "bano__nombre",
+        "bano__ubicacion",
+        "referencia_externa",
+    )
+
+    readonly_fields = (
+        "fecha_registro",
+    )
+
+    ordering = (
+        "-fecha_evento",
+    )

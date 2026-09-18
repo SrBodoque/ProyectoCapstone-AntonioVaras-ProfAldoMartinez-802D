@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>
+            {% block title %}
+                HigieneSmart
+            {% endblock %}
+        </title>
+        <link rel="stylesheet" href="{% static 'css/compartido/variables.css' %}" />
+        <link rel="stylesheet"
+              href="{% static 'css/supervisor/base_supervisor.css' %}" />
+        {% block extra_css %}{% endblock %}
+    </head>
+    <body>
+        <div class="supervisor-layout">
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <div class="sidebar-brand">
+                        <span class="sidebar-brand-mark">H</span>
+                        <div class="sidebar-brand-text">
+                            <span class="sidebar-logo">HigieneSmart</span>
+                            <span class="sidebar-rol">Panel de supervisor</span>
+                        </div>
+                    </div>
+                </div>
+                <nav class="sidebar-nav">
+                    <div class="sidebar-section">
+                        <span class="sidebar-section-title">Principal</span>
+                        <a href="{% url 'inicio_supervisor' %}"
+                           class="sidebar-link {% if request.resolver_match.url_name == 'inicio_supervisor' %}sidebar-link-active{% endif %}">
+                            Dashboard
+                        </a>
+                    </div>
+                    <div class="sidebar-section">
+                        <span class="sidebar-section-title">Gestión</span>
+                        <a href="{% url 'gestion_banos' %}"
+                           class="sidebar-link {% if request.resolver_match.url_name == 'gestion_banos' %}sidebar-link-active{% endif %}">
+                            Baños
+                        </a>
+                        <a href="{% url 'gestion_trabajadores' %}"
+                           class="sidebar-link {% if request.resolver_match.url_name == 'gestion_trabajadores' %}sidebar-link-active{% endif %}">
+                            Trabajadores
+                        </a>
+                        <a href="{% url 'gestion_asignaciones' %}"
+                           class="sidebar-link {% if request.resolver_match.url_name == 'gestion_asignaciones' %}sidebar-link-active{% endif %}">
+                            Asignaciones
+                        </a>
+                    </div>
+                    <div class="sidebar-section">
+                        <span class="sidebar-section-title">Operación</span>
+                        <a href="{% url 'historial_limpiezas' %}"
+                           class="sidebar-link {% if request.resolver_match.url_name == 'historial_limpiezas' %}sidebar-link-active{% endif %}">
+                            Historial de limpiezas
+                        </a>
+                    </div>
+                </nav>
+                <div class="sidebar-footer">
+                    <div class="sidebar-user">
+                        <span class="sidebar-user-label">Sesión iniciada</span>
+                        <span class="sidebar-user-email">{{ request.user.email }}</span>
+                    </div>
+                    <form method="post" action="{% url 'cerrar_sesion' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-sidebar-logout">Cerrar sesión</button>
+                    </form>
+                </div>
+            </aside>
+            <main class="supervisor-content">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+        {% block extra_js %}{% endblock %}
+    </body>
+</html>

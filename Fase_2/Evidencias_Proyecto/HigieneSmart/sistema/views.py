@@ -9,6 +9,7 @@ from django.core.mail import send_mail
 from django.urls import reverse
 from django.db import transaction
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 
 from usuarios.models import Usuario
 from .forms import LoginForm, BanoForm, TrabajadorForm, ActivarCuentaForm, FinalizarLimpiezaForm
@@ -77,7 +78,54 @@ def inicio_supervisor(request):
     if request.user.rol != Usuario.Rol.SUPERVISOR:
         return redirect("inicio_trabajador")
 
-    return render(request, "supervisor/inicio_supervisor.html")
+    hoy = timezone.localdate()
+
+    total_banos = Bano.objects.filter(
+        activo=True,
+    ).count()
+
+    trabajadores_activos = Usuario.objects.filter(
+        rol=Usuario.Rol.TRABAJADOR,
+        is_active=True,
+    ).count()
+
+    alertas_pendientes = Alerta.objects.filter(
+        estado=Alerta.Estado.PENDIENTE,
+    ).count()
+
+    limpiezas_en_curso = IntervencionLimpieza.objects.filter(
+        fecha_fin__isnull=True,
+        alerta__estado=Alerta.Estado.EN_PROCESO,
+    ).count()
+
+    limpiezas_hoy = IntervencionLimpieza.objects.filter(
+        fecha_fin__date=hoy,
+    ).count()
+
+    ultimas_intervenciones = (
+        IntervencionLimpieza.objects
+        .select_related(
+            "trabajador",
+            "bano",
+        )
+        .filter(
+            fecha_fin__isnull=False,
+        )
+        .order_by("-fecha_fin")[:5]
+    )
+
+    return render(
+        request,
+        "supervisor/inicio_supervisor.html",
+        {
+            "total_banos": total_banos,
+            "trabajadores_activos": trabajadores_activos,
+            "alertas_pendientes": alertas_pendientes,
+            "limpiezas_en_curso": limpiezas_en_curso,
+            "limpiezas_hoy": limpiezas_hoy,
+            "ultimas_intervenciones": ultimas_intervenciones,
+        },
+    )
 
 @login_required(login_url="login")
 def gestion_banos(request):
@@ -661,3 +709,90 @@ def cerrar_sesion(request):
     logout(request)
     return redirect("login")
 
+@login_required(login_url="login")
+def historial_limpiezas(request):
+    if request.user.rol != Usuario.Rol.SUPERVISOR:
+        return redirect("inicio_trabajador")
+
+    intervenciones = (
+        IntervencionLimpieza.objects
+        .select_related(
+            "trabajador",
+            "bano",
+            "alerta",
+        )
+        .order_by("-fecha_inicio")
+    )
+
+    trabajador_id = request.GET.get("trabajador")
+    bano_id = request.GET.get("bano")
+    estado = request.GET.get("estado")
+    fecha_desde = request.GET.get("fecha_desde")
+    fecha_hasta = request.GET.get("fecha_hasta")
+
+    if trabajador_id:
+        intervenciones = intervenciones.filter(
+            trabajador_id=trabajador_id
+        )
+
+    if bano_id:
+        intervenciones = intervenciones.filter(
+            bano_id=bano_id
+        )
+
+    if estado == "FINALIZADA":
+        intervenciones = intervenciones.filter(
+            fecha_fin__isnull=False
+        )
+
+    elif estado == "EN_PROCESO":
+        intervenciones = intervenciones.filter(
+            fecha_fin__isnull=True
+        )
+
+    fecha_desde_valida = parse_date(fecha_desde) if fecha_desde else None
+    fecha_hasta_valida = parse_date(fecha_hasta) if fecha_hasta else None
+
+    if fecha_desde_valida:
+        intervenciones = intervenciones.filter(
+            fecha_inicio__date__gte=fecha_desde_valida
+        )
+
+    if fecha_hasta_valida:
+        intervenciones = intervenciones.filter(
+            fecha_inicio__date__lte=fecha_hasta_valida
+        )
+
+    trabajadores = (
+        Usuario.objects
+        .filter(
+            rol=Usuario.Rol.TRABAJADOR,
+            intervenciones_limpieza__isnull=False,
+        )
+        .distinct()
+        .order_by("email")
+    )
+
+    banos = (
+        Bano.objects
+        .filter(
+            intervenciones_limpieza__isnull=False,
+        )
+        .distinct()
+        .order_by("nombre")
+    )
+
+    return render(
+        request,
+        "supervisor/historial_limpiezas.html",
+        {
+            "intervenciones": intervenciones,
+            "trabajadores": trabajadores,
+            "banos": banos,
+            "filtro_trabajador": trabajador_id or "",
+            "filtro_bano": bano_id or "",
+            "filtro_estado": estado or "",
+            "filtro_fecha_desde": fecha_desde or "",
+            "filtro_fecha_hasta": fecha_hasta or "",
+        },
+    )

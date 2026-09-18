@@ -1,22 +1,84 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Supervisor</title>
-</head>
-<body>
-
-    <h1>Vista Supervisor</h1>
-    <p>Inicio de sesión correcto.</p>
-
-    <form method="POST" action="{% url 'cerrar_sesion' %}">
-        {% csrf_token %}
-
-        <button type="submit">
-            Cerrar sesión
-        </button>
-    </form>
-
-</body>
-</html>
+{% extends "supervisor/base_supervisor.html" %}
+{% load static %}
+{% block title %}
+    Dashboard - HigieneSmart
+{% endblock %}
+{% block extra_css %}
+    <link rel="stylesheet"
+          href="{% static 'css/supervisor/inicio_supervisor.css' %}" />
+{% endblock %}
+{% block content %}
+    <header class="dashboard-header">
+        <div>
+            <h1>Dashboard</h1>
+            <p>Resumen general de la operación de limpieza.</p>
+        </div>
+    </header>
+    <section class="resumen-grid">
+        <article class="resumen-card">
+            <span class="resumen-label">Baños activos</span>
+            <strong class="resumen-valor">{{ total_banos }}</strong>
+            <a href="{% url 'gestion_banos' %}" class="resumen-link">Ver baños</a>
+        </article>
+        <article class="resumen-card">
+            <span class="resumen-label">Trabajadores activos</span>
+            <strong class="resumen-valor">{{ trabajadores_activos }}</strong>
+            <a href="{% url 'gestion_trabajadores' %}" class="resumen-link">Ver trabajadores</a>
+        </article>
+        <article class="resumen-card">
+            <span class="resumen-label">Alertas pendientes</span>
+            <strong class="resumen-valor">{{ alertas_pendientes }}</strong>
+            <span class="resumen-descripcion">Requieren atención</span>
+        </article>
+        <article class="resumen-card">
+            <span class="resumen-label">Limpiezas en curso</span>
+            <strong class="resumen-valor">{{ limpiezas_en_curso }}</strong>
+            <span class="resumen-descripcion">Intervenciones activas</span>
+        </article>
+        <article class="resumen-card">
+            <span class="resumen-label">Limpiezas realizadas hoy</span>
+            <strong class="resumen-valor">{{ limpiezas_hoy }}</strong>
+            <a href="{% url 'historial_limpiezas' %}" class="resumen-link">Ver historial</a>
+        </article>
+    </section>
+    <section class="dashboard-section">
+        <div class="dashboard-section-header">
+            <div>
+                <h2>Últimas intervenciones</h2>
+                <p>Limpiezas finalizadas recientemente.</p>
+            </div>
+            <a href="{% url 'historial_limpiezas' %}" class="ver-todo-link">Ver historial completo</a>
+        </div>
+        <div class="intervenciones-card">
+            {% if ultimas_intervenciones %}
+                <table class="intervenciones-table">
+                    <thead>
+                        <tr>
+                            <th>Trabajador</th>
+                            <th>Baño</th>
+                            <th>Finalización</th>
+                            <th>Duración</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for intervencion in ultimas_intervenciones %}
+                            <tr>
+                                <td>{{ intervencion.trabajador.email }}</td>
+                                <td>
+                                    <strong>{{ intervencion.bano.nombre }}</strong>
+                                    <span class="intervencion-ubicacion">{{ intervencion.bano.ubicacion }}</span>
+                                </td>
+                                <td>{{ intervencion.fecha_fin|date:"d/m/Y H:i" }}</td>
+                                <td>{{ intervencion.duracion_formateada }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="sin-intervenciones">
+                    <p>Todavía no existen limpiezas finalizadas.</p>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}
