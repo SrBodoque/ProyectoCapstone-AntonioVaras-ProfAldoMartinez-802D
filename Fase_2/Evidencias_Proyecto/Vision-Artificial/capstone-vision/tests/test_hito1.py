@@ -67,12 +67,21 @@ class ResourceTests(unittest.TestCase):
     def test_ctrl_c_releases(self):
         self.run_session(KeyboardInterrupt())
 
+        
     def test_failed_open_releases_each_attempt(self):
+        auto_config = {**self.config, "backend": "auto"}
         self.capture.open.return_value = False
         with patch.object(camera.cv2, "VideoCapture", return_value=self.capture):
-            with self.assertRaisesRegex(RuntimeError, f"camera_index={self.config['camera_index']}"):
-                camera.open_camera(self.config)
-        self.assertEqual(self.capture.release.call_count, len(camera.backend_candidates("auto")))
+            with self.assertRaisesRegex(
+                RuntimeError,
+                f"camera_index={auto_config['camera_index']}",
+            ):
+                camera.open_camera(auto_config)
+
+        self.assertEqual(
+            self.capture.release.call_count,
+            len(camera.backend_candidates("auto")),
+        )
 
     def test_unreadable_first_frame_falls_back(self):
         failed = MagicMock()
@@ -125,14 +134,20 @@ class ResourceTests(unittest.TestCase):
         self.run_preview(ui_failure=True)
 
     def test_failed_open_still_cleans_windows(self):
+        auto_config = {**self.config, "backend": "auto"}
         fake_ui = MagicMock()
         fake_ui.error = cv2.error
         self.capture.open.return_value = False
+
         with patch.object(camera.cv2, "VideoCapture", return_value=self.capture):
             with self.assertRaises(RuntimeError):
-                main.run_preview(fake_ui, self.config)
+                main.run_preview(fake_ui, auto_config)
+
         fake_ui.destroyAllWindows.assert_called_once()
-        self.assertEqual(self.capture.release.call_count, len(camera.backend_candidates("auto")))
+        self.assertEqual(
+            self.capture.release.call_count,
+            len(camera.backend_candidates("auto")),
+        )
 
     def test_windows_auto_order(self):
         with patch.object(camera.platform, "system", return_value="Windows"):
