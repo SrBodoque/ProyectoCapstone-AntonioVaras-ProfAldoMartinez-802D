@@ -28,7 +28,7 @@ python -c "import struct; print(struct.calcsize('P') * 8)"
 Debe mostrar `Python 3.13.15` y `64`. Si aparece otra versión, detente antes de crear el entorno. Comprueba `Get-Command python` y, si tienes el lanzador de Python, `py -3.13 --version`. Solo si este último indica exactamente 3.13.15 puedes usar `py -3.13 -m venv .venv` en lugar del primer comando siguiente. Si Python abre Microsoft Store, revisa instalación, PATH y alias de ejecución de Windows.
 
 ```powershell
-python -m venv .venv
+python -m venv .venv "si da error usar: py -3.13 -m venv .venv"
 .\.venv\Scripts\Activate.ps1
 python --version
 python -m pip install --upgrade pip
@@ -86,7 +86,13 @@ Mantén el preview al menos 30 segundos. Repite apertura y cierre con ambas tecl
 Edita `config/camera.json` con la aplicación cerrada:
 
 ```json
-{"camera_index": 0, "width": 1280, "height": 720, "fps": 30, "backend": "auto"}
+{
+  "camera_index": 0,
+  "width": 1280,
+  "height": 720,
+  "fps": 30,
+  "backend": "auto"
+}
 ```
 
 Reinicia el programa para cargar cambios. No hay recarga en vivo ni valores alternativos ocultos: los cinco campos son obligatorios. El índice es entero no negativo, dimensiones enteras positivas, FPS positivo finito; backend es una cadena reconocida. Los booleanos no se aceptan como números. Campos extra se rechazan para detectar errores de escritura.
@@ -95,16 +101,16 @@ En Windows `auto` intenta DirectShow, después MSMF y por último selección aut
 
 ## Problemas comunes
 
-| Síntoma | Acción |
-| --- | --- |
-| No abre cámara | Cierra otras aplicaciones, revisa USB y permisos de cámara para aplicaciones de escritorio en Configuración de Windows. Ejecuta `--scan` y usa un índice que entregue frames. |
-| Abre pero no entrega frames | Prueba el otro backend de Windows o resolución 640×480 a 30 FPS, reinicia y registra el resultado. |
-| No existe `cv2` / error DLL | Confirma el intérprete y la instalación. Guarda el error completo; revisa que no haya paquetes OpenCV de variantes distintas. Consulta los requisitos de runtime de Windows de la distribución oficial. |
-| `No module named src` | Abre terminal en la carpeta donde está `requirements.txt` y usa `python -m src.main`. |
-| JSON inválido o campo ausente | Restaura los cinco campos del ejemplo, comillas dobles y sin coma final. |
-| FPS o tamaño distintos | Compara propiedades reportadas y resolución visible. El dispositivo no garantiza los valores pedidos. |
-| Teclas no cierran | Enfoca la ventana de video; usa q minúscula o ESC. Como alternativa usa Ctrl+C en terminal. |
-| Entorno sin escritorio | El preview requiere sesión gráfica. En Linux sin display se informa el error antes de iniciar la GUI. |
+| Síntoma                       | Acción                                                                                                                                                                                                  |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| No abre cámara                | Cierra otras aplicaciones, revisa USB y permisos de cámara para aplicaciones de escritorio en Configuración de Windows. Ejecuta `--scan` y usa un índice que entregue frames.                           |
+| Abre pero no entrega frames   | Prueba el otro backend de Windows o resolución 640×480 a 30 FPS, reinicia y registra el resultado.                                                                                                      |
+| No existe `cv2` / error DLL   | Confirma el intérprete y la instalación. Guarda el error completo; revisa que no haya paquetes OpenCV de variantes distintas. Consulta los requisitos de runtime de Windows de la distribución oficial. |
+| `No module named src`         | Abre terminal en la carpeta donde está `requirements.txt` y usa `python -m src.main`.                                                                                                                   |
+| JSON inválido o campo ausente | Restaura los cinco campos del ejemplo, comillas dobles y sin coma final.                                                                                                                                |
+| FPS o tamaño distintos        | Compara propiedades reportadas y resolución visible. El dispositivo no garantiza los valores pedidos.                                                                                                   |
+| Teclas no cierran             | Enfoca la ventana de video; usa q minúscula o ESC. Como alternativa usa Ctrl+C en terminal.                                                                                                             |
+| Entorno sin escritorio        | El preview requiere sesión gráfica. En Linux sin display se informa el error antes de iniciar la GUI.                                                                                                   |
 
 ## Git y organización
 
