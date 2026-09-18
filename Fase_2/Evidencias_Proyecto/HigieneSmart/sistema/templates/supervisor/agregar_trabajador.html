@@ -1,69 +1,49 @@
 {% load static %}
-
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
     <title>Agregar trabajador</title>
-
     <link rel="stylesheet" href="{% static 'css/compartido/variables.css' %}" />
-
-    <link
-      rel="stylesheet"
-      href="{% static 'css/supervisor/agregar_trabajador.css' %}"
-    />
+    <link rel="stylesheet"
+          href="{% static 'css/supervisor/agregar_trabajador.css' %}" />
   </head>
-
   <body>
     <main class="agregar-trabajador-container">
       <div class="agregar-trabajador-header">
         <h1>Agregar trabajador</h1>
-
         <p>
           Ingresa el correo electrónico del trabajador que deseas incorporar al
           sistema.
         </p>
       </div>
-
       <section class="agregar-trabajador-card">
-        <form method="POST" class="agregar-trabajador-form">
+        <form method="post" class="agregar-trabajador-form">
           {% csrf_token %}
-
           <div class="form-group">
-            <label for="{{ form.email.id_for_label }}">
-              Correo electrónico
-            </label>
-
+            <label for="{{ form.email.id_for_label }}">Correo electrónico</label>
             {{ form.email }} {% if form.email.errors %}
             <div class="form-error">
               {% for error in form.email.errors %}
-              <p>{{ error }}</p>
+                <p>{{ error }}</p>
               {% endfor %}
             </div>
-            {% endif %}
-          </div>
-
-          <div class="form-info">
-            <p>
-              El trabajador será registrado con el rol Trabajador.
-              Posteriormente recibirá una invitación para configurar su
-              contraseña.
-            </p>
-          </div>
-
-          <div class="form-actions">
-            <a href="{% url 'gestion_trabajadores' %}" class="btn-secondary">
-              Cancelar
-            </a>
-
-            <button type="submit" class="btn-primary">
-              Agregar trabajador
-            </button>
-          </div>
-        </form>
-      </section>
-    </main>
-  </body>
+          {% endif %}
+        </div>
+        <div class="form-info">
+          <p>
+            El trabajador será registrado con el rol Trabajador.
+            Posteriormente recibirá una invitación para configurar su
+            contraseña. holaa
+          </p>
+        </div>
+        <div class="form-actions">
+          <a href="{% url 'gestion_trabajadores' %}" class="btn-secondary">Cancelar</a>
+          <button type="submit" class="btn-primary">Agregar trabajador</button>
+        </div>
+      </form>
+    </section>
+  </main>
+</body>
 </html>
