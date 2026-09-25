@@ -14,12 +14,12 @@ Este hito prepara el proyecto y permite diagnosticar y visualizar una webcam loc
 
 Descarga Python desde su [página oficial de versión](https://www.python.org/downloads/release/python-31315/), opción Windows installer (64-bit). Habilita su incorporación a PATH durante la instalación y abre una terminal nueva. OpenCV está fijado según su [distribución en PyPI](https://pypi.org/project/opencv-python/4.14.0.94/). No cambies versiones ante un error sin registrar y revisar primero la causa.
 
-## Instalación desde cero en PowerShell
+## 1. Instalación desde cero en PowerShell
 
 Extrae el ZIP. En VS Code, usa **Archivo > Abrir carpeta** y selecciona la carpeta que contiene este README, `requirements.txt` y `src`. Abre **Terminal > Nueva terminal**, perfil PowerShell. Todos los comandos siguientes se ejecutan desde esa raíz. Fase_2\Evidencias_Proyecto\Vision-Artificial\capstone-vision
 
 
-## Python
+## 2. Python
 ```version pyhton
 Para confirmar que version de python hay:
 py --version 
@@ -53,13 +53,17 @@ Debe mostrar `Python 3.13.15` y `64`. Si aparece otra versión, detente antes de
 
 --------------------------------------------------------------------
 
+## 3. Ejecucion
+
 ```powershell
 Primero ingresar a la carpeta del proyecto HigieneSmart
 
+cd .\Fase_2\Evidencias_Proyecto\Vision-Artificial\capstone-vision
 
+Entorno Virtual: 
 py -3.13 -m venv .venv "(si da error usar: python -m venv .venv)"
 .\.venv\Scripts\Activate.ps1
-python --version
+python --version "o usar py -3.13 --version" 
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 python -m pip check
@@ -83,7 +87,7 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
 .\.venv\Scripts\Activate.ps1
 ```
 
-## Seleccionar intérprete en VS Code
+## 4. Seleccionar intérprete en VS Code
 
 Instala las extensiones recomendadas cuando VS Code lo sugiera. 
 
@@ -95,7 +99,7 @@ python -c "import sys; print(sys.executable); print(sys.prefix != sys.base_prefi
 
 Esperado: el ejecutable de `.venv` y `True`. La configuración de VS Code propone ese intérprete, pero no reemplaza automáticamente una selección anterior. Si `code` está disponible en PATH también puedes abrir la carpeta desde PowerShell con `code .`.
 
-## Diagnóstico, pruebas automáticas y webcam
+## 5. Diagnóstico, pruebas automáticas y webcam
 
 ```powershell
 
