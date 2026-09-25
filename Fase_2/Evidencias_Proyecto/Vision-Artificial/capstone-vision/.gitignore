@@ -17,3 +17,5 @@ Thumbs.db
 *.pt
 *.pth
 *.onnx
+runs/
+.ultralytics/
