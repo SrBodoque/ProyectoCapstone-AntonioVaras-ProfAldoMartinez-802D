@@ -183,3 +183,273 @@ liberó la cámara y permitió reaperturas inmediatas.
 
 No se generaron imágenes, videos, capturas, frames almacenados ni logs
 técnicos adicionales.
+
+---
+
+# HITO 2 - DETECCIÓN DE PERSONAS
+
+Estado: **PENDIENTE DE PRUEBA FÍSICA DEL USUARIO**.
+
+Los resultados anteriores pertenecen al Hito 1 y se conservan. Su frase inicial «Todas las pruebas están PENDIENTES» quedó desactualizada: las pruebas A–K figuran OK y el usuario aprobó el Hito 1. Esta nueva sección sí permanece pendiente; ninguna prueba simulada sustituye estos resultados.
+
+Fecha: __________
+Equipo: __________
+CPU: __________
+GPU: __________
+Python: __________
+OpenCV: __________
+Ultralytics: __________
+PyTorch: __________
+torchvision: __________
+Modelo: yolo26n.pt
+Resolución: __________
+Configuración detection.json: __________
+Cámara/backend y conexión: __________
+
+Ejecutar desde la raíz del módulo, con .venv activado y requirements actualizado. En caso de fallo conservar consola completa y no marcar aprobado. Copiar esta ficha para el segundo equipo.
+
+## PRUEBA A — Regresión webcam sin IA
+
+```powershell
+python -m src.main
+```
+
+Resultado esperado: Mismo preview del Hito 1; cierre y reapertura normales.
+
+Resultado obtenido: __________
+
+Estado: **PENDIENTE**
+
+Observaciones: __________
+
+## PRUEBA B — Diagnóstico IA
+
+```powershell
+python -m src.diagnostics
+```
+
+Resultado esperado: Versiones fijadas, configuración y CPU; CUDA informativa. Complementar con python -m pip check.
+
+Resultado obtenido: __________
+
+Estado: **PENDIENTE**
+
+Observaciones: __________
+
+## PRUEBA C — Carga del modelo
+
+```powershell
+python -m src.detect
+```
+
+Resultado esperado: Descarga oficial si falta el checkpoint, carga una vez y apertura del visor. Tras descargarlo, cerrar y repetir sin Internet para comprobar carga/inferencia local.
+
+Resultado obtenido: __________
+
+Estado: **PENDIENTE**
+
+Observaciones: __________
+
+## PRUEBA D — Escena vacía
+
+```powershell
+python -m src.detect
+```
+
+Resultado esperado: 0 personas/frame en condiciones normales; registrar cualquier falso positivo.
+
+Resultado obtenido: __________
+
+Estado: **PENDIENTE**
+
+Observaciones: __________
+
+## PRUEBA E — Una persona
+
+```powershell
+python -m src.detect
+```
+
+Resultado esperado: Una caja person y confianza cuando una persona sea suficientemente visible.
+
+Resultado obtenido: __________
+
+Estado: **PENDIENTE**
+
+Observaciones: __________
+
+## PRUEBA F — Movimiento
+
+```powershell
+python -m src.detect
+```
+
+Resultado esperado: Caminar lentamente por diferentes partes del campo visual: cajas por frame sin ID ni trayectoria.
+
+Resultado obtenido: __________
+
+Estado: **PENDIENTE**
+
+Observaciones: __________
+
+## PRUEBA G — Distancia
+
+```powershell
+python -m src.detect
+```
+
+Resultado esperado: Probar cerca, distancia media y lo más lejos que permita la habitación. Registrar detecciones/omisiones, sin asumir perfección.
+
+Resultado obtenido: __________
+
+Estado: **PENDIENTE**
+
+Observaciones: __________
+
+## PRUEBA H — Orientación
+
+```powershell
+python -m src.detect
+```
+
+Resultado esperado: Probar frente, perfil y espalda; registrar cambios de confianza y omisiones.
+
+Resultado obtenido: __________
+
+Estado: **PENDIENTE**
+
+Observaciones: __________
+
+## PRUEBA I — Detección parcial
+
+```powershell
+python -m src.detect
+```
+
+Resultado esperado: Probar medio cuerpo y entrada/salida lateral del frame; registrar el comportamiento sin exigir todos los casos perfectos.
+
+Resultado obtenido: __________
+
+Estado: **PENDIENTE**
+
+Observaciones: __________
+
+## PRUEBA J — Dos personas
+
+```powershell
+python -m src.detect
+```
+
+Resultado esperado: Si es posible, dos cajas cuando ambas personas sean suficientemente visibles; si no puede hacerse mantener pendiente.
+
+Resultado obtenido: __________
+
+Estado: **PENDIENTE**
+
+Observaciones: __________
+
+## PRUEBA K — Falso positivo
+
+```powershell
+python -m src.detect
+```
+
+Resultado esperado: Escena sin personas con sillas, ropa y muebles. Registrar si aparece alguna caja person.
+
+Resultado obtenido: __________
+
+Estado: **PENDIENTE**
+
+Observaciones: __________
+
+## PRUEBA L — Rendimiento >=60 segundos
+
+```powershell
+python -m src.detect
+```
+
+Resultado esperado: Mantener >=60 s; registrar duración, FPS pipeline, inferencia ms y estabilidad. Separar inicialización. Sin umbral obligatorio de 30 FPS.
+
+Resultado obtenido: __________
+
+Estado: **PENDIENTE**
+
+Observaciones: __________
+
+## PRUEBA M — Cierre q
+
+```powershell
+python -m src.detect
+```
+
+Resultado esperado: Enfocar ventana, q minúscula; ventana cerrada, retorno a PowerShell y cámara liberada.
+
+Resultado obtenido: __________
+
+Estado: **PENDIENTE**
+
+Observaciones: __________
+
+## PRUEBA N — Cierre ESC
+
+```powershell
+python -m src.detect
+```
+
+Resultado esperado: Enfocar ventana, ESC; ventana cerrada, retorno a PowerShell y cámara liberada. Repetir también X y Ctrl+C.
+
+Resultado obtenido: __________
+
+Estado: **PENDIENTE**
+
+Observaciones: __________
+
+## PRUEBA O — Liberación cámara
+
+```powershell
+python -m src.main
+```
+
+Resultado esperado: Después de cerrar src.detect, abrir src.main inmediatamente; la cámara está disponible.
+
+Resultado obtenido: __________
+
+Estado: **PENDIENTE**
+
+Observaciones: __________
+
+## PRUEBA P — Privacidad
+
+```powershell
+Get-ChildItem -Recurse -File | Where-Object {
+    $_.FullName -notmatch '[\\/]\.venv[\\/]|[\\/]\.git[\\/]' -and
+    $_.Extension -in '.jpg', '.jpeg', '.png', '.bmp', '.webp', '.mp4', '.avi', '.mov', '.mkv', '.npy'
+} | Select-Object FullName
+Test-Path .\runs
+```
+
+Resultado esperado: Comparar inventario antes/después: no hay imágenes, videos, labels ni runs generados. Los pesos y ajustes técnicos no son grabaciones.
+
+Resultado obtenido: __________
+
+Estado: **PENDIENTE**
+
+Observaciones: __________
+
+## PRUEBA Q — Reinicio
+
+```powershell
+python -m src.detect
+```
+
+Resultado esperado: Cerrar y abrir detección varias veces; pesos locales reutilizados y recursos liberados en cada ejecución.
+
+Resultado obtenido: __________
+
+Estado: **PENDIENTE**
+
+Observaciones: __________
+
+## Aprobación Hito 2
+
+PENDIENTE. Devolver salidas completas de diagnóstico, pip check y unittest; configuración utilizada; CPU/equipo; métricas de L; resultados M/N/O/Q; falsos positivos y omisiones por escenario; inventario P. No es necesario enviar imágenes o videos de personas.

@@ -5,10 +5,45 @@ import logging
 import platform
 import struct
 import sys
-from importlib.metadata import version
+from importlib import import_module
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
-from .config import CONFIG_PATH, PROJECT_ROOT, load_config
+from .config import CONFIG_PATH, DETECTION_CONFIG_PATH, PROJECT_ROOT, load_config, load_detection_config
+
+
+def report_detection() -> bool:
+    """Sin pesos ni inferencia. Un fallo de IA no impide el escaneo de webcam."""
+    complete = True
+    print(f"Configuración de detección: {DETECTION_CONFIG_PATH}")
+    try:
+        config = load_detection_config()
+        print(f"Detección configurada: {config}")
+        print(f"Dispositivo Hito 2: {config['device']}; modelo: {config['model']}")
+    except ValueError as exc:
+        print(f"ERROR de configuración de detección: {exc}")
+        complete = False
+    for package, expected in (("ultralytics", "8.4.163"), ("torch", "2.14.0"), ("torchvision", "0.29.0")):
+        try:
+            installed = version(package)
+            print(f"Distribución {package}: {installed} (objetivo: {expected})")
+            if installed.split("+")[0] != expected:
+                print(f"AVISO: {package} no coincide con requirements.txt.")
+                complete = False
+            if package == "ultralytics":
+                from .detector import _load_yolo
+                _load_yolo()  # Importa con telemetría desactivada; NO instancia YOLO.
+            module = import_module(package)
+            print(f"{package} cargado: {module.__version__}")
+            if package == "torch":
+                print(f"CUDA disponible: {module.cuda.is_available()} (detección usa cpu).")
+        except PackageNotFoundError:
+            print(f"FALTA {package}. Activa .venv y ejecuta python -m pip install -r requirements.txt.")
+            complete = False
+        except Exception as exc:
+            print(f"ERROR al cargar {package}: {exc}. Revisa .venv, requirements.txt y python -m pip check.")
+            complete = False
+    return complete
 
 
 def main() -> int:
@@ -35,6 +70,7 @@ def main() -> int:
             print("AVISO: este intérprete no coincide con Python 3.13.15 x64 objetivo.")
         if version("opencv-python") != "4.14.0.94":
             print("AVISO: opencv-python no coincide con requirements.txt.")
+        ai_complete = report_detection()
         backend_candidates(config["backend"])
         if args.scan:
             found = []
@@ -53,7 +89,7 @@ def main() -> int:
     except (ImportError, ValueError, RuntimeError) as exc:
         logging.error("Diagnóstico incompleto: %s. Revisa .venv, requirements.txt y config/camera.json.", exc)
         return 1
-    return 0
+    return 0 if ai_complete else 1
 
 
 if __name__ == "__main__":

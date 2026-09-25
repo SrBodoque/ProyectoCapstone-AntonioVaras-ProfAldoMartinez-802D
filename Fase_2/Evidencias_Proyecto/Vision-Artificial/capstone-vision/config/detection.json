@@ -1,0 +1,9 @@
+{
+  "model": "yolo26n.pt",
+  "confidence_threshold": 0.25,
+  "iou_threshold": 0.70,
+  "image_size": 640,
+  "device": "cpu",
+  "person_class_id": 0,
+  "show_confidence": true
+}
