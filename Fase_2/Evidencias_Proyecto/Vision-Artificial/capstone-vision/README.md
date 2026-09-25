@@ -16,45 +16,48 @@ Descarga Python desde su [página oficial de versión](https://www.python.org/do
 
 ## Instalación desde cero en PowerShell
 
-Extrae el ZIP. En VS Code, usa **Archivo > Abrir carpeta** y selecciona la carpeta que contiene este README, `requirements.txt` y `src`. Abre **Terminal > Nueva terminal**, perfil PowerShell. Todos los comandos siguientes se ejecutan desde esa raíz.
+Extrae el ZIP. En VS Code, usa **Archivo > Abrir carpeta** y selecciona la carpeta que contiene este README, `requirements.txt` y `src`. Abre **Terminal > Nueva terminal**, perfil PowerShell. Todos los comandos siguientes se ejecutan desde esa raíz. Fase_2\Evidencias_Proyecto\Vision-Artificial\capstone-vision
 
+
+## Python
 ```version pyhton
 Para confirmar que version de python hay:
 py --version 
 
-Para verificar que existe 3.13.15 en el paquete para instalarlo
+Paquete instalador: Para verificar que existe 3.13.15 en el paquete para instalarlo
 winget show --id Python.Python.3.13 --versions 
 
-Si 3.13.15 no aparece, entonces no debes ejecutar ese comando con --version 3.13.15, 
+Si 3.13.15 no aparece, entonces no ejecutar el comando con --version 3.13.15, 
 porque Winget no tiene esa versión disponible en ese paquete.
 
-si aparece, instálala con Winget; si no aparece, usa el instalador oficial
+Si aparece la version, instalar: con Winget; si no aparece, usa el instalador oficial en la web.
 
-So aparece la version en el paquete, insatalar:
-
+Si aparece la version en el paquete, insatalar:
 winget install --id Python.Python.3.13 --version 3.13.15 -e --scope user
 
-Para confirmar que es la version correcta
-py -3.13 --version
+Para confirmar que es la version correcta:
+py -3.13 --version "(debe ser 3.13.15)"
 
 
 
-------------------------------------------------------------------
+-------------------------------------------------------------------
 ```powershell
 Get-Location
 Get-ChildItem
 python --version
 python -c "import struct; print(struct.calcsize('P') * 8)"
 ```
-------------------------------------------------------------------
+
 
 Debe mostrar `Python 3.13.15` y `64`. Si aparece otra versión, detente antes de crear el entorno. Comprueba `Get-Command python` y, si tienes el lanzador de Python, `py -3.13 --version`. Solo si este último indica exactamente 3.13.15 puedes usar `py -3.13 -m venv .venv` en lugar del primer comando siguiente. Si Python abre Microsoft Store, revisa instalación, PATH y alias de ejecución de Windows.
+
+--------------------------------------------------------------------
 
 ```powershell
 Primero ingresar a la carpeta del proyecto HigieneSmart
 
 
-python -m venv .venv "si da error usar: py -3.13 -m venv .venv"
+py -3.13 -m venv .venv "(si da error usar: python -m venv .venv)"
 .\.venv\Scripts\Activate.ps1
 python --version
 python -m pip install --upgrade pip
@@ -73,18 +76,18 @@ Si PowerShell bloquea la activación, puedes **evitar cambiar cualquier polític
 .\.venv\Scripts\python.exe -m src.diagnostics
 ```
 
-En cualquier comando posterior sustituye `python` por `.\.venv\Scripts\python.exe` si no activaste el entorno. Alternativamente, solo para esa terminal y si las políticas de tu organización lo permiten:
+En cualquier comando posterior sustituye `python` por `.\.venv\Scripts\python.exe` si no activaste el entorno. Alternativamente, solo para esa terminal:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
 .\.venv\Scripts\Activate.ps1
 ```
 
-No requiere una modificación global ni ejecutar como administrador. No intentes eludir una política corporativa.
-
 ## Seleccionar intérprete en VS Code
 
-Instala las extensiones recomendadas cuando VS Code lo sugiera. Presiona `Ctrl+Shift+P`, busca **Python: Select Interpreter**, selecciona `.venv\Scripts\python.exe`; si no aparece usa **Enter interpreter path** y navega a ese archivo dentro del proyecto. Abre una nueva terminal y verifica:
+Instala las extensiones recomendadas cuando VS Code lo sugiera. 
+
+Presiona `Ctrl+Shift+P`, busca **Python: Select Interpreter**, selecciona `.venv\Scripts\python.exe`; si no aparece usa **Enter interpreter path** y navega a ese archivo dentro del proyecto. Abre una nueva terminal y verifica:
 
 ```powershell
 python -c "import sys; print(sys.executable); print(sys.prefix != sys.base_prefix)"
@@ -95,9 +98,14 @@ Esperado: el ejecutable de `.venv` y `True`. La configuración de VS Code propon
 ## Diagnóstico, pruebas automáticas y webcam
 
 ```powershell
+
+Para diagnostico:
 python -m src.diagnostics
 python -m unittest discover -s tests -v
 python -m src.diagnostics --scan
+
+Ejecutar visor virtual:
+
 python -m src.main
 ```
 
@@ -127,16 +135,16 @@ En Windows `auto` intenta DirectShow, después MSMF y por último selección aut
 
 ## Problemas comunes
 
-| Síntoma                       | Acción                                                                                                                                                                                                  |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| No abre cámara                | Cierra otras aplicaciones, revisa USB y permisos de cámara para aplicaciones de escritorio en Configuración de Windows. Ejecuta `--scan` y usa un índice que entregue frames.                           |
-| Abre pero no entrega frames   | Prueba el otro backend de Windows o resolución 640×480 a 30 FPS, reinicia y registra el resultado.                                                                                                      |
-| No existe `cv2` / error DLL   | Confirma el intérprete y la instalación. Guarda el error completo; revisa que no haya paquetes OpenCV de variantes distintas. Consulta los requisitos de runtime de Windows de la distribución oficial. |
-| `No module named src`         | Abre terminal en la carpeta donde está `requirements.txt` y usa `python -m src.main`.                                                                                                                   |
-| JSON inválido o campo ausente | Restaura los cinco campos del ejemplo, comillas dobles y sin coma final.                                                                                                                                |
-| FPS o tamaño distintos        | Compara propiedades reportadas y resolución visible. El dispositivo no garantiza los valores pedidos.                                                                                                   |
-| Teclas no cierran             | Enfoca la ventana de video; usa q minúscula o ESC. Como alternativa usa Ctrl+C en terminal.                                                                                                             |
-| Entorno sin escritorio        | El preview requiere sesión gráfica. En Linux sin display se informa el error antes de iniciar la GUI.                                                                                                   |
+Síntoma -- Acción  
+
+- No abre cámara: Cierra otras aplicaciones, revisa USB y permisos de cámara para aplicaciones de escritorio en Configuración de Windows. Ejecuta `--scan` y usa un índice que entregue frames.                          
+- Abre pero no entrega frames: Prueba el otro backend de Windows o resolución 640×480 a 30 FPS, reinicia y registra el resultado.
+- No existe `cv2` / error DLL: Confirma el intérprete y la instalación. Guarda el error completo; revisa que no haya paquetes OpenCV de variantes distintas. Consulta los requisitos de runtime de Windows de la distribución oficial.
+- `No module named src`: Abre terminal en la carpeta donde está `requirements.txt` y usa `python -m src.main`.
+- JSON inválido o campo ausente: Restaura los cinco campos del ejemplo, comillas dobles y sin coma final.                                                                                                                               
+- FPS o tamaño distintos: Compara propiedades reportadas y resolución visible. El dispositivo no garantiza los valores pedidos.                                                                                                   |
+- Teclas no cierran: Enfoca la ventana de video; usa q minúscula o ESC. Como alternativa usa Ctrl+C en terminal.                                                                                                             |
+- Entorno sin escritorio: El preview requiere sesión gráfica. En Linux sin display se informa el error antes de iniciar la GUI.                                                                                                   |
 
 ## Git y organización
 
@@ -151,4 +159,4 @@ git status --short --untracked-files=all
 
 `src/config.py` valida configuración; `camera.py` gestiona capturas; `main.py` presenta video; `diagnostics.py` inspecciona el entorno. `tests/` usa solo `unittest` y dobles de prueba para errores y liberación de recursos: no demuestra funcionamiento físico de la cámara.
 
-Completa [las pruebas de aceptación](docs/resultados_pruebas.md). Consulta [el procedimiento detallado](docs/01_entorno_y_webcam.md) y [el contexto](docs/00_contexto_vision.md). La validación del entorno del desarrollador se registra separadamente en `docs/validacion_tecnica.md`. No avances al siguiente hito sin aprobación explícita.
+Completa [las pruebas de aceptación](docs/resultados_pruebas.md). Consulta [el procedimiento detallado](docs/01_entorno_y_webcam.md) y [el contexto](docs/00_contexto_vision.md). La validación del entorno del desarrollador se registra separadamente en `docs/validacion_tecnica.md`.
