@@ -19,27 +19,16 @@ Descarga Python desde su [página oficial de versión](https://www.python.org/do
 
 Extrae el ZIP. En VS Code, usa **Archivo > Abrir carpeta** y selecciona la carpeta que contiene este README, `requirements.txt` y `src`. Abre **Terminal > Nueva terminal**, perfil PowerShell. Todos los comandos siguientes se ejecutan desde esa raíz.
 
-<<<<<<< Updated upstream
-=======
 
 ## 2. Python
 
 Comprueba el intérprete antes de crear un entorno nuevo:
 
->>>>>>> Stashed changes
 ```powershell
 py --list
 py -3.13 --version
 ```
 
-<<<<<<< Updated upstream
-Debe mostrar `Python 3.13.15` y `64`. Si aparece otra versión, detente antes de crear el entorno. Comprueba `Get-Command python` y, si tienes el lanzador de Python, `py -3.13 --version`. Solo si este último indica exactamente 3.13.15 puedes usar `py -3.13 -m venv .venv` en lugar del primer comando siguiente. Si Python abre Microsoft Store, revisa instalación, PATH y alias de ejecución de Windows.
-
-```powershell
-python -m venv .venv "si da error usar: py -3.13 -m venv .venv"
-.\.venv\Scripts\Activate.ps1
-python --version
-=======
 Debe mostrar **Python 3.13.15**. Si no está instalado, usa el instalador oficial enlazado arriba. Con Winget puedes comprobar disponibilidad:
 
 ```powershell
@@ -76,7 +65,6 @@ Activa y actualiza las dependencias del mismo entorno:
 .\.venv\Scripts\Activate.ps1
 python --version
 python -c "import struct; print(struct.calcsize('P') * 8)"
->>>>>>> Stashed changes
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 python -m pip check
@@ -173,9 +161,6 @@ La entrega no incluye `.git`, no hace commits ni push y no cambia remotos o lice
 
 `src/config.py` valida configuración; `camera.py` gestiona capturas; `main.py` presenta video; `diagnostics.py` inspecciona el entorno. `tests/` usa solo `unittest` y dobles de prueba para errores y liberación de recursos: no demuestra funcionamiento físico de la cámara.
 
-<<<<<<< Updated upstream
-Completa [las pruebas de aceptación](docs/resultados_pruebas.md). Consulta [el procedimiento detallado](docs/01_entorno_y_webcam.md) y [el contexto](docs/00_contexto_vision.md). La validación del entorno del desarrollador se registra separadamente en `docs/validacion_tecnica.md`. No avances al siguiente hito sin aprobación explícita.
-=======
 Completa [las pruebas de aceptación](docs/resultados_pruebas.md). Consulta [el procedimiento detallado](docs/01_entorno_y_webcam.md) y [el contexto](docs/00_contexto_vision.md). La validación del entorno del desarrollador se registra separadamente en `docs/validacion_tecnica.md`.
 
 ## Hito 2 - Detección de personas
@@ -245,4 +230,3 @@ Procedimiento y fundamentos: [docs/02_deteccion_personas.md](docs/02_deteccion_p
 Ultralytics es una dependencia externa del prototipo académico. No se cambia la licencia del repositorio; cualquier despliegue comercial futuro requiere revisar sus [condiciones vigentes](https://www.ultralytics.com/license).
 
 Reporte de esta entrega: [REPORTE_HITO2.md](REPORTE_HITO2.md).
->>>>>>> Stashed changes
