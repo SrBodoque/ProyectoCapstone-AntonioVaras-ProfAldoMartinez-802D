@@ -18,16 +18,42 @@ Descarga Python desde su [página oficial de versión](https://www.python.org/do
 
 Extrae el ZIP. En VS Code, usa **Archivo > Abrir carpeta** y selecciona la carpeta que contiene este README, `requirements.txt` y `src`. Abre **Terminal > Nueva terminal**, perfil PowerShell. Todos los comandos siguientes se ejecutan desde esa raíz.
 
+```version pyhton
+Para confirmar que version de python hay:
+py --version 
+
+Para verificar que existe 3.13.15 en el paquete para instalarlo
+winget show --id Python.Python.3.13 --versions 
+
+Si 3.13.15 no aparece, entonces no debes ejecutar ese comando con --version 3.13.15, 
+porque Winget no tiene esa versión disponible en ese paquete.
+
+si aparece, instálala con Winget; si no aparece, usa el instalador oficial
+
+So aparece la version en el paquete, insatalar:
+
+winget install --id Python.Python.3.13 --version 3.13.15 -e --scope user
+
+Para confirmar que es la version correcta
+py -3.13 --version
+
+
+
+------------------------------------------------------------------
 ```powershell
 Get-Location
 Get-ChildItem
 python --version
 python -c "import struct; print(struct.calcsize('P') * 8)"
 ```
+------------------------------------------------------------------
 
 Debe mostrar `Python 3.13.15` y `64`. Si aparece otra versión, detente antes de crear el entorno. Comprueba `Get-Command python` y, si tienes el lanzador de Python, `py -3.13 --version`. Solo si este último indica exactamente 3.13.15 puedes usar `py -3.13 -m venv .venv` en lugar del primer comando siguiente. Si Python abre Microsoft Store, revisa instalación, PATH y alias de ejecución de Windows.
 
 ```powershell
+Primero ingresar a la carpeta del proyecto HigieneSmart
+
+
 python -m venv .venv "si da error usar: py -3.13 -m venv .venv"
 .\.venv\Scripts\Activate.ps1
 python --version
