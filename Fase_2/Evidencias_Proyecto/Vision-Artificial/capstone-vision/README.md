@@ -18,16 +18,16 @@ Descarga Python desde su [página oficial de versión](https://www.python.org/do
 
 Extrae el ZIP. En VS Code, usa **Archivo > Abrir carpeta** y selecciona la carpeta que contiene este README, `requirements.txt` y `src`. Abre **Terminal > Nueva terminal**, perfil PowerShell. Todos los comandos siguientes se ejecutan desde esa raíz. Fase_2\Evidencias_Proyecto\Vision-Artificial\capstone-vision
 
-
 ## 2. Python
-```version pyhton
+
+````version pyhton
 Para confirmar que version de python hay:
-py --version 
+py --version
 
 Paquete instalador: Para verificar que existe 3.13.15 en el paquete para instalarlo
-winget show --id Python.Python.3.13 --versions 
+winget show --id Python.Python.3.13 --versions
 
-Si 3.13.15 no aparece, entonces no ejecutar el comando con --version 3.13.15, 
+Si 3.13.15 no aparece, entonces no ejecutar el comando con --version 3.13.15,
 porque Winget no tiene esa versión disponible en ese paquete.
 
 Si aparece la version, instalar: con Winget; si no aparece, usa el instalador oficial en la web.
@@ -46,12 +46,11 @@ Get-Location
 Get-ChildItem
 python --version
 python -c "import struct; print(struct.calcsize('P') * 8)"
-```
-
+````
 
 Debe mostrar `Python 3.13.15` y `64`. Si aparece otra versión, detente antes de crear el entorno. Comprueba `Get-Command python` y, si tienes el lanzador de Python, `py -3.13 --version`. Solo si este último indica exactamente 3.13.15 puedes usar `py -3.13 -m venv .venv` en lugar del primer comando siguiente. Si Python abre Microsoft Store, revisa instalación, PATH y alias de ejecución de Windows.
 
---------------------------------------------------------------------
+---
 
 ## 3. Ejecucion
 
@@ -60,10 +59,10 @@ Primero ingresar a la carpeta del proyecto HigieneSmart
 
 cd .\Fase_2\Evidencias_Proyecto\Vision-Artificial\capstone-vision
 
-Entorno Virtual: 
+Entorno Virtual:
 py -3.13 -m venv .venv "(si da error usar: python -m venv .venv)"
 .\.venv\Scripts\Activate.ps1
-python --version "o usar py -3.13 --version" 
+python --version "o usar py -3.13 --version"
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 python -m pip check
@@ -89,7 +88,7 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
 
 ## 4. Seleccionar intérprete en VS Code
 
-Instala las extensiones recomendadas cuando VS Code lo sugiera. 
+Instala las extensiones recomendadas cuando VS Code lo sugiera.
 
 Presiona `Ctrl+Shift+P`, busca **Python: Select Interpreter**, selecciona `.venv\Scripts\python.exe`; si no aparece usa **Enter interpreter path** y navega a ese archivo dentro del proyecto. Abre una nueva terminal y verifica:
 
@@ -111,6 +110,10 @@ python -m src.diagnostics --scan
 Ejecutar visor virtual:
 
 python -m src.main
+
+Ejecutar deteccion de persona:
+
+python -m src.detect
 ```
 
 Usa ejecución como módulo **desde la raíz**, no `python src/main.py` ni el botón que ejecuta el archivo suelto. `diagnostics` sin `--scan` no abre la cámara. Con `--scan` prueba 0 a 4, lee un frame por intento exitoso y libera inmediatamente cada cámara antes de pasar a la siguiente. Puede encender su indicador luminoso; no guarda esos frames. Índices ausentes generan avisos y no abortan todo el diagnóstico. Un escaneo sin cámaras devuelve 0 porque completó el diagnóstico, no porque haya aprobado la webcam.
@@ -139,16 +142,16 @@ En Windows `auto` intenta DirectShow, después MSMF y por último selección aut
 
 ## Problemas comunes
 
-Síntoma -- Acción  
+Síntoma -- Acción
 
-- No abre cámara: Cierra otras aplicaciones, revisa USB y permisos de cámara para aplicaciones de escritorio en Configuración de Windows. Ejecuta `--scan` y usa un índice que entregue frames.                          
+- No abre cámara: Cierra otras aplicaciones, revisa USB y permisos de cámara para aplicaciones de escritorio en Configuración de Windows. Ejecuta `--scan` y usa un índice que entregue frames.
 - Abre pero no entrega frames: Prueba el otro backend de Windows o resolución 640×480 a 30 FPS, reinicia y registra el resultado.
 - No existe `cv2` / error DLL: Confirma el intérprete y la instalación. Guarda el error completo; revisa que no haya paquetes OpenCV de variantes distintas. Consulta los requisitos de runtime de Windows de la distribución oficial.
 - `No module named src`: Abre terminal en la carpeta donde está `requirements.txt` y usa `python -m src.main`.
-- JSON inválido o campo ausente: Restaura los cinco campos del ejemplo, comillas dobles y sin coma final.                                                                                                                               
-- FPS o tamaño distintos: Compara propiedades reportadas y resolución visible. El dispositivo no garantiza los valores pedidos.                                                                                                   |
-- Teclas no cierran: Enfoca la ventana de video; usa q minúscula o ESC. Como alternativa usa Ctrl+C en terminal.                                                                                                             |
-- Entorno sin escritorio: El preview requiere sesión gráfica. En Linux sin display se informa el error antes de iniciar la GUI.                                                                                                   |
+- JSON inválido o campo ausente: Restaura los cinco campos del ejemplo, comillas dobles y sin coma final.
+- FPS o tamaño distintos: Compara propiedades reportadas y resolución visible. El dispositivo no garantiza los valores pedidos. |
+- Teclas no cierran: Enfoca la ventana de video; usa q minúscula o ESC. Como alternativa usa Ctrl+C en terminal. |
+- Entorno sin escritorio: El preview requiere sesión gráfica. En Linux sin display se informa el error antes de iniciar la GUI. |
 
 ## Git y organización
 

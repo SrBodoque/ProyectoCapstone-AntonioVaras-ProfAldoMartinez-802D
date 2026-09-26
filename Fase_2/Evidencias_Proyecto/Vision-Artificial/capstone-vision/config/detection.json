@@ -1,6 +1,6 @@
 {
   "model": "yolo26n.pt",
-  "confidence_threshold": 0.25,
+  "confidence_threshold": 0.65,
   "iou_threshold": 0.70,
   "image_size": 640,
   "device": "cpu",
