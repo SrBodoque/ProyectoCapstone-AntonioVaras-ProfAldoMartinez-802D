@@ -1,3 +1,5 @@
+> **Estado actual: Hitos 1–3.** Las secciones originales siguientes se conservan como historial del Hito 1. Para el proyecto actual, las dependencias vigentes son las de `requirements.txt`; consulta la sección **Hito 3 — Tracking ByteTrack** al final. Los comandos H1, H2 y H3 permanecen separados. La validación física H3 está pendiente.
+
 # capstone-vision — Hito 1
 
 Módulo de visión del sistema inteligente de gestión de limpieza de servicios higiénicos basado en demanda real, proyecto CAPSTONE de Ingeniería en Informática, Duoc UC.
@@ -167,3 +169,46 @@ git status --short --untracked-files=all
 `src/config.py` valida configuración; `camera.py` gestiona capturas; `main.py` presenta video; `diagnostics.py` inspecciona el entorno. `tests/` usa solo `unittest` y dobles de prueba para errores y liberación de recursos: no demuestra funcionamiento físico de la cámara.
 
 Completa [las pruebas de aceptación](docs/resultados_pruebas.md). Consulta [el procedimiento detallado](docs/01_entorno_y_webcam.md) y [el contexto](docs/00_contexto_vision.md). La validación del entorno del desarrollador se registra separadamente en `docs/validacion_tecnica.md`.
+
+
+---
+
+## Hito 3 — Tracking ByteTrack
+
+Se amplía el proyecto existente: YOLO26n + ByteTrack integrado en Ultralytics, CPU, cajas, confianza, IDs temporales y trails limitados. H1/H2 conservan su función:
+
+| Comando | Función |
+| --- | --- |
+| `python -m src.main` | Webcam sin IA (H1). |
+| `python -m src.detect` | YOLO sin tracking persistente (H2). |
+| `python -m src.track` | YOLO + ByteTrack (H3). |
+
+Desde la carpeta que contiene `requirements.txt`, activa tu entorno existente e instala sus dependencias:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python -m pip check
+python -m compileall src tests
+python -m unittest discover -s tests -v
+python -m src.diagnostics
+python -m src.main
+python -m src.detect
+python -m src.track
+```
+
+Ejecuta una línea a la vez y cierra cada visor antes de abrir el siguiente. Si PowerShell bloquea la activación, usa `.\.venv\Scripts\python.exe` en lugar de `python`. Conserva tu `.venv` y pesos al aplicar los archivos del ZIP; no borres el proyecto. Si no existe entorno, confirma `py -3.13 --version` = 3.13.15 y crea `.venv` con `py -3.13 -m venv .venv`.
+
+No necesitas instalar nada fuera de `requirements.txt`. Se mantienen las cuatro versiones aprobadas y se agrega `lap==0.5.12`, solver necesario para el ByteTrack integrado; no es un ByteTrack externo. La autoinstalación sigue desactivada. Primera descarga de pesos oficial si faltan; después procesamiento local.
+
+`config/tracking.json` selecciona el YAML relativo, persistencia, etiquetas de ID, trail y su longitud (30; rango 1–300). `persist` debe ser `true` para esta secuencia. `config/bytetrack_capstone.yaml` contiene los parámetros de asociación ByteTrack. Cámara y detección mantienen sus JSON separados. Reinicia para aplicar cambios.
+
+**El adjunto real usa confianza 0.65 y se conserva.** Este filtro YOLO descarta detecciones antes del tracker: con ese valor no llegan candidatos a la segunda asociación de baja confianza (0.10–0.25). Se informa explícitamente y no se modifica silenciosamente el baseline. Los umbrales ByteTrack no equivalen al umbral YOLO.
+
+Un `track_id` identifica una trayectoria temporal durante una ejecución; no una identidad personal. Oclusiones, salidas/reentradas o cruces pueden cambiar o intercambiar IDs. Un falso person de cama/mochila también puede recibir ID: no se aplican reglas para ocultarlo ni se descartan personas inmóviles. Tracks activos no es ocupación ni conteo de personas únicas.
+
+La pantalla distingue FPS pipeline, inferencia YOLO y procesamiento YOLO + tracking. El modelo se carga una vez, se llama solo a `model.track()` por frame y el tracker persiste. Trails acotados y limpieza de historiales ausentes. Cierre con q/ESC/X/Ctrl+C; cámara y ventanas se liberan también ante errores.
+
+Sin guardar fotos, videos, audio, labels ni `runs/`; sin identificación, ReID, cloud, zonas o IN/OUT. Todas las pruebas físicas H3 A–AB permanecen pendientes.
+
+Documentación: [Hito 3](docs/03_tracking_bytetrack.md), [resultados físicos](docs/resultados_pruebas.md), [validación técnica](docs/validacion_tecnica.md) y [reporte de entrega](REPORTE_HITO3.md).
