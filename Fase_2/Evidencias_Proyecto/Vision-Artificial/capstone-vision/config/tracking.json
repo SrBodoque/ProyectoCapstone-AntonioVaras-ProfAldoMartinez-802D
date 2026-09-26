@@ -1,0 +1,7 @@
+{
+  "tracker_config": "config/bytetrack_capstone.yaml",
+  "persist": true,
+  "show_track_id": true,
+  "show_trail": true,
+  "trail_length": 30
+}

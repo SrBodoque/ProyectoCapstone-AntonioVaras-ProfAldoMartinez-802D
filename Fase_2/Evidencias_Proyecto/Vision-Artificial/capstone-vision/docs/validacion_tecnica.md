@@ -126,3 +126,97 @@ El RAR no trae `.git`; `git status` indica que no es un repositorio. Se revisaro
 **HITO 2 IMPLEMENTADO Y VALIDADO AUTOMÁTICAMENTE EN LINUX; ACEPTACIÓN FÍSICA PENDIENTE.**
 
 Resultados finales: tests 48/48 OK; compileall OK; pip check sin conflictos; diagnóstico completo código 0; modelo cargado e inferencia real CPU OK. Sin webcam ni escritorio accesibles: se dejan las pruebas A–Q PENDIENTES en `resultados_pruebas.md` para Windows 10/11, Python 3.13.15, DroidCam/personas, UI, estabilidad, FPS, cierre y reutilización real del dispositivo. No se declara aprobado Hito 2 hasta recibir esos resultados.
+
+
+---
+
+# HITO 3 — BYTETRACK — Validación del 26-09-2026 UTC
+
+## Fuente y baseline anterior a cambios
+
+Se inspeccionó y extrajo el ZIP `capstone-vision(4).zip` adjunto; el archivo de encargo se leyó completo. Se revisaron código, configuraciones, dependencias, README, documentación, tests y VS Code. Se excluyeron caches, settings generados y pesos adjuntos del código de trabajo. No se reconstruyó el proyecto ni se creó un proyecto paralelo. El ZIP no contenía `.git`.
+
+El intérprete global de este servidor es Python 3.12.14 y inicialmente no tenía OpenCV/Ultralytics/torch/torchvision. La primera suite falló al importar cv2; diagnostics informó esa carencia. Compileall e imports diferidos sí pasaron. El `pip check` global sin conflictos no acreditaba que las dependencias del proyecto estuvieran instaladas.
+
+Se creó un entorno aislado de prueba, fuera del proyecto entregable, y se instalaron las cuatro versiones exactas de requirements original. Antes de editar el código: **48/48 tests OK (16 H1 + 32 H2), compileall OK, pip check OK, diagnostics código 0, imports H1/H2 OK**. La carencia inicial era del entorno, no un fallo previo del proyecto.
+
+Valores reales conservados: cámara 0, 1280×720, 30 FPS solicitados, backend auto; detección yolo26n.pt, confianza **0.65**, IoU 0.70, tamaño 640, CPU, person 0. No se impuso 0.50 ni MSMF por referencias históricas.
+
+## Dependencias efectivamente comprobadas
+
+| Componente | Validación local | Objetivo conservado |
+| --- | --- | --- |
+| Python | 3.12.14, Linux x86_64, entorno aislado | 3.13.15 x64, Windows |
+| OpenCV | opencv-python 4.14.0.94; cv2 4.14.0 | Sin cambio |
+| Ultralytics | 8.4.163 | Sin cambio |
+| torch | distribución 2.14.0; cargado 2.14.0+cu130 | Sin cambio |
+| torchvision | distribución 0.29.0; cargado 0.29.0+cu130 | Sin cambio |
+| lap | 0.5.12 | Nueva dependencia directa necesaria |
+| PyYAML | 6.0.3, transitoria de Ultralytics | No nueva instalación independiente |
+
+`lap` no llega con las cuatro dependencias originales y el módulo `matching.py` instalado lo requiere como `lap>=0.5.12`. Se agregó `lap==0.5.12` a requirements; no se instaló ByteTrack externo. Se descargó/verificó su wheel para Windows CPython 3.13 x64, sin ejecutar Windows. La instalación Linux resolvió runtimes GPU transitivos propios de torch: no se configuró CUDA manualmente ni se usó GPU; disponibilidad CUDA False, inferencia CPU.
+
+Se compararon los ocho campos YAML con el archivo distribuido en Ultralytics 8.4.163 y se probó el BYTETracker real. Esta versión usa `track_buffer` directamente en frames procesados y limita el buffer de tracks removidos a 1000. No fueron necesarios campos YAML adicionales.
+
+## Primera pasada — Funcionalidad y correcciones
+
+H3 implementa configuración separada, YAML explícito, clase de datos Track, modelo único, persistencia, extracción de cajas/IDs, cajas sin ID, métricas, trails acotados y limpieza. Se reutiliza carga/validación de modelo y cámara existentes. No se ejecutan predict y track sobre el mismo frame.
+
+La primera ejecución ampliada tuvo 86 tests: un fallo reveló que el nuevo diagnóstico interpolaba una excepción PackageNotFoundError sin nombre emitida por el mock. Se agregó tratamiento específico para dependencia lap ausente, con mensaje claro. Después se añadieron cuatro pruebas del ByteTrack real: **90/90 OK**.
+
+Cobertura H3: 38 pruebas de configuración/rutas, YAML/rangos/tipos, IDs inválidos/duplicados/no finitos, geometría, modelo único, una llamada por frame, persistencia obligatoria, filtro person, opciones sin guardado, tiempos válidos, historial limitado y caducado, visualización, FPS, errores y limpieza de recursos. Más 4 pruebas reales del motor con cajas sintéticas: dos trayectorias móviles, oclusión breve, segunda asociación de baja confianza, expiración/reentrada e inmovilidad. Los cuatro métodos pueden cubrir más de un escenario.
+
+## Inferencia real de YOLO + ByteTrack
+
+Se descargó el checkpoint oficial mediante Ultralytics, una vez. No se utilizaron los pesos adjuntos como fuente de código o dependencias. Dos frames negros sintéticos dieron 0 tracks: primer procesamiento 1001.7 ms / inferencia 44.4 ms; segundo procesamiento 25.0 ms / inferencia 22.7 ms. Son comprobaciones de API, no cámara física.
+
+Se utilizó `bus.jpg`, imagen de ejemplo incluida en el paquete instalado, leída en memoria. Una inicialización y 60 repeticiones posteriores mantuvieron **4 tracks, IDs 1/2/3/4**. La instancia BYTETracker permaneció idéntica, hubo un solo callback de tracking por evento y los frames vacíos incrementaron la edad del motor. H2 sobre la misma muestra devolvió 4 detecciones person sin track_id.
+
+| Medida en muestra repetida, CPU | Resultado |
+| --- | --- |
+| Frames medidos después del arranque | 60 |
+| Primera inferencia / procesamiento | 61.9 / 1080.6 ms |
+| Inferencia media posterior | 40.8 ms |
+| Procesamiento YOLO + tracking medio | 46.5 ms |
+| Rango de procesamiento | 27.4–198.8 ms |
+| Llamadas reales a predictor.inference | 60 para 60 frames |
+| Intentos de conexión bloqueados/detectados | 0 |
+| Archivos nuevos durante la prueba local | 0 |
+
+El spy envolvió el método real `predictor.inference` con `wraps`: no sustituyó resultados ni desactivó la inferencia. La instrumentación exploratoria inicial usó un hook en el objeto modelo equivocado y contó también callbacks predeterminados como si fueran del tracker; se corrigió el procedimiento antes de registrar esta evidencia. No se interpretaron esos fallos de instrumentación como fallos de tracking.
+
+Se bloquearon conexiones de sockets en el proceso de comprobación tras instalar dependencias y disponer de pesos. No hubo intentos de red ni media/runs generados. Esto complementa la revisión de opciones save desactivadas; no demuestra privacidad de otras aplicaciones que el usuario ejecute.
+
+**FPS de webcam H3: PENDIENTE.** Esta muestra repetida no incluye captura ni GUI, fue ejecutada en un servidor distinto y coincidió con otras comprobaciones; sus tiempos no son un benchmark controlado. No es válido concluir cuánto sube o baja frente a los 20–24 FPS y 27–31 ms H2 físicos informados por el usuario. Se medirán en el mismo equipo/escena.
+
+## Segunda pasada — Regresión
+
+Suite final **90/90 OK = 16 H1 + 32 H2 + 38 H3 + 4 integración ByteTrack**. Los 48 tests previos permanecen byte a byte intactos. También son idénticos al ZIP `src/main.py`, `src/camera.py`, `src/detect.py`, `config/camera.json` y `config/detection.json`.
+
+El único cambio en detector.py extrae su carga/validación a la función compartida `load_person_model`; el método detect conserva su llamada predict y estructura Detection sin ID. H1 importa sin cv2/torch/ultralytics/lap; la cámara y pesos se requieren únicamente al ejecutar su función correspondiente. Imports de los tres entrypoints juntos también pasan sin cargar bibliotecas IA o cámara.
+
+## Tercera pasada — Entrega
+
+| Comprobación | Resultado |
+| --- | --- |
+| `python -m compileall src tests` | Código 0 |
+| `python -m pip check` | Código 0; No broken requirements found |
+| `python -m unittest discover -s tests -v` | Código 0; 90 tests OK |
+| `python -m src.diagnostics` | Código 0; versiones/config/YAML/import ByteTrack, sin pesos |
+| `python -m src.diagnostics --scan` | Código 0; índices 0–4 sin webcam. Avisos de hardware esperados |
+| `python -m src.main` / `src.detect` / `src.track` | Código 1 con explicación de falta de sesión gráfica. Es manejo de error, no validación física |
+| Imports de todos los módulos | OK |
+| JSON/YAML y rutas | Validadores y tests OK; rutas configuradas relativas al proyecto |
+| Historial | Test de 10 000 IDs: máximo 32 historiales con buffer 30; vaciado posterior |
+| Privacidad | Sin archivos visuales/runs; prueba de inferencia local sin intentos de red |
+| Conservación documental | README original y resultados previos íntegros dentro de los archivos ampliados |
+| Git | Sin .git adjunto; comparación contra ZIP, sin init/commit/push/remotos |
+| Entrega | Árbol limpio, CRC y extracción del ZIP comprobados antes de entregar |
+
+No se guardan rutas del entorno del desarrollador en configuraciones ni código. Las rutas absolutas que muestra diagnostics se calculan al ejecutar. `.gitignore` ya cubre entorno, cachés, `*.py[cod]`, pesos, runs, temporales y logs; no fue necesario cambiarlo.
+
+Se retiraron del árbol final caches creadas al validar, settings técnicos y pesos temporales. Se conserva logs/.gitkeep y VS Code. Las 28 pruebas físicas H3 A–AB están preparadas, todas PENDIENTES; no se aprobaron Windows, webcam, personas, cama/mochila, FPS reales, oclusiones ni liberación física desde este servidor.
+
+## Estado final
+
+**Implementado y validado automáticamente en Linux. Aceptación física H3 pendiente.** Baseline detector 0.65 conservado; no llegan candidatos a la segunda asociación 0.10–0.25. La limitación se informa en consola, README y documentación. No hay hacks contra falsos positivos ni implementación de calibración espacial/Hito 4.

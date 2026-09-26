@@ -10,6 +10,48 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 from .config import CONFIG_PATH, DETECTION_CONFIG_PATH, PROJECT_ROOT, load_config, load_detection_config
+from .config import (TRACKING_CONFIG_PATH, load_tracking_config,
+                     resolve_tracker_path, load_bytetrack_config)
+
+
+def report_tracking() -> bool:
+    """Valida ByteTrack sin abrir cámara, instanciar YOLO ni descargar pesos."""
+    complete = True
+    print("Tracker: ByteTrack")
+    print(f"Configuración de tracking: {TRACKING_CONFIG_PATH}")
+    try:
+        config = load_tracking_config()
+        path = resolve_tracker_path(config["tracker_config"])
+        params = load_bytetrack_config(path)
+        print(f"Tracking configurado: {config}")
+        print(f"YAML ByteTrack: {path}")
+        for key, value in params.items():
+            print(f"  {key}: {value}")
+        detection = load_detection_config()
+        if detection["confidence_threshold"] >= params["track_high_thresh"]:
+            print("AVISO: confidence_threshold filtra antes de ByteTrack; el baseline actual "
+                  "no alimenta la segunda asociación de baja confianza.")
+    except ValueError as exc:
+        print(f"ERROR de configuración de tracking: {exc}")
+        complete = False
+    try:
+        installed = version("lap")
+        print(f"Distribución lap: {installed} (objetivo: 0.5.12)")
+        if installed != "0.5.12":
+            print("AVISO: lap no coincide con requirements.txt.")
+            complete = False
+        from .detector import _load_yolo
+        _load_yolo()  # Configura privacidad antes de importar el tracker integrado.
+        import_module("ultralytics.trackers.byte_tracker")
+        print("Import ByteTrack integrado: OK (sin modelo ni pesos).")
+    except PackageNotFoundError:
+        print("FALTA lap. Ejecuta python -m pip install -r requirements.txt.")
+        complete = False
+    except Exception as exc:
+        print(f"ERROR al cargar ByteTrack/lap: {exc}. "
+              "Ejecuta python -m pip install -r requirements.txt y python -m pip check.")
+        complete = False
+    return complete
 
 
 def report_detection() -> bool:
@@ -71,6 +113,7 @@ def main() -> int:
         if version("opencv-python") != "4.14.0.94":
             print("AVISO: opencv-python no coincide con requirements.txt.")
         ai_complete = report_detection()
+        tracking_complete = report_tracking()
         backend_candidates(config["backend"])
         if args.scan:
             found = []
@@ -89,7 +132,7 @@ def main() -> int:
     except (ImportError, ValueError, RuntimeError) as exc:
         logging.error("Diagnóstico incompleto: %s. Revisa .venv, requirements.txt y config/camera.json.", exc)
         return 1
-    return 0 if ai_complete else 1
+    return 0 if ai_complete and tracking_complete else 1
 
 
 if __name__ == "__main__":
