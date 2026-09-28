@@ -5,6 +5,8 @@ import os
 import sys
 import time
 
+from .camera_cli import CameraSelectionCancelled, parse_camera_args
+
 from .config import CameraConfig, DetectionConfig, load_config, load_detection_config
 from .detector import FrameDetections, PersonDetector
 
@@ -32,11 +34,13 @@ def _label(cv2, frame, text: str, position: tuple[int, int]) -> None:
                 0.5, (255, 255, 255), 1, cv2.LINE_AA)
 
 
-def run_detection(cv2, camera_config: CameraConfig, detection_config: DetectionConfig) -> None:
+def run_detection(cv2, camera_config: CameraConfig, detection_config: DetectionConfig,
+                  camera_override: int | None = None) -> None:
     """Reutiliza camera_session: libera recursos ante cierre, error o Ctrl+C."""
-    from .camera import camera_info, camera_session
+    from .camera import camera_info, camera_session, resolve_camera_config
 
     try:
+        camera_config = resolve_camera_config(camera_config, camera_override)
         with camera_session(camera_config) as (capture, frame):
             info = camera_info(capture)
             LOGGER.info("Solicitado: %s", camera_config)
@@ -88,7 +92,8 @@ def run_detection(cv2, camera_config: CameraConfig, detection_config: DetectionC
             LOGGER.warning("No se pudieron destruir las ventanas de OpenCV: %s", exc)
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    args = parse_camera_args(__doc__, argv)
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     try:
         import cv2
@@ -100,7 +105,10 @@ def main() -> int:
         detection_config = load_detection_config()
         if sys.platform.startswith("linux") and not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")):
             raise RuntimeError("No hay sesión gráfica disponible. Ejecuta detección en tu equipo con escritorio y webcam.")
-        run_detection(cv2, camera_config, detection_config)
+        run_detection(cv2, camera_config, detection_config, args.camera)
+    except CameraSelectionCancelled:
+        LOGGER.info("Selección de cámara cancelada; recursos liberados.")
+        return 0
     except KeyboardInterrupt:
         LOGGER.info("Cierre solicitado con Ctrl+C.")
     except (ValueError, RuntimeError, cv2.error) as exc:
