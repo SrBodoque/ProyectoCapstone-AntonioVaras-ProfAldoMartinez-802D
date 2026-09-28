@@ -825,3 +825,97 @@ Test-Path .\labels
 ## Aceptación H3
 
 **PENDIENTE**. Deben funcionar H1/H2/H3, existir IDs distintos y razonablemente estables en condiciones normales, caracterizar oclusiones y falsos positivos, y comprobar recursos/privacidad. No se exige tracking perfecto ni 30 FPS. Devuelve salidas de tests/diagnostics/pip check y las fichas; incluye FPS H3, tiempos, persona quieta/movimiento, oclusiones, salida/reentrada, dos personas/cruce/ID switches, cama/mochila/persona+cama/persona con mochila, duración, crashes y liberación de webcam.
+
+---
+
+## Mejora de infraestructura — Selección multicámara
+
+**Todas las pruebas físicas siguientes están PENDIENTES.** Esta sección amplía el historial anterior sin cambiar sus resultados. La ejecución automática se documenta por separado en `validacion_tecnica.md`. Fecha de preparación: 2026-09-27.
+
+Usar Windows, entorno virtual activado y `camera_index: "auto"`, salvo indicación. Cada cámara se prueba en una ejecución separada; no abrir dos comandos simultáneamente. Registrar el índice observado, sin suponer que integrada=0 o DroidCam=1. Cerrar otras aplicaciones de cámara.
+
+| ID | Procedimiento | Resultado esperado | Estado |
+| --- | --- | --- | --- |
+| MC-01 | PC con una cámara; ejecutar `python -m src.main` | Una cámara detectada y seleccionada automáticamente, sin input, imagen correcta | PENDIENTE |
+| MC-02 | Laptop con integrada y DroidCam activo; modo auto | Ambas disponibles, selector y posibilidad de elegir DroidCam | PENDIENTE |
+| MC-03 | Misma laptop; elegir índice de integrada | Se abre la integrada | PENDIENTE |
+| MC-04 | Nueva ejecución; elegir índice de DroidCam | Se muestra la imagen del teléfono | PENDIENTE |
+| MC-05 | `python -m src.main`; probar ambas por separado | Preview correcto en ambas | PENDIENTE |
+| MC-06 | `python -m src.detect`; seleccionar DroidCam | YOLO detecta personas como en H2, sin IDs persistentes | PENDIENTE |
+| MC-07 | `python -m src.track`; seleccionar DroidCam | YOLO + ByteTrack funcionan como en H3 | PENDIENTE |
+| MC-08 | Configurar índice fijo 1 si está disponible; ejecutar | Sin scan ni selector, apertura directa de 1; si no existe, error sin cambiar a 0 | PENDIENTE |
+| MC-09 | Configurar índice 0; `python -m src.track --camera 1` con 1 disponible | Abre 1; JSON conserva índice 0 | PENDIENTE |
+| MC-10 | Auto con varias cámaras; introducir 99 y luego un índice válido | Mensaje de selección inválida, vuelve a pedir sin reescanear | PENDIENTE |
+| MC-11 | Apagar/desactivar DroidCam; auto con integrada | Si solo la integrada entrega frames, se elige automáticamente | PENDIENTE |
+| MC-12 | `python -m src.diagnostics --scan`; después abrir Cámara de Windows | Dispositivos liberados; no selector en diagnóstico | PENDIENTE |
+| MC-13 | En main/detect/track, cerrar con q y con ESC en sesiones separadas; cancelar selector con q | Cierre limpio y cámaras liberadas; cancelación sin iniciar modelo | PENDIENTE |
+| MC-14 | Cámara elegida, persona en movimiento y salida/reentrada como pruebas H3 | IDs temporales conservan comportamiento previo; registrar cambios de ID y FPS | PENDIENTE |
+| MC-15 | Revisar árbol antes/después de scan, preview, detección y tracking | Sin imágenes, videos, screenshots ni runs generados | PENDIENTE |
+
+Al terminar MC-08/MC-09, restaurar `"camera_index": "auto"`. Si DroidCam apagado sigue entregando un cartel o imagen congelada, OpenCV puede considerarlo funcional: registrar ese comportamiento del driver.
+
+### Ficha para devolver resultados
+
+```text
+Fecha / equipo / Windows / versión Python:
+MC-ID / comando / camera_index configurado:
+Cámaras detectadas (índice, resolución real, backend, FPS informados):
+Selección automática sí/no / selector apareció sí/no:
+Índice elegido / cámara física observada / correcta sí/no:
+MAIN ambas cámaras sí/no:
+DETECT DroidCam + YOLO sí/no:
+TRACK DroidCam + ByteTrack sí/no / observaciones de IDs:
+Override --camera N funciona sí/no / JSON sin cambios sí/no:
+Índice fijo evita scan y selector sí/no:
+Cámaras liberadas sí/no (incluye Cámara de Windows):
+FPS aproximados H3 tras selección / duración y escena:
+Crash sí/no / traceback sí/no / mensaje completo:
+Archivos visuales o runs creados sí/no:
+Resultado APROBADO / FALLIDO / BLOQUEADO / PENDIENTE:
+Observaciones:
+```
+
+Adjuntar también las salidas de `compileall`, `unittest`, `pip check`, `diagnostics` y `diagnostics --scan`. No se necesitan imágenes de personas para informar estas pruebas.
+
+---
+
+## Separación modo directo / modo selector
+
+Preparado el 2026-09-27 (Chile). **CAM-01–CAM-09: PENDIENTES de prueba física.** El historial anterior permanece intacto. En los casos MC anteriores que solicitan preview con selección, el comando actual es `python -m src.main_seleccionar_camera`.
+
+La configuración adjunta conserva `"camera_index": "auto"` para detect/track. Para CAM-01, configurar un entero que corresponda a la cámara disponible (por ejemplo 0). `src.main` con auto y sin override debe terminar con un mensaje claro, sin scan ni selector. Como alternativa temporal: `python -m src.main --camera N`.
+
+| ID | Procedimiento | Esperado | Estado |
+| --- | --- | --- | --- |
+| CAM-01 | `python -m src.main` con índice entero configurado | Abre directamente ese índice, sin lista, scan ni input | PENDIENTE |
+| CAM-02 | `python -m src.main_seleccionar_camera` en PC con una cámara | Detecta una, la selecciona automáticamente y abre preview | PENDIENTE |
+| CAM-03 | Mismo comando en laptop con integrada + DroidCam | Lista ambas y permite elegir; probar también con entero en el JSON | PENDIENTE |
+| CAM-04 | Elegir índice de integrada | Abre la integrada | PENDIENTE |
+| CAM-05 | Nueva ejecución; elegir DroidCam | Abre DroidCam | PENDIENTE |
+| CAM-06 | Cerrar cada modo de preview con q; probar q en selector | Libera cámara; cancelar selector no abre ventana | PENDIENTE |
+| CAM-07 | Cerrar cada preview con ESC; comprobar también cierre de ventana y Ctrl+C | Libera cámara y ventanas; otro programa puede usarla después | PENDIENTE |
+| CAM-08 | Restaurar auto; `python -m src.detect` | Selección/detección sin regresión | PENDIENTE |
+| CAM-09 | `python -m src.track` | Selección/tracking sin regresión | PENDIENTE |
+
+Registrar por caso: equipo/Python, configuración, comando, índices encontrados, cámara elegida/observada, aparición del selector sí/no, errores completos, cierre/liberación y resultado. Confirmar que la selección no cambia `config/camera.json` y que no se crean imágenes/videos. Con varias cámaras, probar también entrada inválida (99) seguida de un índice válido. No dar por hecho que DroidCam corresponde al índice 1.
+
+---
+
+## Corrección AUTO-FIRST / FORCED / INTERACTIVE
+
+Preparado el 2026-09-27 (Chile). **AF-01–AF-08: PENDIENTES.** Esta corrección sustituye la exigencia anterior de configurar un entero para ejecutar `src.main`; los registros MC/CAM se conservan como historial de esas versiones.
+
+Mantener `"camera_index": "auto"` para las pruebas normales. `src.main` sin override busca la primera funcional incluso si el JSON contiene un entero. El selector conserva el escaneo completo. No asumir que integrada=0 o DroidCam=1; identificar los índices reales del equipo.
+
+| ID | Procedimiento | Resultado esperado | Estado |
+| --- | --- | --- | --- |
+| AF-01 | PC con una cámara, JSON auto: `python -m src.main` | Abre automáticamente, sin selector ni input, sin editar JSON | PENDIENTE |
+| AF-02 | Laptop con integrada + DroidCam: `python -m src.main` | Abre la primera funcional por orden de índices; no pregunta ni prueba índices posteriores al primer éxito | PENDIENTE |
+| AF-03 | Mismo equipo: `python -m src.main_seleccionar_camera` | Lista ambas; permite elegir integrada o DroidCam en ejecuciones separadas y reintenta entradas inválidas | PENDIENTE |
+| AF-04 | `python -m src.main --camera 1`, si 1 corresponde a DroidCam | Abre 1 directamente, sin búsqueda previa; JSON intacto | PENDIENTE |
+| AF-05 | `python -m src.main --camera 99`, con ese índice ausente | Error del índice 99; no abre otra cámara | PENDIENTE |
+| AF-06 | Sin cámaras disponibles: `python -m src.main` | Error controlado que sugiere diagnostics --scan, sin traceback Python | PENDIENTE |
+| AF-07 | Ambos previews: cerrar con q, ESC, ventana y Ctrl+C en ejecuciones separadas | Cámara liberada; otra aplicación puede abrirla; no se generan imágenes/videos | PENDIENTE |
+| AF-08 | Ejecutar detect y track después de los previews | Selección, YOLO y ByteTrack conservan comportamiento anterior | PENDIENTE |
+
+Registrar comando, camera_index del JSON, dispositivos/índices, cámara observada, si apareció input, cierre/liberación, errores completos y resultado. Si puedes disponer de un índice 0 no funcional y 1 funcional, comprobar que AUTO-FIRST abre 1. Para comparar con configuración histórica, repetir sin override con un entero en JSON: también debe elegir la primera funcional, no necesariamente ese entero. Restablecer auto al terminar para conservar el uso habitual de detect/track.

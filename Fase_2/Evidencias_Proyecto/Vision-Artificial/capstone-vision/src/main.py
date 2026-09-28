@@ -1,21 +1,32 @@
-"""Ejecutar desde la raíz: python -m src.main."""
+"""Preview Hito 1: primera cámara funcional; --camera N fuerza un índice."""
 
 import logging
 import os
 import sys
 import time
 
-from .config import CameraConfig, load_config
+from .camera_cli import CameraSelectionCancelled, parse_camera_args
+
+from .config import CameraConfig, load_config, validate_camera_index
 
 LOGGER = logging.getLogger(__name__)
 WINDOW = "CAPSTONE - Webcam - q / ESC para salir"
 
 
-def run_preview(cv2, config: CameraConfig) -> None:
+def direct_camera_config(config: CameraConfig, camera_override: int | None = None) -> CameraConfig:
+    """Prepara el índice ya elegido para el preview compartido, sin descubrir cámaras."""
+    index = validate_camera_index(config["camera_index"] if camera_override is None else camera_override)
+    if index == "auto":
+        raise ValueError("El preview compartido requiere un índice resuelto antes de abrir la cámara.")
+    return {**config, "camera_index": index}
+
+
+def run_preview(cv2, config: CameraConfig, camera_override: int | None = None) -> None:
     """Muestra frames en memoria y libera cámara/ventanas al terminar."""
     from .camera import camera_info, camera_session
 
     try:
+        config = direct_camera_config(config, camera_override)
         with camera_session(config) as (capture, frame):
             info = camera_info(capture)
             LOGGER.info("Solicitado: %s", config)
@@ -55,7 +66,8 @@ def run_preview(cv2, config: CameraConfig) -> None:
             LOGGER.warning("No se pudieron destruir las ventanas de OpenCV: %s", exc)
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    args = parse_camera_args(__doc__, argv)
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     try:
         import cv2
@@ -66,7 +78,15 @@ def main() -> int:
         config = load_config()
         if sys.platform.startswith("linux") and not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")):
             raise RuntimeError("No hay sesión gráfica disponible. Ejecuta el preview en tu equipo con escritorio y webcam.")
-        run_preview(cv2, config)
+        if args.camera is None:
+            from .camera import find_first_available_camera
+            candidate = find_first_available_camera(config)
+            config = {**config, "camera_index": candidate.index}
+            LOGGER.info("Primera cámara funcional: índice %s. Abriendo preview...", candidate.index)
+        run_preview(cv2, config, args.camera)
+    except CameraSelectionCancelled:
+        LOGGER.info("Selección de cámara cancelada; recursos liberados.")
+        return 0
     except KeyboardInterrupt:
         LOGGER.info("Cierre solicitado con Ctrl+C.")
     except (ValueError, RuntimeError, cv2.error) as exc:

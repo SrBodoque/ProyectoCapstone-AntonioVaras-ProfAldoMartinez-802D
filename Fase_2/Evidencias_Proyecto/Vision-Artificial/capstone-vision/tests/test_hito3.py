@@ -270,9 +270,9 @@ class TrackingResourceTests(unittest.TestCase):
              patch.object(track, 'PersonTracker', return_value=self.tracker, side_effect=load_error):
             if error:
                 with self.assertRaises(error):
-                    track.run_tracking(self.ui, load_config(), self.detection, self.config)
+                    track.run_tracking(self.ui, {**load_config(), "camera_index": 0}, self.detection, self.config)
             else:
-                track.run_tracking(self.ui, load_config(), self.detection, self.config)
+                track.run_tracking(self.ui, {**load_config(), "camera_index": 0}, self.detection, self.config)
         self.capture.release.assert_called_once()
         self.ui.destroyAllWindows.assert_called_once()
 

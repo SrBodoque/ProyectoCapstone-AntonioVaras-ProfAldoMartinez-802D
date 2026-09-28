@@ -5,6 +5,8 @@ import os
 import sys
 import time
 
+from .camera_cli import CameraSelectionCancelled, parse_camera_args
+
 from .config import (CameraConfig, DetectionConfig, TrackingConfig, load_config,
                      load_detection_config, load_tracking_config)
 from .tracker import FrameTracks, PersonTracker, TrackHistory
@@ -38,11 +40,12 @@ def draw_tracks(cv2, frame, result: FrameTracks, config: TrackingConfig,
 
 
 def run_tracking(cv2, camera_config: CameraConfig, detection_config: DetectionConfig,
-                 tracking_config: TrackingConfig) -> None:
+                 tracking_config: TrackingConfig, camera_override: int | None = None) -> None:
     """Reutiliza camera_session: libera recursos ante cierre, error o Ctrl+C."""
-    from .camera import camera_info, camera_session
+    from .camera import camera_info, camera_session, resolve_camera_config
 
     try:
+        camera_config = resolve_camera_config(camera_config, camera_override)
         with camera_session(camera_config) as (capture, frame):
             info = camera_info(capture)
             LOGGER.info("Solicitado: %s", camera_config)
@@ -99,7 +102,8 @@ def run_tracking(cv2, camera_config: CameraConfig, detection_config: DetectionCo
             LOGGER.warning("No se pudieron destruir las ventanas de OpenCV: %s", exc)
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    args = parse_camera_args(__doc__, argv)
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     try:
         import cv2
@@ -112,7 +116,10 @@ def main() -> int:
         tracking_config = load_tracking_config()
         if sys.platform.startswith("linux") and not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")):
             raise RuntimeError("No hay sesión gráfica disponible. Ejecuta tracking en tu equipo con escritorio y webcam.")
-        run_tracking(cv2, camera_config, detection_config, tracking_config)
+        run_tracking(cv2, camera_config, detection_config, tracking_config, args.camera)
+    except CameraSelectionCancelled:
+        LOGGER.info("Selección de cámara cancelada; recursos liberados.")
+        return 0
     except KeyboardInterrupt:
         LOGGER.info("Cierre solicitado con Ctrl+C.")
     except (ValueError, RuntimeError, cv2.error) as exc:
