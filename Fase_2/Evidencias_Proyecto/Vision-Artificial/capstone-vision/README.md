@@ -145,6 +145,20 @@ python -m pip check
 
 El proyecto mantiene distintos puntos de entrada para poder probar cada capa de forma independiente.
 
+### Configurar o cambiar la cámara
+
+```powershell
+python -m src.camera_selector
+```
+
+Ejecuta este comando en la primera configuración del equipo o cuando quieras cambiar de cámara. Prueba los índices 0 a 4 y permite elegir solo entre los que entregan frames. Muestra el tamaño real del frame, el backend y los FPS informados por el controlador (no medidos).
+
+La selección se guarda como `camera_index` en `config/camera.json`, conservando resolución, FPS y backend. Después, `src.main`, `src.detect` y `src.track` usan ese índice sin preguntar, incluso en nuevas ejecuciones. Para cambiarlo, vuelve a ejecutar el selector. `q` cancela; si no hay cámaras disponibles, finaliza con error sin modificar la configuración. Si la cámara elegida deja de estar disponible, los ejecutables mantienen su error seguro; no eligen otra cámara automáticamente.
+
+El índice depende del equipo. Como `camera.json` está versionado, revisa el diff antes de subir cambios para no publicar accidentalmente tu selección local. Cierra los visores antes de ejecutar el selector; durante el escaneo pueden aparecer avisos de OpenCV por índices o backends no disponibles.
+
+Detalles de implementación, pruebas y validación física: [Selección de cámara](docs/seleccion_camara.md).
+
 ### Webcam
 
 ```powershell
@@ -169,7 +183,7 @@ python -m src.track
 python -m src.diagnostics
 ```
 
-Para buscar cámaras disponibles:
+Para diagnosticar cámaras disponibles sin seleccionar ni guardar configuración:
 
 ```powershell
 python -m src.diagnostics --scan
