@@ -47,7 +47,7 @@ class ConfigTests(unittest.TestCase):
 
 class ResourceTests(unittest.TestCase):
     def setUp(self):
-        self.config = {**load_config(), "camera_index": 0}
+        self.config = load_config()
         self.frame = MagicMock(size=10, shape=(720, 1280, 3))
         self.capture = MagicMock()
         self.capture.read.return_value = (True, self.frame)

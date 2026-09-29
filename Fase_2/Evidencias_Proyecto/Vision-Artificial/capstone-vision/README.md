@@ -118,8 +118,6 @@ También puede utilizarse el instalador oficial de Python para Windows x64.
 
 Desde la carpeta `capstone-vision`:
 
-cd .\Fase_2\Evidencias_Proyecto\Vision-Artificial\capstone-vision
-
 ```powershell
 py -3.13 -m venv .venv
 .\.venv\Scripts\Activate.ps1
@@ -147,23 +145,11 @@ python -m pip check
 
 El proyecto mantiene distintos puntos de entrada para poder probar cada capa de forma independiente.
 
-Los comandos `src.main`, `src.detect` y `src.track` aceptan `--camera N` (por ejemplo, `python -m src.track --camera 1`) para elegir un índice solo durante esa ejecución, sin editar el JSON.
-
-### Preview automático simple
+### Webcam
 
 ```powershell
 python -m src.main
 ```
-
-Abre automáticamente la primera cámara funcional al probar índices 0–4 en orden, sin selector ni input, y se detiene al encontrarla. Funciona con `camera_index: "auto"` o entero, sin editar el JSON. `--camera N` fuerza ese índice directamente, sin búsqueda ni cambio a otra cámara si falla.
-
-### Preview con selección
-
-```powershell
-python -m src.main_seleccionar_camera
-```
-
-Escanea cámaras disponibles y permite seleccionar una si hay varias, incluso con un índice fijo en el JSON. La selección es temporal; ambos previews usan solo OpenCV.
 
 ### Detección de personas
 
@@ -239,8 +225,6 @@ Configuración de webcam:
 - resolución;
 - FPS;
 - backend OpenCV.
-
-En detección y tracking, `camera_index: "auto"` busca índices 0–4 al iniciar: elige una cámara automáticamente o muestra un selector si hay varias. Un entero como `0` o `1` abre únicamente ese índice.
 
 ### `detection.json`
 
@@ -355,8 +339,6 @@ docs/
 ├── resultados_pruebas.md
 └── validacion_tecnica.md
 ```
-
-Selección multicámara: [guía y limitaciones](docs/03a_seleccion_multicamara.md).
 
 Los siguientes hitos continuarán esta estructura.
 
