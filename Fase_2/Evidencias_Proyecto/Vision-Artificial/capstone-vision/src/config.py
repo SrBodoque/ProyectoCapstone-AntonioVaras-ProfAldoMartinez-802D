@@ -5,6 +5,8 @@ import math
 from pathlib import Path, PureWindowsPath
 from typing import TypedDict
 
+from .devices import validate_device_format
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 CONFIG_PATH = PROJECT_ROOT / "config" / "camera.json"
 DETECTION_CONFIG_PATH = PROJECT_ROOT / "config" / "detection.json"
@@ -128,7 +130,7 @@ class DetectionConfig(TypedDict):
 
 
 def load_detection_config(path: Path = DETECTION_CONFIG_PATH) -> DetectionConfig:
-    """Parámetros iniciales del Hito 2; CPU y pesos oficiales YOLO26n."""
+    """Pesos oficiales YOLO26n y formato CPU/CUDA; hardware validado al ejecutar."""
     data = _read_config(path, {"model", "confidence_threshold", "iou_threshold",
                               "image_size", "device", "person_class_id", "show_confidence"})
     model = data["model"]
@@ -144,8 +146,7 @@ def load_detection_config(path: Path = DETECTION_CONFIG_PATH) -> DetectionConfig
     for key, minimum in (("image_size", 1), ("person_class_id", 0)):
         if type(data[key]) is not int or not minimum <= data[key] <= 2**31 - 1:
             raise ValueError(f"{key} debe ser un entero entre {minimum} y {2**31 - 1}.")
-    if data["device"] != "cpu":
-        raise ValueError("device debe ser 'cpu' para el baseline del Hito 2.")
+    validate_device_format(data["device"])
     if type(data["show_confidence"]) is not bool:
         raise ValueError("show_confidence debe ser true o false.")
     return data

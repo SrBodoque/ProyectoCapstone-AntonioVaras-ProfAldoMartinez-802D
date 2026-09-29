@@ -9,6 +9,8 @@ from importlib import import_module
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
+from .devices import discover_devices, validate_device
+
 from .config import CONFIG_PATH, DETECTION_CONFIG_PATH, PROJECT_ROOT, load_config, load_detection_config
 from .config import (TRACKING_CONFIG_PATH, load_tracking_config,
                      resolve_tracker_path, load_bytetrack_config)
@@ -57,11 +59,12 @@ def report_tracking() -> bool:
 def report_detection() -> bool:
     """Sin pesos ni inferencia. Un fallo de IA no impide el escaneo de webcam."""
     complete = True
+    config = None
     print(f"Configuración de detección: {DETECTION_CONFIG_PATH}")
     try:
         config = load_detection_config()
         print(f"Detección configurada: {config}")
-        print(f"Dispositivo Hito 2: {config['device']}; modelo: {config['model']}")
+        print(f"Dispositivo configurado para detección: {config['device']}")
     except ValueError as exc:
         print(f"ERROR de configuración de detección: {exc}")
         complete = False
@@ -78,7 +81,21 @@ def report_detection() -> bool:
             module = import_module(package)
             print(f"{package} cargado: {module.__version__}")
             if package == "torch":
-                print(f"CUDA disponible: {module.cuda.is_available()} (detección usa cpu).")
+                inventory = discover_devices(module)
+                print(f"CUDA build: {inventory.cuda_build}")
+                print(f"CUDA disponible: {inventory.cuda_available}")
+                print(f"GPUs CUDA: {inventory.cuda_count}")
+                for entry in inventory.devices:
+                    if entry.device != "cpu":
+                        print(f"  {entry.device}: {entry.name}")
+                for notice in inventory.notices:
+                    print(f"AVISO: {notice}")
+                if config is not None:
+                    try:
+                        validate_device(config["device"], torch_module=module, probe=False)
+                    except RuntimeError as exc:
+                        print(f"ERROR de dispositivo: {exc}")
+                        complete = False
         except PackageNotFoundError:
             print(f"FALTA {package}. Activa .venv y ejecuta python -m pip install -r requirements.txt.")
             complete = False

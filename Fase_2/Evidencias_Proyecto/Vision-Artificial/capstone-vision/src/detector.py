@@ -7,6 +7,7 @@ import time
 from dataclasses import dataclass
 
 from .config import DetectionConfig, PROJECT_ROOT, load_detection_config
+from .devices import validate_device
 
 LOGGER = logging.getLogger(__name__)
 
@@ -50,6 +51,7 @@ def _load_yolo():
 
 def load_person_model(config: DetectionConfig):
     """Carga compartida H2/H3: un modelo, pesos locales y clase person validada."""
+    validate_device(config["device"])  # Compartido por detector y tracker, antes de cargar pesos.
     model_path = PROJECT_ROOT / config["model"]
     LOGGER.info("Cargando %s en %s; el primer inicio puede descargar los pesos oficiales.",
                 config["model"], config["device"])
