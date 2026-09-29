@@ -44,7 +44,7 @@ class DetectionConfigTests(unittest.TestCase):
             "confidence_threshold": (-0.1, 1.1, True, "0.5", float("nan"), float("inf")),
             "iou_threshold": (-0.1, 1.1, False, "0.7", float("nan"), float("inf")),
             "image_size": (0, -1, True, 1.5, "640"),
-            "device": ("", "cuda", "0", None, 0),
+            "device": ("", "cuda", "gpu", "cuda:-1", "cuda:x", "0", None, 0),
             "person_class_id": (-1, True, "0", 0.5),
             "show_confidence": (1, "true", None),
         }
@@ -78,7 +78,7 @@ class DetectionConfigTests(unittest.TestCase):
 
 class DetectorTests(unittest.TestCase):
     def setUp(self):
-        self.config = load_detection_config()
+        self.config = {**load_detection_config(), "device": "cpu"}
         self.frame = MagicMock(shape=(720, 1280, 3), size=720 * 1280 * 3)
         self.model = MagicMock()
         self.model.names = {0: "person", 1: "bicycle"}

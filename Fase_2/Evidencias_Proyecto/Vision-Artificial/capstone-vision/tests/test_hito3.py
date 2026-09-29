@@ -103,7 +103,10 @@ class TrackingConfigTests(unittest.TestCase):
 
 class TrackerTests(unittest.TestCase):
     def setUp(self):
-        self.config = load_detection_config()
+        self.config = {**load_detection_config(), "device": "cpu"}
+        config_loader = patch.object(tracker, 'load_detection_config', return_value=self.config)
+        config_loader.start()
+        self.addCleanup(config_loader.stop)
         self.tracking = load_tracking_config()
         self.frame = MagicMock(shape=(720, 1280, 3), size=100)
         self.model = MagicMock()
