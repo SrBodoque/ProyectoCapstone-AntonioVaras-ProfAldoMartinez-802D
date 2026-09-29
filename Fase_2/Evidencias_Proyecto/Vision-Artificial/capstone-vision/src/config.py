@@ -3,7 +3,7 @@
 import json
 import math
 from pathlib import Path, PureWindowsPath
-from typing import Literal, TypedDict
+from typing import TypedDict
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 CONFIG_PATH = PROJECT_ROOT / "config" / "camera.json"
@@ -13,7 +13,7 @@ BACKENDS = ("auto", "dshow", "msmf", "v4l2", "avfoundation")
 
 
 class CameraConfig(TypedDict):
-    camera_index: int | Literal["auto"]
+    camera_index: int
     width: int
     height: int
     fps: float
@@ -102,21 +102,11 @@ def load_bytetrack_config(path: Path) -> dict:
     return data
 
 
-def validate_camera_index(value: object) -> int | Literal["auto"]:
-    """Un índice explícito conserva el límite de OpenCV; bool no es índice."""
-    if type(value) is str and value == "auto":
-        return "auto"
-    if type(value) is not int or not 0 <= value <= 2**31 - 1:
-        raise ValueError("camera_index debe ser 'auto' o un entero entre 0 y 2147483647.")
-    return value
-
-
 def load_config(path: Path = CONFIG_PATH) -> CameraConfig:
     """Rechaza campos ausentes, desconocidos y valores inválidos."""
     data = _read_config(path, {"camera_index", "width", "height", "fps", "backend"})
-    validate_camera_index(data["camera_index"])
-    for key in ("width", "height"):
-        minimum = 1
+    for key in ("camera_index", "width", "height"):
+        minimum = 0 if key == "camera_index" else 1
         if type(data[key]) is not int or not minimum <= data[key] <= 2**31 - 1:
             raise ValueError(f"{key} debe ser un entero entre {minimum} y {2**31 - 1}.")
     fps = data["fps"]

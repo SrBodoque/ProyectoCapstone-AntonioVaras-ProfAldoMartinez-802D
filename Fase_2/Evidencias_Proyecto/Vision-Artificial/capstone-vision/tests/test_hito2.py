@@ -218,7 +218,7 @@ class DependencyTests(unittest.TestCase):
 
 class DetectionResourceTests(unittest.TestCase):
     def setUp(self):
-        self.camera_config = {**load_config(), "camera_index": 0}
+        self.camera_config = load_config()
         self.config = load_detection_config()
         self.frame = MagicMock(shape=(720, 1280, 3), size=100)
         self.capture = MagicMock()

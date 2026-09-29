@@ -105,7 +105,7 @@ def main() -> int:
         config = load_config()
         print(f"Cámara configurada: {config}", flush=True)
         import cv2
-        from .camera import backend_candidates, describe_camera, discover_cameras
+        from .camera import backend_candidates, camera_info, camera_session
         print(f"OpenCV (cv2): {cv2.__version__}")
         print(f"Distribución opencv-python: {version('opencv-python')}")
         if platform.python_version() != "3.13.15" or struct.calcsize('P') * 8 != 64:
@@ -116,10 +116,14 @@ def main() -> int:
         tracking_complete = report_tracking()
         backend_candidates(config["backend"])
         if args.scan:
-            candidates = discover_cameras(config)
-            for candidate in candidates:
-                print(f"DISPONIBLE: {describe_camera(candidate)}", flush=True)
-            found = [candidate.index for candidate in candidates]
+            found = []
+            for index in range(5):
+                try:
+                    with camera_session({**config, "camera_index": index}) as (capture, frame):
+                        print(f"Índice {index}: DISPONIBLE; frame {frame.shape[1]}x{frame.shape[0]}; {camera_info(capture)}", flush=True)
+                        found.append(index)
+                except (RuntimeError, cv2.error) as exc:
+                    print(f"Índice {index}: no disponible. {exc}", flush=True)
             print(f"Índices que entregaron frames: {found}")
             if not found:
                 print("No se encontró webcam. En un entorno sin hardware es esperable; validar en el equipo del usuario.")
