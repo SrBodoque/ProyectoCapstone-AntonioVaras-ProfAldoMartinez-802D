@@ -48,6 +48,7 @@ La terminal debería mostrar:
 
 Solo la primera vez o cuando requirements.txt cambie:
 
+python -m pip install -r requirements.txt (primero este)
 pip install -r requirements.txt
 
 

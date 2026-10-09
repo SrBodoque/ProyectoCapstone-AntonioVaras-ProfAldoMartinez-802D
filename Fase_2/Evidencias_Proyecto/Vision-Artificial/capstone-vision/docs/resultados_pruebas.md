@@ -855,3 +855,16 @@ OK; diagnostics código 0 en Linux/Python 3.12.14 con PyTorch 2.14.0+cpu. YOLO26
 y ByteTrack reales ejecutaron en CPU sobre frame sintético sin selector; también
 se comprobó CPU temporal con preferencia GPU no disponible y conservación del
 archivo. Esto no cambia los estados físicos PENDIENTE de la tabla DEV.
+
+
+## Comparación experimental FastTracker — pendiente (2026-10-09)
+
+El usuario informa que el baseline actual H1/H2/H3 y CPU/GPU funciona tras pruebas
+manuales. Se conserva íntegro el registro histórico, sin rellenar retrospectivamente
+las casillas sin datos. La nueva comparación física ByteTrack/FastTracker permanece
+PENDIENTE: fichas FT-01 a FT-08, tabla de continuidad de IDs y condiciones constantes
+en [04_comparacion_trackers.md](04_comparacion_trackers.md).
+
+ByteTrack sigue disponible con `python -m src.track`; la alternativa experimental
+se ejecuta con `python -m src.track_fast`. No se modificó confianza 0.65 ni los
+parámetros ByteTrack. No se decide reemplazo antes de medir los escenarios físicos.

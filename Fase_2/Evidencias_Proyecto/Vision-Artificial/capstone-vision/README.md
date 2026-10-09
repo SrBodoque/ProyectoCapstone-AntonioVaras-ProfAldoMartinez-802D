@@ -114,6 +114,8 @@ También puede utilizarse el instalador oficial de Python para Windows x64.
 
 ---
 
+cd .\Fase_2\Evidencias_Proyecto\Vision-Artificial\capstone-vision
+
 ## 2. Crear entorno virtual
 
 Desde la carpeta `capstone-vision`:
@@ -212,11 +214,19 @@ python -m src.main
 python -m src.detect
 ```
 
-### Tracking ByteTrack
+### Tracking ByteTrack estable
 
 ```powershell
 python -m src.track
 ```
+
+### Tracking FastTracker experimental
+
+```powershell
+python -m src.track_fast
+```
+
+Alternativa para comparar estabilidad de IDs ante cruces y oclusiones, conservando YOLO26n, confianza 0.65, cámara y dispositivo. ByteTrack sigue siendo el baseline; todavía no se elige un ganador. Procedimiento y tabla pendiente: [Comparación de trackers](docs/04_comparacion_trackers.md).
 
 ### Diagnóstico
 

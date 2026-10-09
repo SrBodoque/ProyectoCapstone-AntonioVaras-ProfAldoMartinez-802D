@@ -38,10 +38,11 @@ def draw_tracks(cv2, frame, result: FrameTracks, config: TrackingConfig,
 
 
 def run_tracking(cv2, camera_config: CameraConfig, detection_config: DetectionConfig,
-                 tracking_config: TrackingConfig) -> None:
+                 tracking_config: TrackingConfig, *, tracker_label: str = "ByteTrack") -> None:
     """Reutiliza camera_session: libera recursos ante cierre, error o Ctrl+C."""
     from .camera import camera_info, camera_session
 
+    window = WINDOW if tracker_label == "ByteTrack" else f"CAPSTONE - {tracker_label} - q / ESC para salir"
     try:
         with camera_session(camera_config) as (capture, frame):
             info = camera_info(capture)
@@ -52,7 +53,7 @@ def run_tracking(cv2, camera_config: CameraConfig, detection_config: DetectionCo
                        if tracking_config["show_trail"] else None)
             LOGGER.info("Detección: %s", tracker.config)
             LOGGER.info("La primera inferencia incluye inicialización; luego se mide FPS del pipeline.")
-            cv2.namedWindow(WINDOW, cv2.WINDOW_NORMAL)
+            cv2.namedWindow(window, cv2.WINDOW_NORMAL)
             started = None
             count = 0
             pipeline_fps = None
@@ -77,17 +78,17 @@ def run_tracking(cv2, camera_config: CameraConfig, detection_config: DetectionCo
                 inference_text = f"{result.inference_ms:.1f}" if result.inference_ms is not None else "N/D"
                 labels = (
                     f"{width}x{height} | cam: {camera_config['camera_index']} | {info['backend']}",
-                    f"ByteTrack | Tracks activos: {len(result.tracks)} | {detection_config['model']} | {tracker.config['device']}",
+                    f"{tracker_label} | Tracks activos: {len(result.tracks)} | {detection_config['model']} | {tracker.config['device']}",
                     f"FPS pipeline: {fps_text} | Inferencia YOLO: {inference_text} ms",
                     f"YOLO + tracking: {result.processing_ms:.1f} ms | Cajas sin ID: {len(result.untracked_detections)}",
                 )
                 for i, label in enumerate(labels):
                     _label(cv2, frame, label, (10, 24 + i * 24))
-                cv2.imshow(WINDOW, frame)
+                cv2.imshow(window, frame)
                 key = cv2.waitKey(1) & 0xFF
                 if key in (ord("q"), 27):
                     break
-                if cv2.getWindowProperty(WINDOW, cv2.WND_PROP_VISIBLE) < 1:
+                if cv2.getWindowProperty(window, cv2.WND_PROP_VISIBLE) < 1:
                     break
                 ok, frame = capture.read()
                 if not ok or frame is None or frame.size == 0:
@@ -99,7 +100,7 @@ def run_tracking(cv2, camera_config: CameraConfig, detection_config: DetectionCo
             LOGGER.warning("No se pudieron destruir las ventanas de OpenCV: %s", exc)
 
 
-def main() -> int:
+def main(*, tracker_config: str | None = None, tracker_label: str = "ByteTrack") -> int:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     try:
         import cv2
@@ -110,9 +111,14 @@ def main() -> int:
         camera_config = load_config()
         detection_config = load_detection_config()
         tracking_config = load_tracking_config()
+        if tracker_config is not None:
+            tracking_config = {**tracking_config, "tracker_config": tracker_config}
         if sys.platform.startswith("linux") and not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")):
             raise RuntimeError("No hay sesión gráfica disponible. Ejecuta tracking en tu equipo con escritorio y webcam.")
-        run_tracking(cv2, camera_config, detection_config, tracking_config)
+        if tracker_config is None:
+            run_tracking(cv2, camera_config, detection_config, tracking_config)
+        else:
+            run_tracking(cv2, camera_config, detection_config, tracking_config, tracker_label=tracker_label)
     except KeyboardInterrupt:
         LOGGER.info("Cierre solicitado con Ctrl+C.")
     except (ValueError, RuntimeError, cv2.error) as exc:

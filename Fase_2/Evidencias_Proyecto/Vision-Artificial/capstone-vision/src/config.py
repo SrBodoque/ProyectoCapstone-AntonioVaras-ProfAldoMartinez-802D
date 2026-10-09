@@ -76,7 +76,12 @@ def load_tracking_config(path: Path = TRACKING_CONFIG_PATH) -> TrackingConfig:
 
 
 def load_bytetrack_config(path: Path) -> dict:
-    """YAML estricto del baseline; PyYAML ya es dependencia de Ultralytics."""
+    """Conserva la validación estricta del YAML del baseline ByteTrack."""
+    return load_tracker_config(path, allowed_types=("bytetrack",))
+
+
+def load_tracker_config(path: Path, *, allowed_types: tuple[str, ...] = ("bytetrack", "fasttrack")) -> dict:
+    """Valida solo los trackers integrados usados en esta comparación."""
     try:
         import yaml
     except ImportError as exc:
@@ -87,10 +92,15 @@ def load_bytetrack_config(path: Path) -> dict:
         raise ValueError(f"YAML inválido o inaccesible: {path}: {exc}") from exc
     fields = {"tracker_type", "track_high_thresh", "track_low_thresh", "new_track_thresh",
               "track_buffer", "match_thresh", "fuse_score"}
-    if not isinstance(data, dict) or set(data) != fields:
-        raise ValueError(f"YAML ByteTrack debe contener exactamente: {', '.join(sorted(fields))}.")
-    if data["tracker_type"] != "bytetrack":
-        raise ValueError("tracker_type debe ser bytetrack.")
+    tracker_type = data.get("tracker_type") if isinstance(data, dict) else None
+    if tracker_type not in allowed_types or tracker_type not in ("bytetrack", "fasttrack"):
+        raise ValueError(f"tracker_type debe ser: {', '.join(allowed_types)}.")
+    if tracker_type == "fasttrack":
+        fields |= {"reset_velocity_offset_occ", "reset_pos_offset_occ", "enlarge_bbox_occ",
+                   "dampen_motion_occ", "active_occ_to_lost_thresh", "init_iou_suppress",
+                   "occ_cover_thresh", "occ_reappear_window"}
+    if set(data) != fields:
+        raise ValueError(f"YAML {tracker_type} debe contener exactamente: {', '.join(sorted(fields))}.")
     for key in ("track_high_thresh", "track_low_thresh", "new_track_thresh", "match_thresh"):
         value = data[key]
         if type(value) not in (int, float) or not math.isfinite(value) or not 0 <= value <= 1:
@@ -101,6 +111,18 @@ def load_bytetrack_config(path: Path) -> dict:
         raise ValueError("track_buffer debe ser un entero entre 1 y 3000 frames.")
     if type(data["fuse_score"]) is not bool:
         raise ValueError("fuse_score debe ser true o false.")
+    if tracker_type == "fasttrack":
+        for key in ("reset_velocity_offset_occ", "reset_pos_offset_occ",
+                    "active_occ_to_lost_thresh", "occ_reappear_window"):
+            if type(data[key]) is not int or not 0 <= data[key] <= 2**31 - 1:
+                raise ValueError(f"{key} debe ser un entero no negativo de 32 bits.")
+        for key in ("dampen_motion_occ", "init_iou_suppress", "occ_cover_thresh"):
+            value = data[key]
+            if type(value) not in (int, float) or not math.isfinite(value) or not 0 <= value <= 1:
+                raise ValueError(f"{key} debe ser un número finito entre 0 y 1.")
+        value = data["enlarge_bbox_occ"]
+        if type(value) not in (int, float) or not math.isfinite(value) or value < 1:
+            raise ValueError("enlarge_bbox_occ debe ser un número finito mayor o igual a 1.")
     return data
 
 

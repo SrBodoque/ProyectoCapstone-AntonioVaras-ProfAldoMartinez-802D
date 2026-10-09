@@ -1,4 +1,4 @@
-"""YOLO + ByteTrack integrado, una inferencia por frame, sin cámara ni GUI."""
+"""YOLO + tracker integrado inyectable; ByteTrack por defecto, sin cámara ni GUI."""
 
 import logging
 import math
@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 from .config import (DetectionConfig, TrackingConfig, load_detection_config,
                      load_tracking_config, validate_tracking_config,
-                     resolve_tracker_path, load_bytetrack_config)
+                     resolve_tracker_path, load_tracker_config)
 from .detector import Detection, load_person_model
 
 LOGGER = logging.getLogger(__name__)
@@ -73,15 +73,18 @@ class PersonTracker:
         self.tracking_config = validate_tracking_config(
             tracking_config if tracking_config is not None else load_tracking_config())
         self.tracker_path = resolve_tracker_path(self.tracking_config["tracker_config"])
-        self.bytetrack_config = load_bytetrack_config(self.tracker_path)
+        self.tracker_params = load_tracker_config(self.tracker_path)
+        self.bytetrack_config = self.tracker_params  # Compatibilidad con consumidores H3 existentes.
+        self.tracker_label = ("FastTracker" if self.tracker_params["tracker_type"] == "fasttrack"
+                              else "ByteTrack")
         self._model, self.device_resolution = load_person_model(self.config)
         self.config["device"] = self.device_resolution.effective_device
-        LOGGER.info("ByteTrack: %s | persist=%s", self.tracker_path, self.tracking_config["persist"])
+        LOGGER.info("%s: %s | persist=%s", self.tracker_label, self.tracker_path, self.tracking_config["persist"])
         if self.config["confidence_threshold"] >= self.bytetrack_config["track_high_thresh"]:
             LOGGER.warning(
-                "conf=%.2f filtra antes de ByteTrack: la segunda asociación de baja confianza "
+                "conf=%.2f filtra antes de %s: la segunda asociación de baja confianza "
                 "no recibe candidatos. Se conserva el baseline de detection.json.",
-                self.config["confidence_threshold"])
+                self.config["confidence_threshold"], self.tracker_label)
 
     def track(self, frame) -> FrameTracks:
         if (frame is None or not hasattr(frame, "shape") or len(frame.shape) != 3
@@ -136,7 +139,7 @@ class PersonTracker:
                                (time.perf_counter() - started) * 1000)
         except Exception as exc:
             raise RuntimeError(
-                f"Falló YOLO + ByteTrack local: {exc}. Comprueba el YAML y ejecuta "
+                f"Falló YOLO + {self.tracker_label} local: {exc}. Comprueba el YAML y ejecuta "
                 "python -m pip install -r requirements.txt (incluye lap); "
                 "no se instalan paquetes automáticamente."
             ) from exc
