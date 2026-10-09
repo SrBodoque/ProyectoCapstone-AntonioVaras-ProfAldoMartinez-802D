@@ -143,7 +143,7 @@ python -m pip check
 
 ## 4. CPU y soporte opcional NVIDIA CUDA
 
-La instalación general es compatible con ejecución en CPU y `requirements.txt` no obliga a utilizar una GPU. Si tu entorno actual ya funciona, no lo recrees. Para instalar explícitamente los wheels CPU-only en un entorno nuevo, puedes instalar primero:
+La instalación normal con `python -m pip install -r requirements.txt` y `python -m pip check` es suficiente para ejecutar detección y tracking en CPU. **No es obligatorio instalar wheels CUDA ni ejecutar `python -m src.device_selector`.** Sin preferencia local se usa `device: cpu` de `config/detection.json`. Si tu entorno actual ya funciona, no lo recrees. Para asegurar explícitamente los wheels CPU-only en un entorno nuevo, puedes instalar primero:
 
 ```powershell
 python -m pip install torch==2.14.0 torchvision==0.29.0 --index-url https://download.pytorch.org/whl/cpu
@@ -151,7 +151,7 @@ python -m pip install -r requirements.txt
 python -m pip check
 ```
 
-Para un equipo NVIDIA compatible, el procedimiento reportado como validado por el equipo con RTX 5060 y driver 610.88 utiliza los wheels oficiales `cu132`:
+Para utilizar opcionalmente una GPU NVIDIA compatible, el procedimiento reportado como validado por el equipo con RTX 5060 y driver 610.88 utiliza los wheels oficiales `cu132` (la GTX 1650 sigue pendiente de prueba física):
 
 ```powershell
 python -m pip uninstall torch torchvision -y
@@ -162,7 +162,9 @@ python -c "import torch; print(torch.__version__); print(torch.version.cuda); pr
 
 Ejecuta este bloque solo si necesitas cambiar la instalación de PyTorch: si ya tienes `2.14.0+cu132` / `0.29.0+cu132` funcionando, omítelo. Los sufijos `+cpu` y `+cu132` son variantes de las versiones base; diagnostics no los rechaza. Consulta las [instrucciones oficiales de PyTorch](https://pytorch.org/get-started/locally/) para compatibilidad del equipo. No hace falta instalar Toolkit/cuDNN manualmente para esta mejora.
 
-Instalar soporte CUDA y elegir el dispositivo son pasos distintos. El selector no instala paquetes ni modifica el entorno Python.
+Instalar soporte CUDA y elegir el dispositivo son pasos distintos. Solo después de comprobar que `import torch` funciona, CUDA está disponible y hay GPUs, ejecuta `python -m src.device_selector` y elige la GPU. El selector no instala paquetes ni modifica el entorno Python.
+
+Si `import torch` falla con `WinError 4551` o Windows bloquea `torch.dll` mediante App Control / Smart App Control, ese build no es utilizable mientras esté bloqueado. Puedes continuar con el build CPU explícito si su import funciona; no es necesario desactivar la seguridad de Windows desde el proyecto.
 
 ---
 
@@ -184,19 +186,19 @@ El índice depende del equipo. Como `camera.json` está versionado, revisa el di
 
 Detalles de implementación, pruebas y validación física: [Selección de cámara](docs/seleccion_camara.md).
 
-### Configurar o cambiar CPU/CUDA
+### Configurar o cambiar CPU/CUDA (opcional)
 
 ```powershell
 python -m src.device_selector
 ```
 
-CPU siempre aparece como opción. Se ofrecen GPUs únicamente si PyTorch informa CUDA disponible; cada opción muestra su índice y nombre. Una GPU elegida debe superar una operación mínima con tensor antes de guardarse. Una instalación PyTorch CPU-only ofrece solo CPU, aunque el computador tenga una GPU NVIDIA física.
+Con PyTorch funcional, CPU siempre aparece como opción. Se ofrecen GPUs únicamente si PyTorch informa CUDA disponible; cada opción muestra su índice y nombre. Una GPU elegida debe superar una operación mínima con tensor antes de guardarse. Una instalación PyTorch CPU-only ofrece solo CPU, aunque el computador tenga una GPU NVIDIA física.
 
-El selector cambia únicamente `device` en `config/detection.json`, conservando los demás valores. Guarda `cpu` o `cuda:N`. La selección persiste entre procesos: `src.detect` y `src.track` la utilizan sin preguntar. `src.main` continúa siendo preview de cámara independiente. Para cambiar de dispositivo, ejecuta nuevamente el selector; `q` cancela.
+El selector guarda `cpu` o `cuda:N` únicamente en `config/device.local.json`, sin modificar `config/detection.json` ni la cámara. Esta preferencia local persiste entre procesos: `src.detect` y `src.track` la utilizan sin preguntar. Si no existe, ambos usan CPU sin menú, warning ni crear el archivo. `src.main` continúa siendo preview de cámara independiente. Para cambiar de dispositivo, ejecuta nuevamente el selector; `q` cancela.
 
-Si CUDA deja de estar disponible o el índice no existe, la ejecución termina con un error que indica usar el selector. **No hay cambio automático a CPU.** `diagnostics` informa por separado CUDA disponible y dispositivo configurado, sin guardar ni pedir entrada. Los índices CUDA son los visibles para PyTorch en ese entorno, incluyendo posibles restricciones de `CUDA_VISIBLE_DEVICES`.
+Si la GPU local deja de ser utilizable o el índice no existe, se muestra un warning y se usa **CPU solo para esa ejecución**, conservando la preferencia GPU. Un archivo local inválido se ignora con warning y se usa la configuración base; no se reescribe. `diagnostics` distingue base, preferencia local, dispositivo efectivo y fallback, sin guardar ni pedir entrada. Los índices CUDA son los visibles para PyTorch en ese entorno, incluyendo posibles restricciones de `CUDA_VISIBLE_DEVICES`.
 
-`detection.json` está versionado: evita subir accidentalmente una selección CUDA específica de tu computador. Detalles, evidencia y pruebas físicas: [Selección CPU/CUDA](docs/seleccion_dispositivo.md). El baseline histórico Hito 2 fue CPU; CUDA es una mejora posterior opcional.
+`detection.json` está versionado con CPU como base portable. `device.local.json` está ignorado por Git y debe excluirse de los ZIP de entrega. Detalles, evidencia y pruebas físicas: [Selección CPU/CUDA](docs/seleccion_dispositivo.md). El baseline histórico Hito 2 fue CPU; CUDA es una mejora posterior opcional.
 
 ### Webcam
 

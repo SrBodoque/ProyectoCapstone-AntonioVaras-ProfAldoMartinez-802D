@@ -104,6 +104,9 @@ class TrackingConfigTests(unittest.TestCase):
 class TrackerTests(unittest.TestCase):
     def setUp(self):
         self.config = {**load_detection_config(), "device": "cpu"}
+        preference = patch("src.devices.load_device_preference", return_value=None)
+        preference.start()
+        self.addCleanup(preference.stop)
         config_loader = patch.object(tracker, 'load_detection_config', return_value=self.config)
         config_loader.start()
         self.addCleanup(config_loader.stop)

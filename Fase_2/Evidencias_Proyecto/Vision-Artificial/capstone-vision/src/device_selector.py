@@ -6,8 +6,9 @@ import os
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
-from .config import DETECTION_CONFIG_PATH, DetectionConfig, load_detection_config
-from .devices import InferenceDevice, discover_devices, validate_device
+from .config import DETECTION_CONFIG_PATH, load_detection_config
+from .devices import (DEVICE_LOCAL_PATH, InferenceDevice, discover_devices,
+                      load_device_preference, load_torch, validate_device)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -29,11 +30,10 @@ def choose_device(devices: tuple[InferenceDevice, ...]) -> str | None:
         print(f"Selección inválida. Elija una opción entre 0 y {len(devices) - 1}, o q.")
 
 
-def save_device(device: str, path: Path = DETECTION_CONFIG_PATH) -> DetectionConfig:
-    """Valida hardware antes de escribir; solo reemplaza el valor de device."""
-    current = load_detection_config(path)
+def save_device(device: str, path: Path = DEVICE_LOCAL_PATH) -> dict[str, str]:
+    """Valida hardware y guarda solo la preferencia local, incluso si estaba rota."""
     validate_device(device)
-    updated = {**current, "device": device}
+    updated = {"device": device}
     temporary = None
     try:
         with NamedTemporaryFile(
@@ -45,25 +45,31 @@ def save_device(device: str, path: Path = DETECTION_CONFIG_PATH) -> DetectionCon
             stream.write("\n")
             stream.flush()
             os.fsync(stream.fileno())
-        if load_detection_config(temporary) != updated:
+        if load_device_preference(temporary) != device:
             raise RuntimeError("La configuración temporal no coincide con la selección.")
         os.replace(temporary, path)
-        saved = load_detection_config(path)
-        if saved != updated:
+        saved = load_device_preference(path)
+        if saved != device:
             raise RuntimeError("No se pudo verificar la configuración guardada.")
-        return saved
+        return updated
     finally:
         if temporary is not None:
             temporary.unlink(missing_ok=True)
 
 
-def main(path: Path = DETECTION_CONFIG_PATH) -> int:
+def main(path: Path = DEVICE_LOCAL_PATH, base_path: Path = DETECTION_CONFIG_PATH) -> int:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     try:
-        config = load_detection_config(path)
+        config = load_detection_config(base_path)
         print("CAPSTONE - Selector de dispositivo de inferencia")
-        print(f"Configuración actual: {config['device']}", flush=True)
-        inventory = discover_devices()
+        print(f"Configuración base: {config['device']}", flush=True)
+        try:
+            preference = load_device_preference(path)
+            print(f"Preferencia local: {preference or 'no configurada'}")
+        except ValueError as exc:
+            LOGGER.warning("Preferencia local inválida: %s; una selección nueva puede reemplazarla.", exc)
+        torch = load_torch()  # Si el import falla, no ofrecer una instalación rota como utilizable.
+        inventory = discover_devices(torch)
         print("Dispositivos disponibles:")
         for option, entry in enumerate(inventory.devices):
             label = "CPU" if entry.device == "cpu" else f"{entry.device.upper()} - {entry.name}"
@@ -76,7 +82,7 @@ def main(path: Path = DETECTION_CONFIG_PATH) -> int:
             return 0
         save_device(device, path)
         print(f"Dispositivo seleccionado: {device}")
-        print(f"Configuración guardada y verificada en {path}.")
+        print(f"Preferencia local guardada y verificada en {path}.")
         return 0
     except EOFError:
         print("Entrada finalizada; la configuración no se modificó.")

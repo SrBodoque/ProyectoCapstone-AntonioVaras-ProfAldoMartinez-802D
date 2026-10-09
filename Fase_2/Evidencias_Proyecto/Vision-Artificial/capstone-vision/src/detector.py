@@ -7,7 +7,7 @@ import time
 from dataclasses import dataclass
 
 from .config import DetectionConfig, PROJECT_ROOT, load_detection_config
-from .devices import validate_device
+from .devices import resolve_effective_device
 
 LOGGER = logging.getLogger(__name__)
 
@@ -51,10 +51,10 @@ def _load_yolo():
 
 def load_person_model(config: DetectionConfig):
     """Carga compartida H2/H3: un modelo, pesos locales y clase person validada."""
-    validate_device(config["device"])  # Compartido por detector y tracker, antes de cargar pesos.
+    resolution = resolve_effective_device(config["device"])  # Una resolución para H2/H3.
     model_path = PROJECT_ROOT / config["model"]
     LOGGER.info("Cargando %s en %s; el primer inicio puede descargar los pesos oficiales.",
-                config["model"], config["device"])
+                config["model"], resolution.effective_device)
     yolo = _load_yolo()
     started = time.perf_counter()
     try:
@@ -71,7 +71,7 @@ def load_person_model(config: DetectionConfig):
         ) from exc
     LOGGER.info("Modelo cargado una vez en %.2f s; clase person=%s.",
                 time.perf_counter() - started, class_id)
-    return model
+    return model, resolution
 
 
 class PersonDetector:
@@ -80,7 +80,8 @@ class PersonDetector:
     def __init__(self, config: DetectionConfig | None = None):
         self.config = dict(config if config is not None else load_detection_config())
         self.model_path = PROJECT_ROOT / self.config["model"]
-        self._model = load_person_model(self.config)
+        self._model, self.device_resolution = load_person_model(self.config)
+        self.config["device"] = self.device_resolution.effective_device
 
     def detect(self, frame) -> FrameDetections:
         """Inferencia individual. No acepta una URL ni un índice de webcam."""

@@ -42,7 +42,7 @@ def run_detection(cv2, camera_config: CameraConfig, detection_config: DetectionC
             LOGGER.info("Solicitado: %s", camera_config)
             LOGGER.info("Informado por OpenCV: %s", info)
             detector = PersonDetector(detection_config)
-            LOGGER.info("Detección: %s", detection_config)
+            LOGGER.info("Detección: %s", detector.config)
             LOGGER.info("La primera inferencia incluye inicialización; luego se mide FPS del pipeline.")
             cv2.namedWindow(WINDOW, cv2.WINDOW_NORMAL)
             started = None
@@ -67,7 +67,7 @@ def run_detection(cv2, camera_config: CameraConfig, detection_config: DetectionC
                 inference_text = f"{result.inference_ms:.1f}" if result.inference_ms is not None else "N/D"
                 labels = (
                     f"{width}x{height} | cam: {camera_config['camera_index']} | {info['backend']}",
-                    f"Personas/frame: {len(result.detections)} | {detection_config['model']} | {detection_config['device']}",
+                    f"Personas/frame: {len(result.detections)} | {detection_config['model']} | {detector.config['device']}",
                     f"FPS pipeline: {fps_text} | Inferencia: {inference_text} ms",
                 )
                 for i, label in enumerate(labels):

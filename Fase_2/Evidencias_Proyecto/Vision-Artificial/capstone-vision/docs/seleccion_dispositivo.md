@@ -1,4 +1,8 @@
-# Selección persistente CPU/CUDA — implementación y validación
+# Selección opcional y local CPU/CUDA — implementación y validación
+
+Actualización 2026-10-09 sobre el ZIP actual: la base compartida queda en CPU;
+la selección personal se guarda en `config/device.local.json`. El selector es
+opcional. Las cifras de la entrega anterior se conservan como evidencia histórica.
 
 Mejora incremental sobre `capstone-vision(2).rar`, incluyendo su selector de
 cámara. No se reconstruyeron los Hitos 1–3 ni se implementó el siguiente hito.
@@ -30,13 +34,14 @@ python -m src.detect
 python -m src.track
 ```
 
-Ambos leen la selección guardada sin preguntar. Para cambiarla, ejecuta otra vez
+Sin selector ni archivo local, ambos usan CPU sin warnings, preguntas ni escritura.
+Si existe una preferencia local válida, ambos la resuelven sin preguntar. Para cambiarla, ejecuta otra vez
 el selector. `src.main` sigue siendo preview de cámara. `src.camera_selector`
 permanece independiente y sin modificaciones.
 
-CPU siempre puede configurarse. Si falta PyTorch o falla su importación, se
-advierte: guardar CPU no repara dependencias; la inferencia necesita un entorno
-funcional. Si PyTorch es CPU-only, no se ofrecen GPUs aunque Windows detecte una
+CPU puede configurarse si PyTorch funciona. Si falla su importación, el selector
+termina con un mensaje controlado antes del menú; no guarda nada. La inferencia
+CPU también necesita PyTorch funcional. Si PyTorch es CPU-only, no se ofrecen GPUs aunque Windows detecte una
 NVIDIA física. El selector nunca ejecuta pip ni instala Toolkit/cuDNN.
 
 ## Restricción encontrada y cambios mínimos
@@ -53,9 +58,11 @@ usarlo si el índice no está entre los dispositivos disponibles.
 
 `src.detector.load_person_model()` ya era el punto de carga compartido por
 `PersonDetector` y `PersonTracker`. Se añadió allí la validación de disponibilidad
-antes de cargar pesos. Es la única modificación funcional de `detector.py`; su
-método de inferencia se conserva. No fue necesario modificar `detect.py`,
-`track.py` ni `tracker.py`: ya pasan `config['device']` a `predict()` / `track()`.
+antes de cargar pesos. En esta actualización ese mismo cargador llama al único
+resolver y devuelve el modelo junto con `DeviceResolution`. Detector y tracker
+conservan base/preferencia y usan el dispositivo efectivo en su copia de config.
+`detect.py` y `track.py` muestran ese valor efectivo en consola y overlay;
+`predict()` / `track()` conservan el resto de sus argumentos.
 
 Se revisó `select_device()` del Ultralytics 8.4.163 instalado: admite `cuda:N`
 directamente. Se comprobó su selección de `cuda:1` con funciones de hardware
@@ -75,9 +82,10 @@ configuración, selector, cargador del modelo y diagnóstico:
   elemento en esa GPU, suma 1, sincroniza ese índice y verifica el resultado.
 - CPU no requiere consultas CUDA ni una prueba GPU.
 
-Un fallo de asignación, kernel, sincronización o resultado evita guardar la GPU
-y evita cargar YOLO en runtime. El error indica `python -m src.device_selector`.
-No hay reintento en CPU. Si una inferencia falla después de inicializarse,
+Un fallo de asignación, kernel, sincronización o resultado impide guardar una
+GPU elegida explícitamente. En runtime, una preferencia local CUDA que no pasa
+esa misma validación produce warning y CPU temporal; el archivo no se modifica.
+El mensaje indica `python -m src.device_selector`. Si una inferencia falla después de inicializarse,
 permanecen los manejadores existentes: se informa el error y se liberan cámara y
 ventanas. No se introdujo un segundo intento de inferencia en otro dispositivo.
 
@@ -87,9 +95,10 @@ de precisión, umbrales, tamaño de entrada, cámara, trails ni asociación.
 
 ## Persistencia
 
-`save_device()` carga y valida el archivo vigente, valida el dispositivo elegido
-y crea una copia cambiando exclusivamente `device`. Conserva valores y tipos de
-las otras propiedades: modelo, confianza, IoU, tamaño, clase y visualización.
+`save_device()` valida el dispositivo elegido y escribe exclusivamente
+`{"device": "cpu"}` o `{"device": "cuda:N"}` en `config/device.local.json`.
+No lee ni modifica los parámetros YOLO para guardarlos. El menú valida la base
+y permite reemplazar explícitamente una preferencia local corrupta.
 
 Escribe JSON UTF-8 legible en un temporal único dentro del mismo directorio,
 hace flush/fsync, cierra y valida el temporal, ejecuta `os.replace()` y recarga
@@ -101,16 +110,20 @@ la nueva configuración validada puede estar ya instalada. No se promete
 recuperación frente a terminación forzada, corte eléctrico o ediciones externas
 concurrentes. Ejecuta un selector a la vez.
 
-`config/detection.json` entregado permanece idéntico al RAR (`device: cpu`,
-confianza 0.65); el usuario hace su selección en su equipo. También se conservan
+`config/detection.json` cambia respecto del ZIP actual únicamente `cuda:0`
+por `cpu`; confianza 0.65 y los demás parámetros quedan intactos. La selección
+del usuario se guarda solo en su archivo local. También se conservan
 las configuraciones de cámara (1280×720, 60 FPS, auto), tracking y YAML.
 
 ## Diagnóstico e instalación
 
 `python -m src.diagnostics` informa versión instalada/cargada, build CUDA,
-disponibilidad, cantidad/nombres de GPUs y dispositivo configurado por separado.
-No guarda, pregunta ni ejecuta la prueba con tensor. Si se configuró una GPU que
-no está disponible, informa el error y devuelve diagnóstico incompleto.
+disponibilidad, cantidad/nombres de GPUs, base, preferencia local, dispositivo
+efectivo y fallback por separado. No guarda, pregunta ni carga pesos. Para una
+preferencia GPU ejecuta la misma prueba ligera con tensor que runtime, de modo
+que también detecta kernels o sincronización no utilizables. El fallback local
+es un aviso y no vuelve incompleto el diagnóstico por sí solo. Un import roto
+de PyTorch sigue siendo error: CPU no puede reparar una DLL bloqueada.
 
 La comparación de versiones ya utilizaba `installed.split('+')[0]`; se conservó.
 Las variantes `2.14.0+cpu` / `2.14.0+cu132` y `0.29.0+cu132` no generan una falsa
@@ -122,7 +135,7 @@ cu132 documenta el procedimiento proporcionado como validado por el usuario con
 RTX 5060 / driver 610.88; no se instaló ni probó ese equipo desde este servidor.
 Si esa instalación ya funciona, solo aplica el código y ejecuta el selector.
 
-## Archivos de esta entrega
+## Archivos de la entrega anterior (histórico)
 
 Creados:
 
@@ -152,7 +165,7 @@ todos los archivos de `config/`, `requirements.txt`, `tests/test_hito1.py`,
 `tests/test_camera_selector.py`, `tests/test_hito3_integration.py`, reportes,
 documentación anterior, `.gitignore` y ajustes de VS Code.
 
-## Evidencia automática
+## Evidencia automática de la entrega anterior (histórica)
 
 Entorno de verificación Linux x86_64, Python 3.12.14, dependencias exactas del
 requirements. torch cargado 2.14.0+cu130, CUDA build 13.0, CUDA disponible False,
@@ -194,13 +207,13 @@ python --version
 python -m compileall src tests
 python -m unittest discover -s tests -v
 python -m pip check
-python -m src.device_selector
 ```
 
-1. Elige CPU (opción 0) y comprueba `device: cpu` con:
+1. Primero ejecuta detect/track sin selector ni archivo local: deben usar CPU.
+Después elige CPU (opción 0) y comprueba la preferencia local con:
 
 ```powershell
-Get-Content .\config\detection.json
+Get-Content .\config\device.local.json
 python -m src.diagnostics
 python -m src.detect
 python -m src.track
@@ -212,7 +225,7 @@ Cierra cada visor con q/ESC antes del siguiente. Deben ejecutar sin preguntas.
 
 ```powershell
 python -m src.device_selector
-Get-Content .\config\detection.json
+Get-Content .\config\device.local.json
 python -m src.diagnostics
 python -m src.detect
 python -m src.track
@@ -231,7 +244,7 @@ Es una comprobación adicional de actividad; la elección del selector se basa e
 PyTorch. No se promete un FPS determinado ni que todo ByteTrack ejecute en GPU:
 `device` selecciona dónde ejecuta YOLO; la asociación conserva su implementación.
 
-3. Para probar el error seguro, con `cuda:0` guardado, abre una terminal nueva y
+3. Para probar el fallback temporal, con `cuda:0` local guardado, abre una terminal nueva y
 oculta las GPUs solo en esa sesión, restaurando luego el valor anterior:
 
 ```powershell
@@ -250,19 +263,21 @@ try {
 }
 ```
 
-Con cámara accesible, detect/track deben fallar por CUDA y sugerir el selector,
-sin inferencia CPU. Si falla primero la cámara o el escritorio, resuelve ese
-requisito para alcanzar la validación del modelo. No cambia detection.json.
+Con cámara accesible, detect/track deben avisar y continuar en CPU. La preferencia
+local `cuda:0` debe conservarse para una futura ejecución con CUDA recuperada.
+Si falla primero la cámara o el escritorio, resuelve ese requisito para alcanzar
+la validación del modelo. No cambia detection.json ni device.local.json.
 No hace falta desinstalar drivers ni modificar el entorno de otro proceso.
 
 4. Ejecuta el selector de nuevo para volver a CPU. Prueba también `q`, entrada
-inválida y que todos los campos excepto `device` permanezcan iguales.
+inválida y que detection.json y camera.json permanezcan idénticos al guardar.
 
 ## Git, privacidad y fuentes
 
-No se inicializó ni manipuló Git, ramas, historial, commits o remotos. Tanto
-`device` como `camera_index` dependen del equipo: revisa los cambios locales antes
-de subir configuraciones versionadas. El ZIP contiene código/documentación
+No se inicializó ni manipuló Git, ramas, historial, commits o remotos.
+`camera_index` depende del equipo: revisa sus cambios antes de subir camera.json.
+La preferencia personal `device` ahora está ignorada en `config/device.local.json`
+y debe excluirse al preparar ZIP; `.gitignore` no filtra automáticamente un ZIP. El ZIP contiene código/documentación
 completos; excluye `.venv`, caches, settings generados, pesos y runs.
 
 No se agregaron grabación de imágenes/video, audio, servicios cloud o telemetría.
@@ -277,3 +292,63 @@ requirements:
   formato cuda:N e índices visibles para PyTorch.
 - [Instalación oficial de PyTorch](https://pytorch.org/get-started/locally/): elección
   de plataforma y variante del wheel.
+
+
+## Resolución vigente y archivos inválidos
+
+Orden único en `src/devices.py`: preferencia local válida → base de detection.json.
+La base distribuida es CPU. Ausencia local es normal y no crea ningún archivo.
+JSON local corrupto, campo ausente, formato inválido o lectura inaccesible producen
+warning y se ignoran para esa ejecución, sin reparar silenciosamente el archivo.
+La base sigue siendo estricta: falta de detection.json o parámetros esenciales
+inválidos producen error; no se ocultan mediante valores predeterminados.
+Una GPU puesta manualmente en la base mantiene validación estricta; el fallback
+se aplica a la preferencia local personal. Si una inferencia falla después de
+inicializarse, permanece el manejo existente; no se repite una inferencia en CPU.
+
+`DeviceResolution` conserva `base_device`, `local_preference`, `effective_device`,
+`fallback` y avisos. La copia interna usada por predict/track contiene el valor
+efectivo; los JSON originales no cambian. Cámara, DSHOW/MSMF, preview, modelo,
+umbrales, ByteTrack, IDs y trails mantienen su comportamiento.
+
+La instalación normal es suficiente para CPU. CUDA sigue siendo manual/opcional,
+y no hay reglas por nombre RTX 5060/GTX 1650. El caso reportado WinError 4551 al
+importar torch por bloqueo de torch.dll se conserva como contexto del usuario:
+no se reproduce ni se modifica seguridad Windows. Su import CPU fue reportado
+funcional; detect/track en ese notebook siguen pendientes de prueba física.
+
+
+## Evidencia automática de esta actualización (2026-10-09)
+
+Entorno aislado Linux x86_64 / Python 3.12.14; versiones exactas de requirements,
+con torch 2.14.0+cpu y torchvision 0.29.0+cpu. CUDA build None, disponible False,
+0 GPUs. El objetivo Windows/Python 3.13.15 no fue modificado.
+
+| Comprobación actual | Resultado |
+| --- | --- |
+| ZIP original, tras instalar dependencias en entorno de prueba | 149/149 tests OK |
+| Suite actual | 177/177 tests OK: 28 casos nuevos, pruebas previas adaptadas |
+| compileall src tests | Código 0 |
+| pip check | Código 0, sin conflictos |
+| diagnostics, sin preferencia local | Código 0; base CPU / local no configurada / efectivo CPU |
+| Imports config/devices/device_selector/main/detect/track | Código 0 |
+| YOLO26n real, frame negro sintético, sin selector | Inferencia CPU OK; archivo local no creado |
+| YOLO + ByteTrack reales, frame negro sintético, sin selector | Inferencia CPU OK; archivo local no creado |
+| Preferencia cuda:0 con PyTorch CPU real | Ambas inferencias CPU OK; warning; preferencia conservada |
+| Selector CPU con PyTorch real | Preferencia local guardada; base y cámara intactas |
+| Preferencia local corrupta con PyTorch CPU real | Ambas inferencias CPU OK; archivo corrupto conservado |
+| main/detect/track en este servidor sin escritorio | Código 1 controlado por ausencia de sesión gráfica |
+
+Las inferencias usan pesos oficiales, pero frames sintéticos sin personas: no
+certifican precisión, IDs con personas, webcam, FPS ni GPU física. El ByteTrack
+real también se verifica con cajas sintéticas en la suite existente. La primera
+validación antes de instalar dependencias fallaba por falta de cv2/Ultralytics;
+se registró como limitación inicial y se repitió sobre el ZIP original tras
+instalar los paquetes. Un primer intento de suite modificada se interrumpió por
+un mock del import de PyTorch sin adaptar al menú nuevo; el fixture fue corregido
+y la suite completa posterior pasó. No quedó un fallo de pruebas pendiente.
+
+DEV-01 a DEV-08 en `resultados_pruebas.md` siguen pendientes como pruebas físicas.
+Se revisaron funcionalidad, regresión y distribución, incluyendo el diff completo
+contra el ZIP original, conservación byte a byte de cámara/requirements/tracking,
+y exclusión del archivo local de la entrega.

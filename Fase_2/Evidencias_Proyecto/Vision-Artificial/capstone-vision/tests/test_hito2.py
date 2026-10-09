@@ -79,6 +79,9 @@ class DetectionConfigTests(unittest.TestCase):
 class DetectorTests(unittest.TestCase):
     def setUp(self):
         self.config = {**load_detection_config(), "device": "cpu"}
+        preference = patch("src.devices.load_device_preference", return_value=None)
+        preference.start()
+        self.addCleanup(preference.stop)
         self.frame = MagicMock(shape=(720, 1280, 3), size=720 * 1280 * 3)
         self.model = MagicMock()
         self.model.names = {0: "person", 1: "bicycle"}
