@@ -18,4 +18,5 @@ Thumbs.db
 *.pth
 *.onnx
 runs/
+config/device.local.json
 .ultralytics/

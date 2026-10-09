@@ -9,7 +9,7 @@ from importlib import import_module
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
-from .devices import discover_devices, validate_device
+from .devices import DEVICE_LOCAL_PATH, discover_devices, resolve_effective_device
 
 from .config import CONFIG_PATH, DETECTION_CONFIG_PATH, PROJECT_ROOT, load_config, load_detection_config
 from .config import (TRACKING_CONFIG_PATH, load_tracking_config,
@@ -64,7 +64,8 @@ def report_detection() -> bool:
     try:
         config = load_detection_config()
         print(f"Detección configurada: {config}")
-        print(f"Dispositivo configurado para detección: {config['device']}")
+        print(f"Configuración base: {config['device']}")
+        print(f"Archivo de preferencia local: {DEVICE_LOCAL_PATH}")
     except ValueError as exc:
         print(f"ERROR de configuración de detección: {exc}")
         complete = False
@@ -92,7 +93,12 @@ def report_detection() -> bool:
                     print(f"AVISO: {notice}")
                 if config is not None:
                     try:
-                        validate_device(config["device"], torch_module=module, probe=False)
+                        resolution = resolve_effective_device(config["device"], torch_module=module, emit_warnings=False)
+                        print(f"Preferencia local: {resolution.local_preference or 'no configurada'}")
+                        print(f"Dispositivo efectivo: {resolution.effective_device}")
+                        print(f"Fallback GPU → CPU: {resolution.fallback}")
+                        for notice in resolution.notices:
+                            print(f"WARNING: {notice}")
                     except RuntimeError as exc:
                         print(f"ERROR de dispositivo: {exc}")
                         complete = False
@@ -101,6 +107,9 @@ def report_detection() -> bool:
             complete = False
         except Exception as exc:
             print(f"ERROR al cargar {package}: {exc}. Revisa .venv, requirements.txt y python -m pip check.")
+            if package == "torch":
+                print("PyTorch no pudo cargarse correctamente; dispositivo efectivo: no comprobable. "
+                      "No es posible garantizar inferencia CPU con PyTorch roto.")
             complete = False
     return complete
 

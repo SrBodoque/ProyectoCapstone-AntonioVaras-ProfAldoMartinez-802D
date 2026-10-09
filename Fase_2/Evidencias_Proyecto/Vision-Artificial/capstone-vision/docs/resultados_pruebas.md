@@ -825,3 +825,33 @@ Test-Path .\labels
 ## Aceptación H3
 
 **PENDIENTE**. Deben funcionar H1/H2/H3, existir IDs distintos y razonablemente estables en condiciones normales, caracterizar oclusiones y falsos positivos, y comprobar recursos/privacidad. No se exige tracking perfecto ni 30 FPS. Devuelve salidas de tests/diagnostics/pip check y las fichas; incluye FPS H3, tiempos, persona quieta/movimiento, oclusiones, salida/reentrada, dos personas/cruce/ID switches, cama/mochila/persona+cama/persona con mochila, duración, crashes y liberación de webcam.
+
+
+## Mejora — dispositivo opcional y preferencia local (2026-10-09)
+
+La entrega distribuye CPU como base y no incluye `config/device.local.json`.
+Las siguientes pruebas físicas de esta mejora permanecen **PENDIENTES**. Los
+mocks y cajas sintéticas no certifican cámara, personas ni NVIDIA reales.
+
+| Caso | Procedimiento | Resultado esperado | Estado físico |
+| --- | --- | --- | --- |
+| DEV-01 | Sin archivo local, ejecutar `python -m src.detect` | CPU sin selector ni error CUDA | PENDIENTE |
+| DEV-02 | Sin archivo local, ejecutar `python -m src.track` | CPU; ByteTrack conserva IDs/trails | PENDIENTE |
+| DEV-03 | Ejecutar selector, elegir CPU y reiniciar detect/track | Solo device.local.json guardado; CPU sin preguntar | PENDIENTE |
+| DEV-04 | RTX 5060 con PyTorch CUDA utilizable; elegir GPU | Preferencia local y ambas inferencias en cuda:0 | PENDIENTE |
+| DEV-05 | GTX 1650 con PyTorch CUDA utilizable; elegir GPU | Mismo flujo; comprobar uso GPU físicamente | PENDIENTE |
+| DEV-06 | Preferencia cuda:0; runtime CPU o CUDA no disponible | Warning + CPU; preferencia intacta | PENDIENTE |
+| DEV-07 | Notebook App Control con import del build CPU funcional | Detect/track usan CPU sin tocar políticas Windows | PENDIENTE |
+| DEV-08 | Seleccionar cámara y ejecutar main/detect/track por separado | Misma cámara elegida; cierre y liberación correctos | PENDIENTE |
+
+Antecedente informado por el usuario, sin reproducción en este servidor:
+build CUDA cu132 bloqueado al importar torch con WinError 4551 / torch.dll;
+posteriormente import CPU 2.14.0+cpu funcional, CUDA build None y disponible False.
+Ese antecedente no certifica todavía inferencia física DEV-07.
+
+
+Validación técnica de esta mejora: 177/177 tests, compileall, pip check e imports
+OK; diagnostics código 0 en Linux/Python 3.12.14 con PyTorch 2.14.0+cpu. YOLO26n
+y ByteTrack reales ejecutaron en CPU sobre frame sintético sin selector; también
+se comprobó CPU temporal con preferencia GPU no disponible y conservación del
+archivo. Esto no cambia los estados físicos PENDIENTE de la tabla DEV.

@@ -74,7 +74,8 @@ class PersonTracker:
             tracking_config if tracking_config is not None else load_tracking_config())
         self.tracker_path = resolve_tracker_path(self.tracking_config["tracker_config"])
         self.bytetrack_config = load_bytetrack_config(self.tracker_path)
-        self._model = load_person_model(self.config)
+        self._model, self.device_resolution = load_person_model(self.config)
+        self.config["device"] = self.device_resolution.effective_device
         LOGGER.info("ByteTrack: %s | persist=%s", self.tracker_path, self.tracking_config["persist"])
         if self.config["confidence_threshold"] >= self.bytetrack_config["track_high_thresh"]:
             LOGGER.warning(

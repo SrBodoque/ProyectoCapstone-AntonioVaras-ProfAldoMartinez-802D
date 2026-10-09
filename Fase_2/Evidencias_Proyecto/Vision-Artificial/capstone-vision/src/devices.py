@@ -1,8 +1,14 @@
 """Formato y disponibilidad CPU/CUDA compartidos; PyTorch se importa al usarlo."""
 
+import json
+import logging
 import re
 from dataclasses import dataclass
 from importlib import import_module
+from pathlib import Path
+
+LOGGER = logging.getLogger(__name__)
+DEVICE_LOCAL_PATH = Path(__file__).resolve().parent.parent / "config" / "device.local.json"
 
 
 def validate_device_format(device: str) -> None:
@@ -92,6 +98,61 @@ def validate_device(device: str, *, torch_module=None, probe: bool = True) -> No
     except Exception as exc:
         raise RuntimeError(
             f"El dispositivo configurado '{device}' no está disponible o no es utilizable. "
-            f"{exc} No se cambiará a CPU automáticamente. "
+            f"{exc} La validación explícita no cambia el dispositivo. "
             "Ejecute: python -m src.device_selector"
         ) from exc
+
+
+@dataclass(frozen=True)
+class DeviceResolution:
+    """Conserva la selección original separada del dispositivo de esta sesión."""
+    base_device: str
+    local_preference: str | None
+    effective_device: str
+    fallback: bool = False
+    notices: tuple[str, ...] = ()
+
+
+def load_device_preference(path: Path = DEVICE_LOCAL_PATH) -> str | None:
+    """La ausencia es normal; un archivo existente debe contener solo device."""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8-sig"))
+    except FileNotFoundError:
+        return None
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ValueError(f"No se pudo leer la preferencia local {path}: {exc}.") from exc
+    if not isinstance(data, dict) or set(data) != {"device"}:
+        raise ValueError(f"La preferencia local {path} debe contener exactamente: device.")
+    validate_device_format(data["device"])
+    return data["device"]
+
+
+def resolve_effective_device(base_device: str, local_path: Path = DEVICE_LOCAL_PATH,
+                             *, torch_module=None, emit_warnings: bool = True) -> DeviceResolution:
+    """Preferencia local > base; tolerancia local sin escribir configuraciones."""
+    validate_device_format(base_device)
+    notices = []
+    try:
+        preference = load_device_preference(local_path)
+    except ValueError as exc:
+        preference = None
+        notices.append(f"Preferencia local inválida: {exc} Se ignorará para esta ejecución. "
+                       "Para cambiar la preferencia: python -m src.device_selector")
+    effective = preference if preference is not None else base_device
+    fallback = False
+    try:
+        validate_device(effective, torch_module=torch_module)
+    except RuntimeError as exc:
+        # Solo la preferencia personal recibe fallback; la base sigue siendo estricta.
+        if preference is None or not preference.startswith("cuda:"):
+            raise
+        effective = "cpu"
+        fallback = True
+        notices.append(f"La preferencia local '{preference}' no está disponible o no es utilizable. "
+                       "Se utilizará CPU para esta ejecución. "
+                       "Para cambiar la preferencia: python -m src.device_selector. "
+                       f"Detalle: {exc}")
+    if emit_warnings:
+        for notice in notices:
+            LOGGER.warning("%s", notice)
+    return DeviceResolution(base_device, preference, effective, fallback, tuple(notices))

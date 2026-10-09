@@ -50,7 +50,7 @@ def run_tracking(cv2, camera_config: CameraConfig, detection_config: DetectionCo
             tracker = PersonTracker(detection_config, tracking_config)
             history = (TrackHistory(tracking_config["trail_length"], tracker.bytetrack_config["track_buffer"])
                        if tracking_config["show_trail"] else None)
-            LOGGER.info("Detección: %s", detection_config)
+            LOGGER.info("Detección: %s", tracker.config)
             LOGGER.info("La primera inferencia incluye inicialización; luego se mide FPS del pipeline.")
             cv2.namedWindow(WINDOW, cv2.WINDOW_NORMAL)
             started = None
@@ -77,7 +77,7 @@ def run_tracking(cv2, camera_config: CameraConfig, detection_config: DetectionCo
                 inference_text = f"{result.inference_ms:.1f}" if result.inference_ms is not None else "N/D"
                 labels = (
                     f"{width}x{height} | cam: {camera_config['camera_index']} | {info['backend']}",
-                    f"ByteTrack | Tracks activos: {len(result.tracks)} | {detection_config['model']} | {detection_config['device']}",
+                    f"ByteTrack | Tracks activos: {len(result.tracks)} | {detection_config['model']} | {tracker.config['device']}",
                     f"FPS pipeline: {fps_text} | Inferencia YOLO: {inference_text} ms",
                     f"YOLO + tracking: {result.processing_ms:.1f} ms | Cajas sin ID: {len(result.untracked_detections)}",
                 )
