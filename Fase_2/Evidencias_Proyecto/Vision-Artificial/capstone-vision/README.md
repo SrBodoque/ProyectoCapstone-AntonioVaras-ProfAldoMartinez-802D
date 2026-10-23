@@ -236,6 +236,14 @@ python -m src.track_recovery
 
 Recovery utiliza umbrales separados: candidatos YOLO desde 0.10 para intentar mantener tracks existentes, con confianza alta 0.65 para iniciar nuevos tracks. La detección general, ByteTrack original y FastTracker conservan confianza 0.65. Procedimiento y pruebas pendientes: [ByteTrack Recovery](docs/05_bytetrack_recovery.md).
 
+### Tracking BoT-SORT + ReID experimental
+
+```powershell
+python -m src.track_botsort_reid
+```
+
+Experimento con ReID temporal por apariencia, confianza **0.65** y la cámara y dispositivo ya seleccionados. Puede requerir el modelo oficial adicional `yolo26n-cls.pt`; comprueba el encoder, las características y su paso a la asociación durante la ejecución. Eficacia y rendimiento pendientes de pruebas físicas: [BoT-SORT + ReID](docs/06_botsort_reid.md).
+
 ### Diagnóstico
 
 ```powershell

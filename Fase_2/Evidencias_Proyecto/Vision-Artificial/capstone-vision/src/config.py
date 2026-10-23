@@ -80,7 +80,7 @@ def load_bytetrack_config(path: Path) -> dict:
     return load_tracker_config(path, allowed_types=("bytetrack",))
 
 
-def load_tracker_config(path: Path, *, allowed_types: tuple[str, ...] = ("bytetrack", "fasttrack")) -> dict:
+def load_tracker_config(path: Path, *, allowed_types: tuple[str, ...] = ("bytetrack", "fasttrack", "botsort")) -> dict:
     """Valida solo los trackers integrados usados en esta comparación."""
     try:
         import yaml
@@ -93,12 +93,14 @@ def load_tracker_config(path: Path, *, allowed_types: tuple[str, ...] = ("bytetr
     fields = {"tracker_type", "track_high_thresh", "track_low_thresh", "new_track_thresh",
               "track_buffer", "match_thresh", "fuse_score"}
     tracker_type = data.get("tracker_type") if isinstance(data, dict) else None
-    if tracker_type not in allowed_types or tracker_type not in ("bytetrack", "fasttrack"):
+    if tracker_type not in allowed_types or tracker_type not in ("bytetrack", "fasttrack", "botsort"):
         raise ValueError(f"tracker_type debe ser: {', '.join(allowed_types)}.")
     if tracker_type == "fasttrack":
         fields |= {"reset_velocity_offset_occ", "reset_pos_offset_occ", "enlarge_bbox_occ",
                    "dampen_motion_occ", "active_occ_to_lost_thresh", "init_iou_suppress",
                    "occ_cover_thresh", "occ_reappear_window"}
+    if tracker_type == "botsort":
+        fields |= {"gmc_method", "proximity_thresh", "appearance_thresh", "with_reid", "model"}
     if set(data) != fields:
         raise ValueError(f"YAML {tracker_type} debe contener exactamente: {', '.join(sorted(fields))}.")
     for key in ("track_high_thresh", "track_low_thresh", "new_track_thresh", "match_thresh"):
@@ -123,6 +125,20 @@ def load_tracker_config(path: Path, *, allowed_types: tuple[str, ...] = ("bytetr
         value = data["enlarge_bbox_occ"]
         if type(value) not in (int, float) or not math.isfinite(value) or value < 1:
             raise ValueError("enlarge_bbox_occ debe ser un número finito mayor o igual a 1.")
+    if tracker_type == "botsort":
+        for key in ("proximity_thresh", "appearance_thresh"):
+            value = data[key]
+            if type(value) not in (int, float) or not 0 <= value <= 1 or not math.isfinite(value):
+                raise ValueError(f"{key} debe ser un número finito entre 0 y 1.")
+        if type(data["with_reid"]) is not bool or not data["with_reid"]:
+            raise ValueError("with_reid debe ser true para el experimento BoT-SORT + ReID.")
+        if not isinstance(data["gmc_method"], str) or data["gmc_method"] not in (
+                "none", "sparseOptFlow", "orb", "sift", "ecc"):
+            raise ValueError("gmc_method no es un método GMC soportado.")
+        if data["model"] != "auto":
+            raise ValueError("model debe ser auto; no se admiten rutas externas ni otros extractores.")
+        if data["new_track_thresh"] < data["track_high_thresh"]:
+            raise ValueError("En BoT-SORT new_track_thresh debe ser mayor o igual a track_high_thresh.")
     return data
 
 
