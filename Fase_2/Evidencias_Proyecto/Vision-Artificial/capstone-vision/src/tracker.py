@@ -10,6 +10,7 @@ from .config import (DetectionConfig, TrackingConfig, load_detection_config,
                      load_tracking_config, validate_tracking_config,
                      resolve_tracker_path, load_tracker_config)
 from .detector import Detection, load_person_model
+from .reid_diagnostics import ReIDDiagnostics
 
 LOGGER = logging.getLogger(__name__)
 
@@ -92,10 +93,21 @@ class PersonTracker:
                         self.tracking_confidence, self.config["confidence_threshold"])
             for key in ("track_high_thresh", "track_low_thresh", "new_track_thresh", "track_buffer"):
                 LOGGER.info("%s: %s", key, self.tracker_params[key])
-        self.tracker_label = ("FastTracker" if self.tracker_params["tracker_type"] == "fasttrack"
-                              else "ByteTrack")
+        self.tracker_label = {"bytetrack": "ByteTrack", "fasttrack": "FastTracker",
+                              "botsort": "BoT-SORT + ReID"}[self.tracker_params["tracker_type"]]
+        if self.tracker_params["tracker_type"] == "botsort" and (
+                tracking_confidence_override is not None or self.tracking_confidence != 0.65):
+            raise ValueError("BoT-SORT + ReID requiere confianza general 0.65 y ningún override de Recovery.")
         self._model, self.device_resolution = load_person_model(self.config)
         self.config["device"] = self.device_resolution.effective_device
+        self.reid_diagnostics = None
+        if self.tracker_params["tracker_type"] == "botsort":
+            LOGGER.info("Modo experimental: BoT-SORT + ReID | Detector: %s | Confianza: %.2f | "
+                        "Tracker: botsort | ReID solicitado: True | Modelo ReID configurado: auto | "
+                        "Dispositivo efectivo: %s | GMC: %s",
+                        self.config["model"], self.tracking_confidence, self.config["device"],
+                        self.tracker_params["gmc_method"])
+            self.reid_diagnostics = ReIDDiagnostics(self._model, self.config["device"])
         LOGGER.info("%s: %s | persist=%s", self.tracker_label, self.tracker_path, self.tracking_config["persist"])
         if self.tracking_confidence >= self.bytetrack_config["track_high_thresh"]:
             LOGGER.warning(
@@ -120,6 +132,8 @@ class PersonTracker:
             )
             if len(results) != 1:
                 raise RuntimeError("YOLO no devolvió exactamente un resultado para el frame.")
+            if self.reid_diagnostics is not None:
+                self.reid_diagnostics.after_frame()
             result = results[0]
             tracks, untracked = [], []
             seen_ids = set()
