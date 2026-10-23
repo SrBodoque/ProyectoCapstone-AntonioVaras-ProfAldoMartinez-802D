@@ -68,23 +68,40 @@ class PersonTracker:
     """Una instancia por sesión; model.track incluye detección y asociación."""
 
     def __init__(self, detection_config: DetectionConfig | None = None,
-                 tracking_config: TrackingConfig | None = None):
+                 tracking_config: TrackingConfig | None = None, *,
+                 tracking_confidence_override: float | None = None):
         self.config = dict(detection_config if detection_config is not None else load_detection_config())
+        # El override pertenece a esta sesión; nunca altera la confianza general.
+        self.tracking_confidence = (self.config["confidence_threshold"]
+                                    if tracking_confidence_override is None
+                                    else tracking_confidence_override)
+        if (type(self.tracking_confidence) not in (int, float)
+                or not 0 <= self.tracking_confidence <= 1
+                or not math.isfinite(self.tracking_confidence)):
+            raise ValueError("La confianza efectiva de tracking debe ser un número finito entre 0 y 1.")
         self.tracking_config = validate_tracking_config(
             tracking_config if tracking_config is not None else load_tracking_config())
         self.tracker_path = resolve_tracker_path(self.tracking_config["tracker_config"])
         self.tracker_params = load_tracker_config(self.tracker_path)
+        if (tracking_confidence_override is not None
+                and self.tracker_params["new_track_thresh"] < self.tracker_params["track_high_thresh"]):
+            raise ValueError("En tracking experimental new_track_thresh debe ser mayor o igual a track_high_thresh.")
         self.bytetrack_config = self.tracker_params  # Compatibilidad con consumidores H3 existentes.
+        if tracking_confidence_override is not None:
+            LOGGER.info("YOLO tracking conf: %.2f | confianza general: %.2f",
+                        self.tracking_confidence, self.config["confidence_threshold"])
+            for key in ("track_high_thresh", "track_low_thresh", "new_track_thresh", "track_buffer"):
+                LOGGER.info("%s: %s", key, self.tracker_params[key])
         self.tracker_label = ("FastTracker" if self.tracker_params["tracker_type"] == "fasttrack"
                               else "ByteTrack")
         self._model, self.device_resolution = load_person_model(self.config)
         self.config["device"] = self.device_resolution.effective_device
         LOGGER.info("%s: %s | persist=%s", self.tracker_label, self.tracker_path, self.tracking_config["persist"])
-        if self.config["confidence_threshold"] >= self.bytetrack_config["track_high_thresh"]:
+        if self.tracking_confidence >= self.bytetrack_config["track_high_thresh"]:
             LOGGER.warning(
                 "conf=%.2f filtra antes de %s: la segunda asociación de baja confianza "
                 "no recibe candidatos. Se conserva el baseline de detection.json.",
-                self.config["confidence_threshold"], self.tracker_label)
+                self.tracking_confidence, self.tracker_label)
 
     def track(self, frame) -> FrameTracks:
         if (frame is None or not hasattr(frame, "shape") or len(frame.shape) != 3
@@ -96,7 +113,7 @@ class PersonTracker:
                 source=frame, tracker=str(self.tracker_path),
                 persist=self.tracking_config["persist"],
                 classes=[self.config["person_class_id"]],
-                conf=self.config["confidence_threshold"], iou=self.config["iou_threshold"],
+                conf=self.tracking_confidence, iou=self.config["iou_threshold"],
                 imgsz=self.config["image_size"], device=self.config["device"],
                 stream=False, save=False, save_txt=False, save_conf=False, save_crop=False,
                 show=False, visualize=False, verbose=False, augment=False,

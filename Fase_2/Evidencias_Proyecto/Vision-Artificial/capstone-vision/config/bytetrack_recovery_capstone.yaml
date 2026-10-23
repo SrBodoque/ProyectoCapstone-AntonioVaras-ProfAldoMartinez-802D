@@ -1,0 +1,9 @@
+# Experimento de recuperación de baja confianza; hipótesis pendiente de prueba física.
+# No modifica el baseline ByteTrack ni FastTracker. Sin ReID.
+tracker_type: bytetrack
+track_high_thresh: 0.65
+track_low_thresh: 0.10
+new_track_thresh: 0.65
+track_buffer: 30
+match_thresh: 0.80
+fuse_score: true

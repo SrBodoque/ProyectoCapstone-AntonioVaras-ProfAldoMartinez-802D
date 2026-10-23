@@ -228,6 +228,14 @@ python -m src.track_fast
 
 Alternativa para comparar estabilidad de IDs ante cruces y oclusiones, conservando YOLO26n, confianza 0.65, cámara y dispositivo. ByteTrack sigue siendo el baseline; todavía no se elige un ganador. Procedimiento y tabla pendiente: [Comparación de trackers](docs/04_comparacion_trackers.md).
 
+### Tracking ByteTrack Recovery experimental
+
+```powershell
+python -m src.track_recovery
+```
+
+Recovery utiliza umbrales separados: candidatos YOLO desde 0.10 para intentar mantener tracks existentes, con confianza alta 0.65 para iniciar nuevos tracks. La detección general, ByteTrack original y FastTracker conservan confianza 0.65. Procedimiento y pruebas pendientes: [ByteTrack Recovery](docs/05_bytetrack_recovery.md).
+
 ### Diagnóstico
 
 ```powershell

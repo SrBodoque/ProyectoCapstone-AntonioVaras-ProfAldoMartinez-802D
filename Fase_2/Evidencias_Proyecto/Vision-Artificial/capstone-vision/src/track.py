@@ -38,7 +38,8 @@ def draw_tracks(cv2, frame, result: FrameTracks, config: TrackingConfig,
 
 
 def run_tracking(cv2, camera_config: CameraConfig, detection_config: DetectionConfig,
-                 tracking_config: TrackingConfig, *, tracker_label: str = "ByteTrack") -> None:
+                 tracking_config: TrackingConfig, *, tracker_label: str = "ByteTrack",
+                 tracking_confidence_override: float | None = None) -> None:
     """Reutiliza camera_session: libera recursos ante cierre, error o Ctrl+C."""
     from .camera import camera_info, camera_session
 
@@ -48,7 +49,12 @@ def run_tracking(cv2, camera_config: CameraConfig, detection_config: DetectionCo
             info = camera_info(capture)
             LOGGER.info("Solicitado: %s", camera_config)
             LOGGER.info("Informado por OpenCV: %s", info)
-            tracker = PersonTracker(detection_config, tracking_config)
+            if tracking_confidence_override is None:
+                tracker = PersonTracker(detection_config, tracking_config)
+            else:
+                LOGGER.info("Tracking experimental: %s", tracker_label)
+                tracker = PersonTracker(detection_config, tracking_config,
+                                        tracking_confidence_override=tracking_confidence_override)
             history = (TrackHistory(tracking_config["trail_length"], tracker.bytetrack_config["track_buffer"])
                        if tracking_config["show_trail"] else None)
             LOGGER.info("Detección: %s", tracker.config)
@@ -100,7 +106,8 @@ def run_tracking(cv2, camera_config: CameraConfig, detection_config: DetectionCo
             LOGGER.warning("No se pudieron destruir las ventanas de OpenCV: %s", exc)
 
 
-def main(*, tracker_config: str | None = None, tracker_label: str = "ByteTrack") -> int:
+def main(*, tracker_config: str | None = None, tracker_label: str = "ByteTrack",
+         tracking_confidence_override: float | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     try:
         import cv2
@@ -115,7 +122,11 @@ def main(*, tracker_config: str | None = None, tracker_label: str = "ByteTrack")
             tracking_config = {**tracking_config, "tracker_config": tracker_config}
         if sys.platform.startswith("linux") and not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")):
             raise RuntimeError("No hay sesión gráfica disponible. Ejecuta tracking en tu equipo con escritorio y webcam.")
-        if tracker_config is None:
+        if tracking_confidence_override is not None:
+            run_tracking(cv2, camera_config, detection_config, tracking_config,
+                         tracker_label=tracker_label,
+                         tracking_confidence_override=tracking_confidence_override)
+        elif tracker_config is None:
             run_tracking(cv2, camera_config, detection_config, tracking_config)
         else:
             run_tracking(cv2, camera_config, detection_config, tracking_config, tracker_label=tracker_label)
