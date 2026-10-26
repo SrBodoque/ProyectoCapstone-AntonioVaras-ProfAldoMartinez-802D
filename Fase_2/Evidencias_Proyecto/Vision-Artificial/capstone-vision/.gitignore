@@ -20,3 +20,5 @@ Thumbs.db
 runs/
 config/device.local.json
 .ultralytics/
+videos_testing/
+results_testing/
