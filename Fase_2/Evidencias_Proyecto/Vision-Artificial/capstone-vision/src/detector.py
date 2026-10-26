@@ -7,7 +7,7 @@ import time
 from dataclasses import dataclass
 
 from .config import DetectionConfig, PROJECT_ROOT, load_detection_config
-from .devices import resolve_effective_device
+from .devices import DeviceResolution, resolve_effective_device, validate_device
 
 LOGGER = logging.getLogger(__name__)
 
@@ -49,10 +49,16 @@ def _load_yolo():
     return YOLO
 
 
-def load_person_model(config: DetectionConfig):
+def load_person_model(config: DetectionConfig, *, device_override: str | None = None):
     """Carga compartida H2/H3: un modelo, pesos locales y clase person validada."""
-    resolution = resolve_effective_device(config["device"])  # Una resolución para H2/H3.
+    if device_override is None:
+        resolution = resolve_effective_device(config["device"])  # Una resolución para H2/H3.
+    else:
+        validate_device(device_override)  # Selección explícita: sin preferencia ni fallback.
+        resolution = DeviceResolution(config["device"], None, device_override)
     model_path = PROJECT_ROOT / config["model"]
+    if device_override is not None and (not model_path.is_file() or model_path.stat().st_size == 0):
+        raise RuntimeError(f"Faltan pesos locales no vacíos: {model_path}. No se descargarán con device_override.")
     LOGGER.info("Cargando %s en %s; el primer inicio puede descargar los pesos oficiales.",
                 config["model"], resolution.effective_device)
     yolo = _load_yolo()
@@ -77,10 +83,12 @@ def load_person_model(config: DetectionConfig):
 class PersonDetector:
     """Mantiene un único modelo y devuelve datos simples de cada frame."""
 
-    def __init__(self, config: DetectionConfig | None = None):
+    def __init__(self, config: DetectionConfig | None = None, *,
+                 device_override: str | None = None):
         self.config = dict(config if config is not None else load_detection_config())
         self.model_path = PROJECT_ROOT / self.config["model"]
-        self._model, self.device_resolution = load_person_model(self.config)
+        self._model, self.device_resolution = (load_person_model(self.config)
+            if device_override is None else load_person_model(self.config, device_override=device_override))
         self.config["device"] = self.device_resolution.effective_device
 
     def detect(self, frame) -> FrameDetections:

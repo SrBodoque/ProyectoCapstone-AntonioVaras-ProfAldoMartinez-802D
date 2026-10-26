@@ -70,7 +70,8 @@ class PersonTracker:
 
     def __init__(self, detection_config: DetectionConfig | None = None,
                  tracking_config: TrackingConfig | None = None, *,
-                 tracking_confidence_override: float | None = None):
+                 tracking_confidence_override: float | None = None,
+                 device_override: str | None = None):
         self.config = dict(detection_config if detection_config is not None else load_detection_config())
         # El override pertenece a esta sesión; nunca altera la confianza general.
         self.tracking_confidence = (self.config["confidence_threshold"]
@@ -98,7 +99,8 @@ class PersonTracker:
         if self.tracker_params["tracker_type"] == "botsort" and (
                 tracking_confidence_override is not None or self.tracking_confidence != 0.65):
             raise ValueError("BoT-SORT + ReID requiere confianza general 0.65 y ningún override de Recovery.")
-        self._model, self.device_resolution = load_person_model(self.config)
+        self._model, self.device_resolution = (load_person_model(self.config)
+            if device_override is None else load_person_model(self.config, device_override=device_override))
         self.config["device"] = self.device_resolution.effective_device
         self.reid_diagnostics = None
         if self.tracker_params["tracker_type"] == "botsort":

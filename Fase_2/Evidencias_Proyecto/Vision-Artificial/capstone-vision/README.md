@@ -116,57 +116,68 @@ También puede utilizarse el instalador oficial de Python para Windows x64.
 
 cd .\Fase_2\Evidencias_Proyecto\Vision-Artificial\capstone-vision
 
-## 2. Crear entorno virtual
+## 2. Entorno Python local
 
-Desde la carpeta `capstone-vision`:
+Utilizar Python **3.13.15 x64** y un `.venv` independiente dentro de `capstone-vision`.
+No reutilizar ni modificar el entorno de OneDrive. Si `.venv` ya existe y funciona,
+no recrearlo. Solo para preparar un entorno nuevo, con autorización:
 
 ```powershell
+if (Test-Path -LiteralPath .venv) { throw '.venv ya existe; no sobrescribir.' }
 py -3.13 -m venv .venv
-.\.venv\Scripts\Activate.ps1
+if ($LASTEXITCODE -ne 0) { throw 'Falló la creación de .venv.' }
+& .\.venv\Scripts\python.exe --version
 ```
 
-Verificar:
+Los comandos de esta guía usan directamente ese intérprete; **no requieren activar
+`Activate.ps1`**. `.venv/` está excluido de Git. Instalar paquetes únicamente mediante
+`.venv\Scripts\python.exe -m pip`, nunca sobre el Python global.
+
+## 3. Dependencias y CUDA en RTX 5060
+
+Configuración validada: PyTorch **2.14.0+cu132**, torchvision **0.29.0+cu132**,
+Ultralytics **8.4.163**, OpenCV **4.14.0.94**, lap **0.5.12**, NumPy **2.5.2** y
+PyYAML **6.0.3**. Las dos últimas son dependencias transitivas; `requirements.txt`
+fija las cinco dependencias directas, pero no es un lock completo de transitivas.
+
+Solo al instalar en un `.venv` nuevo y con autorización, ejecutar una línea a la vez:
 
 ```powershell
-python --version
+& .\.venv\Scripts\python.exe -m pip install --only-binary=:all: --index-url https://download.pytorch.org/whl/cu132 "torch==2.14.0+cu132" "torchvision==0.29.0+cu132"
+& .\.venv\Scripts\python.exe -m pip install --index-url https://pypi.org/simple -r requirements.txt "torch==2.14.0+cu132" "torchvision==0.29.0+cu132"
+& .\.venv\Scripts\python.exe -m pip check
 ```
 
----
+Detenerse si cualquier comando falla; no sustituir versiones ni intentar otra
+combinación automáticamente. Los sufijos explícitos `+cu132` preservan la variante
+CUDA al instalar el resto de requisitos. No instalar Toolkit/cuDNN aparte para
+este procedimiento con wheels oficiales. Consultar la [instalación oficial de
+PyTorch](https://pytorch.org/get-started/locally/) para otro hardware.
 
-## 3. Instalar dependencias
+RTX 5060 y driver **610.88** validados con runtime CUDA **13.2**, arquitectura
+`sm_120`, multiplicación matricial CUDA y NMS CUDA de torchvision. Comprobación
+rápida, sin modelos ni cambios de preferencias:
 
 ```powershell
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-python -m pip check
+& .\.venv\Scripts\python.exe -c "import torch; print(torch.__version__, torch.version.cuda); assert torch.cuda.is_available(); print(torch.cuda.get_device_name(0)); x=torch.ones((32,32),device='cuda:0'); assert (x@x).sum().item()==32768; torch.cuda.synchronize()"
 ```
 
----
+La disponibilidad de GPU se comprueba con PyTorch, no solo con `nvidia-smi`.
+Un error de importación/DLL o CUDA no disponible debe diagnosticarse; no cambiar
+paquetes, políticas de Windows ni dispositivo silenciosamente. La GTX 1650 no
+queda validada por estas pruebas.
 
-## 4. CPU y soporte opcional NVIDIA CUDA
+## 4. Dispositivo y pesos locales
 
-La instalación normal con `python -m pip install -r requirements.txt` y `python -m pip check` es suficiente para ejecutar detección y tracking en CPU. **No es obligatorio instalar wheels CUDA ni ejecutar `python -m src.device_selector`.** Sin preferencia local se usa `device: cpu` de `config/detection.json`. Si tu entorno actual ya funciona, no lo recrees. Para asegurar explícitamente los wheels CPU-only en un entorno nuevo, puedes instalar primero:
+La instalación anterior permite solicitar `cpu` o `cuda:0`. Para videos se exige
+`--device` explícito; no se utiliza el selector persistente. Para los ejecutables
+de cámara sigue disponible `src.device_selector`, descrito a continuación.
 
-```powershell
-python -m pip install torch==2.14.0 torchvision==0.29.0 --index-url https://download.pytorch.org/whl/cpu
-python -m pip install -r requirements.txt
-python -m pip check
-```
-
-Para utilizar opcionalmente una GPU NVIDIA compatible, el procedimiento reportado como validado por el equipo con RTX 5060 y driver 610.88 utiliza los wheels oficiales `cu132` (la GTX 1650 sigue pendiente de prueba física):
-
-```powershell
-python -m pip uninstall torch torchvision -y
-python -m pip install torch==2.14.0 torchvision==0.29.0 --index-url https://download.pytorch.org/whl/cu132
-python -m pip check
-python -c "import torch; print(torch.__version__); print(torch.version.cuda); print(torch.cuda.is_available()); print(torch.cuda.device_count())"
-```
-
-Ejecuta este bloque solo si necesitas cambiar la instalación de PyTorch: si ya tienes `2.14.0+cu132` / `0.29.0+cu132` funcionando, omítelo. Los sufijos `+cpu` y `+cu132` son variantes de las versiones base; diagnostics no los rechaza. Consulta las [instrucciones oficiales de PyTorch](https://pytorch.org/get-started/locally/) para compatibilidad del equipo. No hace falta instalar Toolkit/cuDNN manualmente para esta mejora.
-
-Instalar soporte CUDA y elegir el dispositivo son pasos distintos. Solo después de comprobar que `import torch` funciona, CUDA está disponible y hay GPUs, ejecuta `python -m src.device_selector` y elige la GPU. El selector no instala paquetes ni modifica el entorno Python.
-
-Si `import torch` falla con `WinError 4551` o Windows bloquea `torch.dll` mediante App Control / Smart App Control, ese build no es utilizable mientras esté bloqueado. Puedes continuar con el build CPU explícito si su import funciona; no es necesario desactivar la seguridad de Windows desde el proyecto.
+Detección y tracking MP4 requieren **`yolo26n.pt`** en la raíz. El checkpoint oficial
+se prepara por separado y únicamente con autorización desde:
+[Ultralytics/YOLO26 en Hugging Face](https://huggingface.co/Ultralytics/YOLO26/resolve/main/yolo26n.pt).
+No sobrescribir un archivo existente. El ejecutable MP4 no descarga pesos ni instala
+paquetes. No ejecutar el selector de dispositivo para preparar el entorno.
 
 ---
 
@@ -177,7 +188,7 @@ El proyecto mantiene distintos puntos de entrada para poder probar cada capa de 
 ### Configurar o cambiar la cámara
 
 ```powershell
-python -m src.camera_selector
+& .\.venv\Scripts\python.exe -m src.camera_selector
 ```
 
 Ejecuta este comando en la primera configuración del equipo o cuando quieras cambiar de cámara. Prueba los índices 0 a 4 y permite elegir solo entre los que entregan frames. Muestra el tamaño real del frame, el backend y los FPS informados por el controlador (no medidos).
@@ -191,7 +202,7 @@ Detalles de implementación, pruebas y validación física: [Selección de cáma
 ### Configurar o cambiar CPU/CUDA (opcional)
 
 ```powershell
-python -m src.device_selector
+& .\.venv\Scripts\python.exe -m src.device_selector
 ```
 
 Con PyTorch funcional, CPU siempre aparece como opción. Se ofrecen GPUs únicamente si PyTorch informa CUDA disponible; cada opción muestra su índice y nombre. Una GPU elegida debe superar una operación mínima con tensor antes de guardarse. Una instalación PyTorch CPU-only ofrece solo CPU, aunque el computador tenga una GPU NVIDIA física.
@@ -205,25 +216,25 @@ Si la GPU local deja de ser utilizable o el índice no existe, se muestra un war
 ### Webcam
 
 ```powershell
-python -m src.main
+& .\.venv\Scripts\python.exe -m src.main
 ```
 
 ### Detección de personas
 
 ```powershell
-python -m src.detect
+& .\.venv\Scripts\python.exe -m src.detect
 ```
 
 ### Tracking ByteTrack estable
 
 ```powershell
-python -m src.track
+& .\.venv\Scripts\python.exe -m src.track
 ```
 
 ### Tracking FastTracker experimental
 
 ```powershell
-python -m src.track_fast
+& .\.venv\Scripts\python.exe -m src.track_fast
 ```
 
 Alternativa para comparar estabilidad de IDs ante cruces y oclusiones, conservando YOLO26n, confianza 0.65, cámara y dispositivo. ByteTrack sigue siendo el baseline; todavía no se elige un ganador. Procedimiento y tabla pendiente: [Comparación de trackers](docs/04_comparacion_trackers.md).
@@ -231,7 +242,7 @@ Alternativa para comparar estabilidad de IDs ante cruces y oclusiones, conservan
 ### Tracking ByteTrack Recovery experimental
 
 ```powershell
-python -m src.track_recovery
+& .\.venv\Scripts\python.exe -m src.track_recovery
 ```
 
 Recovery utiliza umbrales separados: candidatos YOLO desde 0.10 para intentar mantener tracks existentes, con confianza alta 0.65 para iniciar nuevos tracks. La detección general, ByteTrack original y FastTracker conservan confianza 0.65. Procedimiento y pruebas pendientes: [ByteTrack Recovery](docs/05_bytetrack_recovery.md).
@@ -239,7 +250,7 @@ Recovery utiliza umbrales separados: candidatos YOLO desde 0.10 para intentar ma
 ### Tracking BoT-SORT + ReID experimental
 
 ```powershell
-python -m src.track_botsort_reid
+& .\.venv\Scripts\python.exe -m src.track_botsort_reid
 ```
 
 Experimento con ReID temporal por apariencia, confianza **0.65** y la cámara y dispositivo ya seleccionados. Puede requerir el modelo oficial adicional `yolo26n-cls.pt`; comprueba el encoder, las características y su paso a la asociación durante la ejecución. Eficacia y rendimiento pendientes de pruebas físicas: [BoT-SORT + ReID](docs/06_botsort_reid.md).
@@ -247,13 +258,13 @@ Experimento con ReID temporal por apariencia, confianza **0.65** y la cámara y 
 ### Diagnóstico
 
 ```powershell
-python -m src.diagnostics
+& .\.venv\Scripts\python.exe -m src.diagnostics
 ```
 
 Para diagnosticar cámaras disponibles sin seleccionar ni guardar configuración:
 
 ```powershell
-python -m src.diagnostics --scan
+& .\.venv\Scripts\python.exe -m src.diagnostics --scan
 ```
 
 Cerrar las ventanas con:
@@ -272,10 +283,147 @@ ESC
 
 # Pruebas automáticas
 
+## Procesamiento MP4 local — Etapa 1
+
+El ejecutable independiente `src.process_videos` procesa MP4 sin cámara ni ventanas.
+`src.main`, `src.detect`, `src.track` y los selectores conservan su funcionamiento.
+Requiere el entorno local con las dependencias ya instaladas y `yolo26n.pt` no vacío
+en la raíz de `capstone-vision`. No instala paquetes ni descarga pesos. Si faltan,
+finaliza con error y deja la validación pendiente.
+
+Desde `capstone-vision`, con el intérprete del entorno existente:
+
 ```powershell
-python -m compileall src tests
-python -m unittest discover -s tests -v
-python -m pip check
+& .\.venv\Scripts\python.exe -m src.process_videos --video videos_testing/dev/prueba_01.mp4 --mode tracking --device cuda:0
+& .\.venv\Scripts\python.exe -m src.process_videos --directory videos_testing/dev --mode tracking --device cuda:0
+& .\.venv\Scripts\python.exe -m src.process_videos --video videos_testing/dev/prueba_01.mp4 --mode detection --device cpu
+```
+
+Se debe seleccionar exactamente `--video` o `--directory`, un modo y un dispositivo.
+La selección CPU/CUDA es explícita, prevalece sobre la preferencia personal y no la
+modifica. CUDA no disponible causa error, sin fallback. Los comandos anteriores
+utilizan exclusivamente el `.venv` local; no es necesario activarlo ni recurrir
+a otro entorno. Las rutas de entrada son ejemplos: seleccionar un MP4 local existente.
+
+Organización local sugerida, excluida de Git:
+
+```text
+videos_testing/
+  dev/          # videos para desarrollo
+  validation/   # grabaciones independientes reservadas
+results_testing/
+  <run_id>/
+    run.json
+    summary.json
+    <case_id>/
+      metadata.json
+      predictions.jsonl
+      timings.csv
+```
+
+La carpeta se enumera sin recursión, con orden estable y extensión MP4 sin
+distinguir mayúsculas. No se admiten URLs ni rutas UNC. Cada video tiene una sesión
+nueva, se procesa frame a frame sin saltos ni pausas de reproducción y se libera
+antes del siguiente. Los IDs solo tienen significado dentro de esa sesión.
+En esta etapa no hay selector de perfiles: tracking utiliza ByteTrack baseline,
+con los parámetros actuales, sin tuning ni cambio de algoritmos.
+
+Cada ejecución crea un directorio exclusivo (fecha UTC y UUID); nunca reutiliza
+resultados anteriores. `--output RUTA` cambia el directorio raíz de resultados.
+Los resultados fuera de `results_testing/` deben mantenerse fuera de Git.
+
+| Archivo | Contenido |
+| --- | --- |
+| `run.json` | ID y estado del lote, opciones, casos, hashes, configuración y versiones. |
+| `summary.json` | Estado global, resultado por caso, errores y casos no procesados. |
+| `metadata.json` | Por video: dispositivo solicitado/efectivo, modelo y hash, perfil y parámetros, backend, dimensiones, FPS informado, frames, tiempos iniciales y motivo de terminación. |
+| `predictions.jsonl` | Una fila por frame, también vacío: índice desde cero, tiempo y origen del tiempo, cajas en píxeles originales, confianza, clase e ID cuando existe. |
+| `timings.csv` | Una fila por frame: `frame_index`, `timestamp_ms`, `timestamp_source`, `read_ms`, `processing_ms`, `inference_ms` y `model_processing_ms`; valores ausentes quedan vacíos. |
+
+En predicciones, `tracks` contiene cajas con ID, `detections` las del modo detección
+y `untracked_detections` las del modo tracking sin ID. Todos los formatos incluyen o
+se vinculan al esquema v1. Los IDs de caso tienen ordinal de selección y prefijo de
+hash; no son identidades globales entre selecciones distintas. No se guardan imágenes,
+videos anotados ni vectores de apariencia. Los archivos de ejecuciones fallidas o
+interrumpidas son parciales y deben interpretarse junto con sus estados.
+
+Los tiempos externos incluyen sincronización CUDA cuando corresponde. Se registran
+por separado lectura, procesamiento, inferencia interna, carga y primera inferencia;
+no se elimina el primer frame ni se calienta el tracker con frames adicionales.
+El tiempo de video proviene de OpenCV o de índice/FPS informado, indicando el origen;
+puede ser desconocido. Para video de FPS variable, índice/FPS es solo una estimación.
+
+Estados: `completed` (fin consistente con el número informado de frames), `failed`
+(error o fin anticipado), `incomplete` (metadatos insuficientes/inconsistentes) e
+`interrupted` (Ctrl+C). OpenCV no distingue universalmente EOF de error de decodificación:
+`completed` no certifica integridad absoluta del MP4. Un video fallido no impide
+intentar los restantes; Ctrl+C detiene el lote conservando parciales. Fallos globales
+de pesos/configuración/dispositivo impiden comenzar inferencias. Código de salida:
+0 completo, 1 error/incompleto, 130 interrupción.
+
+### Verificación de Etapa 1
+
+```powershell
+& .\.venv\Scripts\python.exe -m unittest discover -s tests -p "test_video*.py" -v
+& .\.venv\Scripts\python.exe -m unittest discover -s tests -v
+```
+
+La primera batería incluye casos unitarios, decodificación real de MP4 sintéticos,
+inferencia simulada y una selección explícita de regresiones existentes. No equivale
+a inferencia YOLO ni a la suite completa. La selección reutiliza ResourceTests de
+Hito 1, escaneo/selección de cámara, DetectionResourceTests de Hito 2, DeviceTests del
+selector CPU/CUDA y DetectorTests de Hito 2 excepto `test_model_path_independent_of_cwd`.
+La exclusión de ese caso en la batería corta proviene del problema histórico de
+ACL de temporales del sandbox; la suite completa sí lo incluye y permite verificarlo
+fuera del sandbox. La batería corta no sustituye la regresión completa. No se
+modificaron pruebas existentes para ocultar resultados.
+
+Los nuevos fixtures crean y eliminan temporales exclusivos bajo `logs/video_test_temp/`,
+sin cambiar ACL, para evitar el problema de `TemporaryDirectory(mode=0o700)` con tokens
+Windows restringidos. No modifican el comportamiento de las pruebas existentes.
+
+Integración YOLO real, separada y sin descargas, con recursos locales:
+
+```powershell
+$env:LIMPIA_TEST_MP4 = (Resolve-Path videos_testing/dev/prueba_01.mp4).Path
+$env:LIMPIA_TEST_DEVICE = "cuda:0"  # usar cpu para validar explícitamente en CPU
+& .\.venv\Scripts\python.exe -m unittest discover -s tests -p test_mp4_inference_integration.py -v
+```
+
+Si faltan dependencias, pesos o la variable del MP4, la integración se registra como
+omitida y pendiente, nunca aprobada. Antes de declarar validada la tarea, ejecutar
+tres veces en procesos independientes la batería relevante después del último
+cambio, además de cubrir escenarios distintos y las regresiones disponibles.
+
+Esta etapa no implementa comparación, baseline promovido/inmutable, optimización,
+métricas MOT, conteo IN/OUT ni integración Django. Las predicciones guardadas permiten
+evaluación posterior sin repetir inferencias para métricas derivables de esas salidas.
+
+### Estado verificado de Etapa 1
+
+- Tres validaciones independientes conservadas de **89/89** pruebas específicas,
+  sin fallos, errores ni omisiones; no se han modificado módulos funcionales después.
+- `prueba_01.mp4`: **734/734** frames, estado `completed`, dispositivo efectivo
+  `cuda:0` en RTX 5060. Se comprobaron índices, filas CSV/JSONL y hashes. Hay **588**
+  frames con tracks y **5** con detecciones sin ID; no equivalen a personas contadas.
+- Integración real de detección y tracking MP4 en CUDA: **1 prueba aprobada**, con
+  ambos modos ejecutados sobre el archivo local, sin descargas ni omisiones.
+- Regresión general: **373** casos descubiertos; `unittest` registra **370** pruebas,
+  cero fallos, cero errores y **una omisión de clase**: las tres pruebas de inferencia
+  BoT-SORT + ReID requieren `yolo26n-cls.pt`. No se descargó ese modelo ni se declara
+  aprobada esa integración. La regresión general no se presenta como íntegramente aprobada.
+- Cámara y selectores conservan contratos verificados con pruebas disponibles;
+  esta comprobación no sustituye una nueva aceptación física de cámara.
+- Sin anotaciones de referencia, no se certifican precisión, continuidad correcta de
+  IDs ni conteo de personas. La terminación del MP4 conserva la limitación de EOF
+  descrita arriba. BoT-SORT + ReID y evaluación cuantitativa siguen pendientes.
+
+## Suite existente
+
+```powershell
+& .\.venv\Scripts\python.exe -m compileall src tests
+& .\.venv\Scripts\python.exe -m unittest discover -s tests -v
+& .\.venv\Scripts\python.exe -m pip check
 ```
 
 Las pruebas físicas y sus resultados se registran en:
