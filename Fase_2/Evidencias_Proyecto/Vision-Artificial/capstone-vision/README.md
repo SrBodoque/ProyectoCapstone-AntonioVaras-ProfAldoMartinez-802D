@@ -14,6 +14,129 @@ El sistema está diseñado bajo principios de privacidad:
 
 ---
 
+## INICIO RÁPIDO — MP4 y visualización offline
+
+Desde la raíz del repositorio, en PowerShell:
+
+```powershell
+Set-Location .\Fase_2\Evidencias_Proyecto\Vision-Artificial\capstone-vision
+# Opcional: activar el entorno existente (no modificar políticas de Windows).
+. .\.venv\Scripts\Activate.ps1
+```
+
+Los siguientes comandos usan el intérprete directamente; funcionan también sin
+activar el entorno. Si falta `.venv`, consultar [preparación local](#2-entorno-python-local).
+Para procesar se necesitan el MP4 y `yolo26n.pt` local:
+
+```powershell
+# Detección CPU; tracking NVIDIA; carpeta secuencial, respectivamente.
+& .\.venv\Scripts\python.exe -m src.process_videos --video videos_testing/dev/prueba_01.mp4 --mode detection --device cpu
+& .\.venv\Scripts\python.exe -m src.process_videos --video videos_testing/dev/prueba_01.mp4 --mode tracking --device cuda:0
+& .\.venv\Scripts\python.exe -m src.process_videos --directory videos_testing/dev --mode tracking --device cuda:0
+```
+
+`--device` es obligatorio. CUDA no disponible causa error, sin cambiar a CPU.
+Al finalizar se muestra un informe por video y global: dispositivo efectivo,
+frames, cajas sin ID, tiempo y rendimiento de procesamiento (no FPS de cámara).
+Los IDs temporales no son un conteo de personas. Cada ejecución crea una carpeta
+exclusiva bajo `results_testing/`; copiar su ruta del informe.
+
+Para abrir **una ejecución ya guardada**, indicar su carpeta concreta, sin volver
+a procesar. Este ejemplo usa el ID de la ejecución histórica de `prueba_01.mp4`;
+sustituirlo por el directorio real si corresponde:
+
+```powershell
+& .\.venv\Scripts\python.exe -m src.view_results --video videos_testing/dev/prueba_01.mp4 --results results_testing/20261026T024129449173Z-df00f66010c4470c8911ea203e0e1b90 --trail-frames 30
+```
+
+También se admite la subcarpeta de un caso que contenga `metadata.json` y
+`predictions.jsonl`. No pasar la raíz con todas las ejecuciones: no se elige
+automáticamente la última. El visualizador no requiere pesos ni CUDA y no
+importa/ejecuta YOLO o trackers; decodifica el MP4 y dibuja las predicciones.
+
+| Control | Acción |
+| --- | --- |
+| Espacio | Pausar / reanudar |
+| `n` o `.` en pausa | Avanzar exactamente un fotograma y permanecer en pausa |
+| `q`, Escape o cerrar ventana | Salir y liberar el video |
+
+Dar foco a la ventana para usar las teclas. No hay retroceso, búsqueda aleatoria
+ni exportación. El historial configurable admite 1–300 frames. Los colores
+distinguen IDs; naranja identifica cajas sin ID. Las trayectorias no unen huecos
+de observación ni recuperan identidades. La reproducción espera según los FPS
+informados y no salta frames: un equipo lento puede reproducir más despacio.
+El tiempo proviene del decodificador o del índice/FPS; FPS variable conserva
+las limitaciones descritas en [procesamiento MP4](#procesamiento-mp4-local--etapa-1).
+
+La correspondencia se comprueba mediante SHA-256 aunque se hayan movido el MP4 o
+los resultados. Sin hash se exige coincidencia verificable de dimensiones y
+frames y se advierte que no certifica identidad de contenido. Una incompatibilidad,
+índices duplicados o JSONL corrupto/truncado detienen la apertura. Se toleran filas
+desordenadas indexándolas por `frame_index`; los frames sin fila muestran un aviso,
+sin reutilizar cajas. Las cajas inválidas se omiten con advertencia y las que
+exceden la imagen se recortan. Resultados parciales generan advertencias.
+Las predicciones se cargan en memoria; archivos muy grandes requieren memoria proporcional.
+
+Los archivos estructurados conservan sus formatos: `run.json` describe el lote,
+`summary.json` sus estados, `metadata.json` el caso, `predictions.jsonl` sus cajas
+por frame y `timings.csv` sus tiempos. Consultar la tabla completa más abajo.
+El informe de consola lee esos archivos sin modificarlos; el FPS global divide
+frames por suma de tiempos de casos con medición válida, incluyendo carga y E/S.
+
+**`.gitignore` no es un sistema de respaldo.** Conservar fuera del repositorio
+videos originales/anotados, datasets, resultados, pesos, logs y configuraciones
+privadas/calibraciones. Al clonar se recupera el código, no esos datos. El entorno
+se puede reconstruir con las dependencias; las grabaciones y anotaciones originales
+deben recuperarse de un respaldo. No borrar ni sobrescribir recursos existentes.
+
+### Verificación de Etapa 1.5 y aceptación manual
+
+Desde `capstone-vision`, sin descargar recursos ni abrir ventanas durante tests:
+
+```powershell
+& .\.venv\Scripts\python.exe -B -m unittest discover -s tests -p 'test_stage15*.py' -v
+& .\.venv\Scripts\python.exe -B -m unittest discover -s tests -p 'test_video*.py' -v
+& .\.venv\Scripts\python.exe -B -m unittest discover -s tests -p 'test*.py' -v
+```
+
+La batería nueva utiliza datos temporales, dibujo OpenCV real y decodificación de
+un MP4 sintético, con ventana y teclado simulados. Verifica asociación, errores,
+controles, liberación, informes y ausencia de importaciones de IA; no acredita
+aceptación visual humana ni inferencia real. Repetir la batería relevante tres
+veces en procesos nuevos después de la última modificación funcional. Las
+integraciones que omiten recursos no cuentan como aprobadas.
+
+Validación automatizada de esta entrega: **38/38** pruebas nuevas y **89/89** de
+regresión específica; tres procesos independientes con **127/127** cada uno, sin
+omisiones. Suite general fuera del sandbox: **411** descubiertas, **407** aprobadas
+y **4** pendientes (una MP4 real y tres de la clase de inferencia ReID omitida),
+sin fallos ni errores. `unittest` registra 408 casos y dos entradas de omisión,
+porque la clase omitida no incrementa `testsRun`. La ejecución dentro del sandbox
+falló por permisos de temporales existentes; no se cambiaron pruebas para eludirlo.
+
+Para aceptación humana: comprobar primero con `Test-Path` el video y el directorio
+guardado; ejecutar el comando del visualizador anterior; observar cajas sobre las
+personas, IDs/confianzas, colores y trayectorias, contador y tiempo. Pausar con
+Espacio, pulsar `n` y `.` verificando incremento de uno en uno, reanudar y salir con
+`q`; repetir con Escape o cerrar ventana. Contrastar una fila JSONL por su índice
+desde cero (el contador visible comienza en uno). Comprobar que un frame vacío no
+arrastra cajas anteriores. Registrar el resultado humano y cualquier desalineación.
+
+Durante el desarrollo, el MP4 y los resultados históricos no fueron accesibles
+desde la sesión de ejecución, incluso fuera del sandbox; en ese momento se
+validó con datos sintéticos y quedó pendiente la aceptación visual real.
+Posteriormente, `videos_testing/dev/prueba_01.mp4` y `results_testing/` fueron
+recuperados de un respaldo y están disponibles. El SHA-256 del MP4 original
+coincide con el registrado en los metadatos históricos. El equipo realizó la
+aceptación visual real del visualizador y confirmó el funcionamiento de cajas,
+IDs, confianza, trayectorias y controles de reproducción. También realizó una
+nueva ejecución real con YOLO26n + ByteTrack en NVIDIA RTX 5060, dispositivo
+efectivo `cuda:0`, completando 734/734 fotogramas. Estas comprobaciones son
+posteriores a las validaciones automatizadas descritas arriba; la aceptación
+visual acredita el funcionamiento del visualizador, pero no certifica la
+precisión del tracking ni la conservación correcta de identidades. La causa de
+la desaparición temporal de los recursos locales sigue indeterminada.
+
 ## Estado actual
 
 | Hito | Funcionalidad                     | Estado       |
@@ -133,12 +256,14 @@ Los comandos de esta guía usan directamente ese intérprete; **no requieren act
 `Activate.ps1`**. `.venv/` está excluido de Git. Instalar paquetes únicamente mediante
 `.venv\Scripts\python.exe -m pip`, nunca sobre el Python global.
 
-## 3. Dependencias y CUDA en RTX 5060
+## 3. Dependencias: CPU y NVIDIA CUDA
 
 Configuración validada: PyTorch **2.14.0+cu132**, torchvision **0.29.0+cu132**,
 Ultralytics **8.4.163**, OpenCV **4.14.0.94**, lap **0.5.12**, NumPy **2.5.2** y
 PyYAML **6.0.3**. Las dos últimas son dependencias transitivas; `requirements.txt`
 fija las cinco dependencias directas, pero no es un lock completo de transitivas.
+
+### NVIDIA RTX 5060
 
 Solo al instalar en un `.venv` nuevo y con autorización, ejecutar una línea a la vez:
 
@@ -166,6 +291,23 @@ La disponibilidad de GPU se comprueba con PyTorch, no solo con `nvidia-smi`.
 Un error de importación/DLL o CUDA no disponible debe diagnosticarse; no cambiar
 paquetes, políticas de Windows ni dispositivo silenciosamente. La GTX 1650 no
 queda validada por estas pruebas.
+
+### Equipo sin NVIDIA (CPU)
+
+Elegir esta alternativa únicamente para un entorno nuevo destinado a CPU, no para
+reemplazar el entorno CUDA existente. Conserva las versiones base declaradas en
+`requirements.txt`, seleccionando wheels desde el índice CPU:
+
+```powershell
+& .\.venv\Scripts\python.exe -m pip install --only-binary=:all: --index-url https://download.pytorch.org/whl/cpu "torch==2.14.0" "torchvision==0.29.0"
+& .\.venv\Scripts\python.exe -m pip install --index-url https://pypi.org/simple -r requirements.txt
+& .\.venv\Scripts\python.exe -m pip check
+& .\.venv\Scripts\python.exe -c "import torch; print(torch.__version__, torch.version.cuda); x=torch.ones((32,32),device='cpu'); assert (x@x).sum().item()==32768"
+```
+
+Detenerse ante incompatibilidad o wheel no disponible; no cambiar versiones sin
+aprobación. Esta receta CPU no se instaló ni validó durante la Etapa 1.5. Ejecutar
+videos con `--device cpu`; el visualizador offline no selecciona dispositivo de IA.
 
 ## 4. Dispositivo y pesos locales
 
@@ -399,10 +541,11 @@ Esta etapa no implementa comparación, baseline promovido/inmutable, optimizaci�
 métricas MOT, conteo IN/OUT ni integración Django. Las predicciones guardadas permiten
 evaluación posterior sin repetir inferencias para métricas derivables de esas salidas.
 
-### Estado verificado de Etapa 1
+### Estado histórico verificado de Etapa 1
 
 - Tres validaciones independientes conservadas de **89/89** pruebas específicas,
-  sin fallos, errores ni omisiones; no se han modificado módulos funcionales después.
+  sin fallos, errores ni omisiones en el cierre de esa etapa. Etapa 1.5 conecta
+  únicamente la presentación final de `process_videos`, con autorización explícita.
 - `prueba_01.mp4`: **734/734** frames, estado `completed`, dispositivo efectivo
   `cuda:0` en RTX 5060. Se comprobaron índices, filas CSV/JSONL y hashes. Hay **588**
   frames con tracks y **5** con detecciones sin ID; no equivalen a personas contadas.

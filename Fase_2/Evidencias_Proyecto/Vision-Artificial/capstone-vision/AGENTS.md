@@ -263,3 +263,29 @@ y las tres ejecuciones no aplican; no ejecutar inferencias innecesarias.
   física pendiente.
 - Ante dudas de alcance o decisiones arquitectónicas importantes, presentar
   evidencia y alternativas al equipo antes de modificar.
+
+## 12. Cierre accionable y documentación
+
+Terminar cada etapa con un informe breve, entendible y accionable que incluya:
+
+1. Qué se implementó, en lenguaje sencillo.
+2. Archivos exactos creados o modificados.
+3. Comandos exactos para ejecutar lo desarrollado desde su directorio de trabajo.
+4. Cómo comprobar visual o funcionalmente que funciona.
+5. Resultados reales de pruebas automatizadas, incluidas las tres validaciones.
+6. Limitaciones, omisiones y pruebas pendientes, separando aceptación humana.
+7. Estado de Git y recomendación explícita de commit/push, sin ejecutarlos.
+
+Cuando cambien comandos o funcionalidades, actualizar el README correspondiente.
+Estas reglas complementan los criterios de entrega anteriores; no los sustituyen.
+
+## 13. Protección permanente de datos locales
+
+- Nunca eliminar ni sobrescribir videos, resultados, pesos, datasets, anotaciones,
+  logs, calibraciones, configuraciones privadas o respaldos sin autorización explícita.
+- No interpretar que un archivo es prescindible únicamente porque está ignorado
+  por Git. `.gitignore` no respalda los datos.
+- No ejecutar operaciones destructivas como `git clean`, `git reset --hard` o
+  limpiezas masivas sin autorización expresa.
+- Crear fixtures temporales exclusivos para pruebas y limitar su limpieza a los
+  archivos que la propia prueba creó, preservando todos los recursos preexistentes.
