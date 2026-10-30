@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .config import PROJECT_ROOT
 from .devices import validate_device_format
+from .processing_report import print_processing_report
 from .video_runner import RunOptions, run_cases
 from .video_source import discover_cases
 
@@ -24,13 +25,7 @@ def main(argv=None) -> int:
         validate_device_format(args.device)
         cases = discover_cases(video=args.video, directory=args.directory)
         directory, summary = run_cases(cases, RunOptions(args.mode, args.device), args.output)
-        print(f"Resultados: {directory}")
-        print(f"Estado: {summary['status']} | videos procesados: {len(summary['results'])}/{len(cases)}")
-        for result in summary["results"]:
-            print(f"{result['case_id']}: {result['status']} | frames: {result['frames_processed']}"
-                  + (f" | {result['error']}" if result["error"] else ""))
-        if summary.get("error"):
-            print(summary["error"])
+        print_processing_report(directory, summary)
         return 0 if summary["status"] == "completed" else 130 if summary["status"] == "interrupted" else 1
     except KeyboardInterrupt:
         return 130
