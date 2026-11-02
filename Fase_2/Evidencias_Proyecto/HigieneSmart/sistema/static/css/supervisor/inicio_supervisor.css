@@ -258,3 +258,262 @@
         min-height: 130px;
     }
 }
+
+
+/* =========================
+   ANIMACIONES DEL DASHBOARD
+   ========================= */
+
+/* Aparición suave desde abajo */
+@keyframes aparecer-suave {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Aparición desde la izquierda */
+@keyframes aparecer-tarjeta {
+    from {
+        opacity: 0;
+        transform: translate(-14px, 8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(0, 0);
+    }
+}
+
+/* 1. Encabezado */
+.dashboard-header {
+    animation: aparecer-suave 450ms ease-out both;
+}
+
+/* 2. Tarjetas del resumen */
+.resumen-card {
+    animation: aparecer-tarjeta 480ms
+        cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Aparición progresiva de izquierda a derecha */
+.resumen-card:nth-child(1) {
+    animation-delay: 120ms;
+}
+
+.resumen-card:nth-child(2) {
+    animation-delay: 190ms;
+}
+
+.resumen-card:nth-child(3) {
+    animation-delay: 260ms;
+}
+
+.resumen-card:nth-child(4) {
+    animation-delay: 330ms;
+}
+
+.resumen-card:nth-child(5) {
+    animation-delay: 400ms;
+}
+
+/* 3. Sección de últimas intervenciones */
+.dashboard-section {
+    animation: aparecer-suave 550ms ease-out both;
+    animation-delay: 650ms;
+}
+
+/* Respetar configuración de movimiento reducido */
+@media (prefers-reduced-motion: reduce) {
+    .dashboard-header,
+    .resumen-card,
+    .dashboard-section {
+        animation: none;
+    }
+}
+
+
+
+/* =========================
+   TARJETAS MODERNAS - limpIAvision
+   ========================= */
+
+.resumen-card {
+    position: relative;
+    overflow: hidden;
+
+    background: linear-gradient(
+        160deg,
+        #ffffff 70%,
+        #f1fbff 100%
+    );
+
+    box-shadow: var(--shadow-soft);
+
+    transition:
+        transform 220ms ease,
+        box-shadow 220ms ease,
+        border-color 220ms ease;
+
+    /* Mantiene el hover después de la animación de entrada */
+    animation-fill-mode: backwards;
+}
+
+/* Línea de color superior */
+.resumen-card::before {
+    content: "";
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+
+    height: 4px;
+
+    background: var(--card-accent);
+}
+
+/* Un color por indicador */
+.resumen-card:nth-child(1) {
+    --card-accent: #22bfc6;
+}
+
+.resumen-card:nth-child(2) {
+    --card-accent: #1d8fd8;
+}
+
+.resumen-card:nth-child(3) {
+    --card-accent: #e6a23c;
+}
+
+.resumen-card:nth-child(4) {
+    --card-accent: #5a83d7;
+}
+
+.resumen-card:nth-child(5) {
+    --card-accent: #21a987;
+}
+
+/* Movimiento al pasar el mouse */
+@media (hover: hover) {
+    .resumen-card:hover {
+        transform: translateY(-4px);
+
+        border-color: var(--card-accent);
+        box-shadow: var(--shadow-card);
+    }
+}
+
+/* Números destacados */
+.resumen-valor {
+    color: var(--color-brand-deep);
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Enlaces dentro de las tarjetas */
+.resumen-link {
+    display: inline-flex;
+    align-self: flex-start;
+    align-items: center;
+
+    gap: 5px;
+
+    transition: color var(--transition-fast);
+}
+
+.resumen-link:hover {
+    color: var(--color-brand-deep);
+}
+
+/* Accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+    .resumen-card {
+        animation: none;
+        transition: none;
+    }
+
+    .resumen-card:hover {
+        transform: none;
+    }
+}
+
+/* Enlaces de las tarjetas sin subrayado */
+.resumen-link,
+.resumen-link:hover {
+    text-decoration: none;
+}
+
+
+/* =========================
+   TABLA MODERNA - limpIAvision
+   ========================= */
+
+/* Contenedor de la tabla */
+.intervenciones-card {
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-soft);
+}
+
+/* Encabezado de la tabla */
+.intervenciones-table thead {
+    background: linear-gradient(
+        90deg,
+        #eaf6fc 0%,
+        #f5fbfe 100%
+    );
+}
+
+.intervenciones-table th {
+    color: var(--color-brand-deep);
+
+    font-weight: 700;
+    letter-spacing: 0.01em;
+
+    border-bottom: 2px solid #c8eaf2;
+}
+
+/* Filas de la tabla */
+.intervenciones-table tbody tr {
+    transition: background-color 200ms ease;
+}
+
+/* Resaltado al pasar el mouse */
+.intervenciones-table tbody tr:hover {
+    background-color: #effaff;
+}
+
+/* Indicador turquesa en la fila */
+.intervenciones-table tbody tr:hover td:first-child {
+    box-shadow: inset 3px 0 0 var(--color-accent);
+}
+
+/* Texto principal del baño */
+.intervenciones-table td strong {
+    color: var(--color-brand-deep);
+    font-weight: 650;
+}
+
+/* Estado cuando no hay intervenciones */
+.sin-intervenciones {
+    background: linear-gradient(
+        135deg,
+        #ffffff 0%,
+        #f4fbfe 100%
+    );
+}
+
+/* Accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+    .intervenciones-table tbody tr {
+        transition: none;
+    }
+}
