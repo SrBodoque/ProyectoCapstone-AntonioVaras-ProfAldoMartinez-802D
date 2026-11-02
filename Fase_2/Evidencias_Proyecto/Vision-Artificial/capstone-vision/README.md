@@ -751,3 +751,38 @@ La máquina de estados será implementada en el siguiente hito.
 ## Proyecto CAPSTONE
 
 **HigieneSmart** busca utilizar datos de uso real para apoyar la gestión de limpieza de servicios higiénicos, reduciendo la dependencia de frecuencias fijas y permitiendo una gestión basada en demanda.
+
+## Auditoría de datasets — Etapa 2A
+
+Desde `capstone-vision`, usando el entorno existente:
+
+```powershell
+& .\.venv\Scripts\python.exe -B -m src.dataset_audit --output logs/dataset_audit_2a_01.json
+& .\.venv\Scripts\python.exe -B -m unittest discover -s tests -p test_dataset_audit.py -v
+```
+
+`--datasets` permite indicar otra carpeta base; por defecto se usa
+`capstone-vision/videos_testing`, independientemente del directorio actual.
+El archivo de salida debe ser nuevo y estar fuera de `videos_testing`. Para repetir
+la auditoría, cambiar el nombre de salida: no se sobrescriben informes.
+Una auditoría completada devuelve 0 aunque encuentre secuencias no evaluables;
+esto significa que se creó el informe, no que haya datasets `READY`.
+
+La auditoría lee/hashéa los originales, decodifica los MP4 completos, inspecciona
+GT dentro de ZIP sin extraerlo y compara CAVIAR con sus JPEG originales locales.
+No importa YOLO/ByteTrack, no ejecuta inferencia ni modifica el pipeline.
+`OxfordTownCentre.zip.part` se lista como descarga ignorada y no se abre.
+Las predicciones históricas y los borradores de `prueba_01` no se usan como GT.
+
+El manifiesto conserva hashes, rutas relativas a `dataset_root`, metadatos,
+anomalías y una lista explícita `eligible_sequence_ids`. Los futuros experimentos
+deben seleccionar mediante `src.dataset_audit.evaluation_cases(manifest)`;
+enumerar `dev/*.mp4` no acredita elegibilidad. Esta etapa no promueve automáticamente
+ninguna secuencia a `READY`, porque faltan verificaciones semánticas/temporales.
+No editar únicamente una bandera para habilitarla: antes se debe registrar y
+vincular la evidencia de aprobación al video, GT y protocolo correspondientes.
+
+Consulta [el informe de Etapa 2A y propuesta 2B](docs/DATASET_AUDIT_2A.md) y
+[el manifiesto de la auditoría local](docs/dataset_audit_2a_manifest.json).
+El manifiesto es una instantánea de archivos locales, no incluye videos ni
+reemplaza una auditoría nueva después de cambiar los datos.

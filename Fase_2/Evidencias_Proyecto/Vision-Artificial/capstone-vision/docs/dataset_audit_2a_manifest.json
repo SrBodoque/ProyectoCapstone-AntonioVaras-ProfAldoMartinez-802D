@@ -1,0 +1,1351 @@
+{
+  "audit_scope": "full_sequential_decode_no_inference",
+  "dataset_root": "C:\\Users\\juanc\\Downloads\\ProyectoCapstone-AntonioVaras-ProfAldoMartinez-802D\\Fase_2\\Evidencias_Proyecto\\Vision-Artificial\\capstone-vision\\videos_testing",
+  "eligible_sequence_ids": [],
+  "ignored_incomplete_downloads": [
+    "source/OxfordTownCentre/OxfordTownCentre.zip.part"
+  ],
+  "input_inventory": {
+    "annotations/CAVIAR/ceecp1gt.xml": {
+      "bytes": 1227399,
+      "sha256": "3525985d2ee60fdd91a584a1c6fd8b70f335c19c9bc26280d785b1c4e8ae123f"
+    },
+    "annotations/CAVIAR/colsr1gt.xml": {
+      "bytes": 311783,
+      "sha256": "fc97f3a9168869a6f380b5491ab91dba1dd6f3f241e97a34a021836cbd73fe88"
+    },
+    "annotations/MOT/MOT15Labels.zip": {
+      "bytes": 1534073,
+      "sha256": "b48ee31a720a3dae558df4303b82924bd862067138bc5376e1c86aadb82f782a"
+    },
+    "annotations/MOT/MOT17Labels.zip": {
+      "bytes": 10107022,
+      "sha256": "0aa79322e91583369f42f17c4d79a0b145380d8732487bba59272048dc82b2b9"
+    },
+    "annotations/OxfordTownCentre/TownCentre-calibration.ci": {
+      "bytes": 610,
+      "sha256": "d8e8a8271508cede978d468db9bb083f11b332f01846a23b99a6561858367d20"
+    },
+    "annotations/OxfordTownCentre/TownCentre-groundtruth.top": {
+      "bytes": 3699676,
+      "sha256": "e57d858bebe336823e0d91e1c6ff6697a65c53cc572d92532dde1155728c4502"
+    },
+    "dev/CAVIAR-EnterExitCrossingPaths1cor.mp4": {
+      "bytes": 1747971,
+      "sha256": "8a24f775da0f6e20b32a35df88d6f826ecc3f4b7cd24c16e8ef60260caa60ba6"
+    },
+    "dev/CAVIAR-OneLeaveShopReenter1cor.mp4": {
+      "bytes": 1716600,
+      "sha256": "456d654d679a92a1a4150f129cc2edbbb051f0c94e3fd5f62fed0af572aac4bd"
+    },
+    "dev/MOT17-02.mp4": {
+      "bytes": 14780307,
+      "sha256": "d560bc50e1942d5c7335c937c8ac513aa87bb41ea51ae21fa02f661151d5a066"
+    },
+    "dev/MOT17-04.mp4": {
+      "bytes": 14745062,
+      "sha256": "ab0d2fc03bce5e112abe9a173de7a2d70b39875c0af3eca49d6160c6e317e495"
+    },
+    "dev/PETS09-S2L1.mp4": {
+      "bytes": 21357352,
+      "sha256": "e03a8d3ae953c640a2eb26bdeff8502111e8c5ac11e529f4dc67931dd548557e"
+    },
+    "dev/TownCentreXVID.mp4": {
+      "bytes": 86033276,
+      "sha256": "988263dd7aa8dd52f03f052d13c81d57239c6d0ef3478e9c17a10ef3d0fa41f2"
+    },
+    "exploratory/prueba_01.mp4": {
+      "bytes": 3524934,
+      "sha256": "a76ee127f7f45b48b93c1e68a9ef607c1c8463d4c8ae7994c0a3df75246185fd"
+    },
+    "source/CAVIAR/EnterExitCrossingPaths1cor.mpg": {
+      "bytes": 2257192,
+      "sha256": "f8363a5492e57787647c0e9e525b749a864e3bcbaee48a7353060525428a1367"
+    },
+    "source/CAVIAR/EnterExitCrossingPaths1cor.tar.gz": {
+      "bytes": 7830340,
+      "sha256": "b15f265695412a10c4f6788f1bb35347ee4003e2a99d0b194757fd663fc7ec6f"
+    },
+    "source/CAVIAR/OneLeaveShopReenter1cor.mpg": {
+      "bytes": 2301827,
+      "sha256": "14d55141103159aedfaf9f2be798396536cdc00a4e5113f99063276181edf937"
+    },
+    "source/CAVIAR/OneLeaveShopReenter1cor.tar.gz": {
+      "bytes": 8173110,
+      "sha256": "e09b42b9a25222c19692dfe4e0d1e59c1ce3351357b866ab51caa7c3a46b3193"
+    }
+  },
+  "original_inputs_unchanged": true,
+  "schema_version": 1,
+  "selection_rule": "Use evaluation_cases; never infer eligibility from directory",
+  "sequences": [
+    {
+      "annotations": {
+        "annotation_dimensions": [
+          1920,
+          1080
+        ],
+        "candidate_annotation_to_video_scale": [
+          0.5,
+          0.5
+        ],
+        "expected_fps": 30.0,
+        "expected_frames": 600,
+        "format": "MOT17",
+        "path": "annotations/MOT/MOT17Labels.zip",
+        "selected_member": "train/MOT17-02-DPM/gt/gt.txt",
+        "source_asset": {
+          "bytes": 10107022,
+          "sha256": "0aa79322e91583369f42f17c4d79a0b145380d8732487bba59272048dc82b2b9"
+        },
+        "summary": {
+          "active_person_rows": 18581,
+          "bbox_outside_image_rows": 982,
+          "coverage_caveat": "Missing row != verified negative frame; gaps may be legitimate occlusions.",
+          "duplicate_frame_id_pairs": 0,
+          "errors": [],
+          "examples": [
+            {
+              "bbox_xyxy": [
+                911.0,
+                483.0,
+                1008.0,
+                592.0
+              ],
+              "class_label": null,
+              "frame_index": 0,
+              "ignored": true,
+              "object_id": "1",
+              "raw": {
+                "columns": [
+                  "1",
+                  "1",
+                  "912",
+                  "484",
+                  "97",
+                  "109",
+                  "0",
+                  "7",
+                  "1"
+                ],
+                "mark": 0,
+                "world_xyz": null
+              },
+              "source_class": 7,
+              "source_frame": 1,
+              "transformations": [
+                "frame_minus_1",
+                "left_top_minus_1",
+                "xywh_to_xyxy"
+              ],
+              "visibility": 1.0
+            },
+            {
+              "bbox_xyxy": [
+                911.0,
+                483.0,
+                1008.0,
+                592.0
+              ],
+              "class_label": null,
+              "frame_index": 1,
+              "ignored": true,
+              "object_id": "1",
+              "raw": {
+                "columns": [
+                  "2",
+                  "1",
+                  "912",
+                  "484",
+                  "97",
+                  "109",
+                  "0",
+                  "7",
+                  "1"
+                ],
+                "mark": 0,
+                "world_xyz": null
+              },
+              "source_class": 7,
+              "source_frame": 2,
+              "transformations": [
+                "frame_minus_1",
+                "left_top_minus_1",
+                "xywh_to_xyxy"
+              ],
+              "visibility": 1.0
+            }
+          ],
+          "explicit_empty_xml_frame_ranges": [],
+          "explicit_xml_frames": 0,
+          "frames_outside_expected_ranges": [],
+          "frames_with_any_valid_rows": 600,
+          "frames_without_rows_ranges": [],
+          "identity_gap_count": 0,
+          "ignore_policy_unknown_rows": 0,
+          "ignored_rows": 11422,
+          "invalid_rows": 0,
+          "missing_explicit_xml_frame_ranges": null,
+          "non_person_target_rows": 11422,
+          "source_classes": {
+            "1": 18581,
+            "2": 1549,
+            "4": 1559,
+            "7": 5271,
+            "8": 1200,
+            "9": 1843
+          },
+          "source_frame_max": 600,
+          "source_frame_min": 1,
+          "unique_ids": 83,
+          "valid_rows": 30003,
+          "visibility_unknown_rows": 0
+        },
+        "variant_ground_truth_identical": true,
+        "variants": [
+          {
+            "member": "train/MOT17-02-DPM/gt/gt.txt",
+            "sequence": {
+              "fps": 30.0,
+              "frames": 600,
+              "height": 1080,
+              "name": "MOT17-02-DPM",
+              "width": 1920
+            },
+            "sha256": "2e3ecb488da8886d3200d402b2b08890c6d2879923839444e9b74fa43a551440"
+          },
+          {
+            "member": "train/MOT17-02-FRCNN/gt/gt.txt",
+            "sequence": {
+              "fps": 30.0,
+              "frames": 600,
+              "height": 1080,
+              "name": "MOT17-02-FRCNN",
+              "width": 1920
+            },
+            "sha256": "2e3ecb488da8886d3200d402b2b08890c6d2879923839444e9b74fa43a551440"
+          },
+          {
+            "member": "train/MOT17-02-SDP/gt/gt.txt",
+            "sequence": {
+              "fps": 30.0,
+              "frames": 600,
+              "height": 1080,
+              "name": "MOT17-02-SDP",
+              "width": 1920
+            },
+            "sha256": "2e3ecb488da8886d3200d402b2b08890c6d2879923839444e9b74fa43a551440"
+          }
+        ],
+        "variants_are_independent_sequences": false
+      },
+      "evaluation_ready": false,
+      "id": "MOT17-02",
+      "issues": [
+        "Image size mismatch: candidate scale [0.5, 0.5]; crop/registration not verified",
+        "Temporal registration and evaluation exclusions require documented verification; matching FPS/counts is insufficient"
+      ],
+      "kind": "mot17",
+      "original_sequence": "MOT17-02",
+      "recording_group": "MOT17-02",
+      "status": "NEEDS_VERIFICATION",
+      "verification": {
+        "evaluation_policy_verified": false,
+        "temporal_alignment_verified": false,
+        "visual_review": "not_performed_by_this_command"
+      },
+      "video": {
+        "backend": "FFMPEG",
+        "decode_reason": "EOF consistente con frames informados; no certifica integridad.",
+        "decode_status": "completed",
+        "decoded_frames": 600,
+        "duration_seconds_nominal": 20.0,
+        "height": 540.0,
+        "identical_adjacent_decoded_frames": 0,
+        "observed_dimensions": [
+          [
+            960,
+            540
+          ]
+        ],
+        "pts_integrity_certified": false,
+        "reported_fps": 30.0,
+        "reported_frames": 600,
+        "timestamp_fallback_frames": 0,
+        "timestamp_first_ms": 0.0,
+        "timestamp_last_ms": 19966.666666666664,
+        "width": 960.0
+      },
+      "video_asset": {
+        "bytes": 14780307,
+        "sha256": "d560bc50e1942d5c7335c937c8ac513aa87bb41ea51ae21fa02f661151d5a066"
+      },
+      "video_path": "dev/MOT17-02.mp4"
+    },
+    {
+      "annotations": {
+        "annotation_dimensions": [
+          1920,
+          1080
+        ],
+        "candidate_annotation_to_video_scale": [
+          0.5,
+          0.5
+        ],
+        "expected_fps": 30.0,
+        "expected_frames": 1050,
+        "format": "MOT17",
+        "path": "annotations/MOT/MOT17Labels.zip",
+        "selected_member": "train/MOT17-04-DPM/gt/gt.txt",
+        "source_asset": {
+          "bytes": 10107022,
+          "sha256": "0aa79322e91583369f42f17c4d79a0b145380d8732487bba59272048dc82b2b9"
+        },
+        "summary": {
+          "active_person_rows": 47557,
+          "bbox_outside_image_rows": 21492,
+          "coverage_caveat": "Missing row != verified negative frame; gaps may be legitimate occlusions.",
+          "duplicate_frame_id_pairs": 0,
+          "errors": [],
+          "examples": [
+            {
+              "bbox_xyxy": [
+                1362.0,
+                568.0,
+                1465.0,
+                809.0
+              ],
+              "class_label": "person",
+              "frame_index": 0,
+              "ignored": false,
+              "object_id": "1",
+              "raw": {
+                "columns": [
+                  "1",
+                  "1",
+                  "1363",
+                  "569",
+                  "103",
+                  "241",
+                  "1",
+                  "1",
+                  "0.86014"
+                ],
+                "mark": 1,
+                "world_xyz": null
+              },
+              "source_class": 1,
+              "source_frame": 1,
+              "transformations": [
+                "frame_minus_1",
+                "left_top_minus_1",
+                "xywh_to_xyxy"
+              ],
+              "visibility": 0.86014
+            },
+            {
+              "bbox_xyxy": [
+                1361.0,
+                567.0,
+                1464.0,
+                808.0
+              ],
+              "class_label": "person",
+              "frame_index": 1,
+              "ignored": false,
+              "object_id": "1",
+              "raw": {
+                "columns": [
+                  "2",
+                  "1",
+                  "1362",
+                  "568",
+                  "103",
+                  "241",
+                  "1",
+                  "1",
+                  "0.86173"
+                ],
+                "mark": 1,
+                "world_xyz": null
+              },
+              "source_class": 1,
+              "source_frame": 2,
+              "transformations": [
+                "frame_minus_1",
+                "left_top_minus_1",
+                "xywh_to_xyxy"
+              ],
+              "visibility": 0.86173
+            }
+          ],
+          "explicit_empty_xml_frame_ranges": [],
+          "explicit_xml_frames": 0,
+          "frames_outside_expected_ranges": [],
+          "frames_with_any_valid_rows": 1050,
+          "frames_without_rows_ranges": [],
+          "identity_gap_count": 0,
+          "ignore_policy_unknown_rows": 0,
+          "ignored_rows": 60448,
+          "invalid_rows": 0,
+          "missing_explicit_xml_frame_ranges": null,
+          "non_person_target_rows": 60448,
+          "source_classes": {
+            "1": 47557,
+            "10": 23100,
+            "11": 18900,
+            "3": 1050,
+            "4": 11550,
+            "5": 1050,
+            "7": 4798
+          },
+          "source_frame_max": 1050,
+          "source_frame_min": 1,
+          "unique_ids": 141,
+          "valid_rows": 108005,
+          "visibility_unknown_rows": 0
+        },
+        "variant_ground_truth_identical": true,
+        "variants": [
+          {
+            "member": "train/MOT17-04-DPM/gt/gt.txt",
+            "sequence": {
+              "fps": 30.0,
+              "frames": 1050,
+              "height": 1080,
+              "name": "MOT17-04-DPM",
+              "width": 1920
+            },
+            "sha256": "f8cfbe36ef38a2e1857d7ebfe7d754b2355a3ffb9e1f9cedea435e86e4fbc948"
+          },
+          {
+            "member": "train/MOT17-04-FRCNN/gt/gt.txt",
+            "sequence": {
+              "fps": 30.0,
+              "frames": 1050,
+              "height": 1080,
+              "name": "MOT17-04-FRCNN",
+              "width": 1920
+            },
+            "sha256": "f8cfbe36ef38a2e1857d7ebfe7d754b2355a3ffb9e1f9cedea435e86e4fbc948"
+          },
+          {
+            "member": "train/MOT17-04-SDP/gt/gt.txt",
+            "sequence": {
+              "fps": 30.0,
+              "frames": 1050,
+              "height": 1080,
+              "name": "MOT17-04-SDP",
+              "width": 1920
+            },
+            "sha256": "f8cfbe36ef38a2e1857d7ebfe7d754b2355a3ffb9e1f9cedea435e86e4fbc948"
+          }
+        ],
+        "variants_are_independent_sequences": false
+      },
+      "evaluation_ready": false,
+      "id": "MOT17-04",
+      "issues": [
+        "Image size mismatch: candidate scale [0.5, 0.5]; crop/registration not verified",
+        "Temporal registration and evaluation exclusions require documented verification; matching FPS/counts is insufficient"
+      ],
+      "kind": "mot17",
+      "original_sequence": "MOT17-04",
+      "recording_group": "MOT17-04",
+      "status": "NEEDS_VERIFICATION",
+      "verification": {
+        "evaluation_policy_verified": false,
+        "temporal_alignment_verified": false,
+        "visual_review": "not_performed_by_this_command"
+      },
+      "video": {
+        "backend": "FFMPEG",
+        "decode_reason": "EOF consistente con frames informados; no certifica integridad.",
+        "decode_status": "completed",
+        "decoded_frames": 1050,
+        "duration_seconds_nominal": 35.0,
+        "height": 540.0,
+        "identical_adjacent_decoded_frames": 0,
+        "observed_dimensions": [
+          [
+            960,
+            540
+          ]
+        ],
+        "pts_integrity_certified": false,
+        "reported_fps": 30.0,
+        "reported_frames": 1050,
+        "timestamp_fallback_frames": 0,
+        "timestamp_first_ms": 0.0,
+        "timestamp_last_ms": 34966.66666666667,
+        "width": 960.0
+      },
+      "video_asset": {
+        "bytes": 14745062,
+        "sha256": "ab0d2fc03bce5e112abe9a173de7a2d70b39875c0af3eca49d6160c6e317e495"
+      },
+      "video_path": "dev/MOT17-04.mp4"
+    },
+    {
+      "annotations": {
+        "annotation_dimensions": [
+          768,
+          576
+        ],
+        "candidate_annotation_to_video_scale": [
+          1.0,
+          1.0
+        ],
+        "expected_fps": 7.0,
+        "expected_frames": 795,
+        "format": "MOT15",
+        "path": "annotations/MOT/MOT15Labels.zip",
+        "selected_member": "MOT15Labels/train/PETS09-S2L1/gt/gt.txt",
+        "source_asset": {
+          "bytes": 1534073,
+          "sha256": "b48ee31a720a3dae558df4303b82924bd862067138bc5376e1c86aadb82f782a"
+        },
+        "summary": {
+          "active_person_rows": 4476,
+          "bbox_outside_image_rows": 0,
+          "coverage_caveat": "Missing row != verified negative frame; gaps may be legitimate occlusions.",
+          "duplicate_frame_id_pairs": 0,
+          "errors": [],
+          "examples": [
+            {
+              "bbox_xyxy": [
+                498.0,
+                157.0,
+                529.03,
+                232.17000000000002
+              ],
+              "class_label": "person",
+              "frame_index": 0,
+              "ignored": false,
+              "object_id": "9",
+              "raw": {
+                "columns": [
+                  "1",
+                  "9",
+                  "499",
+                  "158",
+                  "31.03",
+                  "75.17",
+                  "1",
+                  "-4.1554",
+                  "-7.3591",
+                  "0"
+                ],
+                "mark": 1,
+                "world_xyz": [
+                  -4.1554,
+                  -7.3591,
+                  0.0
+                ]
+              },
+              "source_class": null,
+              "source_frame": 1,
+              "transformations": [
+                "frame_minus_1",
+                "left_top_minus_1",
+                "xywh_to_xyxy",
+                "person_from_MOT15_protocol_not_source_class"
+              ],
+              "visibility": null
+            },
+            {
+              "bbox_xyxy": [
+                257.0,
+                218.0,
+                289.913,
+                306.702
+              ],
+              "class_label": "person",
+              "frame_index": 0,
+              "ignored": false,
+              "object_id": "15",
+              "raw": {
+                "columns": [
+                  "1",
+                  "15",
+                  "258",
+                  "219",
+                  "32.913",
+                  "88.702",
+                  "1",
+                  "-11.306",
+                  "-5.5995",
+                  "0"
+                ],
+                "mark": 1,
+                "world_xyz": [
+                  -11.306,
+                  -5.5995,
+                  0.0
+                ]
+              },
+              "source_class": null,
+              "source_frame": 1,
+              "transformations": [
+                "frame_minus_1",
+                "left_top_minus_1",
+                "xywh_to_xyxy",
+                "person_from_MOT15_protocol_not_source_class"
+              ],
+              "visibility": null
+            }
+          ],
+          "explicit_empty_xml_frame_ranges": [],
+          "explicit_xml_frames": 0,
+          "frames_outside_expected_ranges": [],
+          "frames_with_any_valid_rows": 795,
+          "frames_without_rows_ranges": [],
+          "identity_gap_count": 0,
+          "ignore_policy_unknown_rows": 0,
+          "ignored_rows": 174,
+          "invalid_rows": 0,
+          "missing_explicit_xml_frame_ranges": null,
+          "non_person_target_rows": 0,
+          "source_classes": {
+            "absent": 4650
+          },
+          "source_frame_max": 795,
+          "source_frame_min": 1,
+          "unique_ids": 19,
+          "valid_rows": 4650,
+          "visibility_unknown_rows": 4650
+        },
+        "variant_ground_truth_identical": true,
+        "variants": [
+          {
+            "member": "MOT15Labels/train/PETS09-S2L1/gt/gt.txt",
+            "sequence": {
+              "fps": 7.0,
+              "frames": 795,
+              "height": 576,
+              "name": "PETS09-S2L1",
+              "width": 768
+            },
+            "sha256": "9759f51a2429b17e1f4dfdd76cf9731ca02097069298914b51d35bb9045baf1d"
+          }
+        ],
+        "variants_are_independent_sequences": false
+      },
+      "evaluation_ready": false,
+      "id": "PETS09-S2L1",
+      "issues": [
+        "Temporal registration and evaluation exclusions require documented verification; matching FPS/counts is insufficient"
+      ],
+      "kind": "mot15",
+      "original_sequence": "PETS09-S2L1",
+      "recording_group": "PETS09-S2L1",
+      "status": "NEEDS_VERIFICATION",
+      "verification": {
+        "evaluation_policy_verified": false,
+        "temporal_alignment_verified": false,
+        "visual_review": "not_performed_by_this_command"
+      },
+      "video": {
+        "backend": "FFMPEG",
+        "decode_reason": "EOF consistente con frames informados; no certifica integridad.",
+        "decode_status": "completed",
+        "decoded_frames": 795,
+        "duration_seconds_nominal": 113.57142857142857,
+        "height": 576.0,
+        "identical_adjacent_decoded_frames": 0,
+        "observed_dimensions": [
+          [
+            768,
+            576
+          ]
+        ],
+        "pts_integrity_certified": false,
+        "reported_fps": 7.0,
+        "reported_frames": 795,
+        "timestamp_fallback_frames": 0,
+        "timestamp_first_ms": 0.0,
+        "timestamp_last_ms": 113428.57142857142,
+        "width": 768.0
+      },
+      "video_asset": {
+        "bytes": 21357352,
+        "sha256": "e03a8d3ae953c640a2eb26bdeff8502111e8c5ac11e529f4dc67931dd548557e"
+      },
+      "video_path": "dev/PETS09-S2L1.mp4"
+    },
+    {
+      "annotations": {
+        "annotation_dimensions": null,
+        "body_boxes_estimated_from_heads": "reported_by_original_project_description; verify before evaluation",
+        "calibration_fields": {
+          "DistortionK1": "-0.60150605440139770508",
+          "DistortionK2": "4.70203733444213867188",
+          "DistortionP1": "-0.00047452122089453042",
+          "DistortionP2": "-0.00782289821654558182",
+          "FocalLengthX": "2696.35888671875000000000",
+          "FocalLengthY": "2696.35888671875000000000",
+          "PrincipalPointX": "959.50000000000000000000",
+          "PrincipalPointY": "539.50000000000000000000",
+          "RotationW": "0.49527896681027261394",
+          "RotationX": "0.69724917918208628720",
+          "RotationY": "-0.43029624469563848566",
+          "RotationZ": "0.28876888503799524877",
+          "Skew": "0.00000000000000000000",
+          "TranslationX": "-0.05988363921642303467",
+          "TranslationY": "3.83331298828125000000",
+          "TranslationZ": "12.39112186431884765625"
+        },
+        "calibration_path": "annotations/OxfordTownCentre/TownCentre-calibration.ci",
+        "coordinate_origin_verified": false,
+        "expected_fps": null,
+        "expected_frames": null,
+        "format": "Oxford_TOP_12_candidate",
+        "path": "annotations/OxfordTownCentre/TownCentre-groundtruth.top",
+        "source_asset": {
+          "bytes": 3699676,
+          "sha256": "e57d858bebe336823e0d91e1c6ff6697a65c53cc572d92532dde1155728c4502"
+        },
+        "summary": {
+          "active_person_rows": 47746,
+          "bbox_outside_image_rows": 0,
+          "coverage_caveat": "Missing row != verified negative frame; gaps may be legitimate occlusions.",
+          "duplicate_frame_id_pairs": 0,
+          "errors": [
+            {
+              "line": 47747,
+              "reason": "Expected 12 TOP columns; got 11"
+            }
+          ],
+          "examples": [
+            {
+              "bbox_xyxy": [
+                235.925,
+                770.142,
+                371.546,
+                1101.029
+              ],
+              "class_label": "person",
+              "frame_index": 0,
+              "ignored": false,
+              "object_id": "0",
+              "raw": {
+                "body_valid": 1,
+                "columns": [
+                  "0",
+                  "0",
+                  "1",
+                  "1",
+                  "270.828",
+                  "794.098",
+                  "309.037",
+                  "834.066",
+                  "235.925",
+                  "770.142",
+                  "371.546",
+                  "1101.029"
+                ],
+                "coordinate_origin_verified": false,
+                "head_valid": 1,
+                "head_xyxy": [
+                  270.828,
+                  794.098,
+                  309.037,
+                  834.066
+                ]
+              },
+              "source_class": null,
+              "source_frame": 0,
+              "transformations": [
+                "TOP_body_columns_candidate",
+                "person_from_dataset_protocol"
+              ],
+              "visibility": null
+            },
+            {
+              "bbox_xyxy": [
+                285.748,
+                291.418,
+                370.556,
+                493.414
+              ],
+              "class_label": "person",
+              "frame_index": 0,
+              "ignored": false,
+              "object_id": "1",
+              "raw": {
+                "body_valid": 1,
+                "columns": [
+                  "1",
+                  "0",
+                  "1",
+                  "1",
+                  "308.304",
+                  "302.982",
+                  "330.837",
+                  "326.823",
+                  "285.748",
+                  "291.418",
+                  "370.556",
+                  "493.414"
+                ],
+                "coordinate_origin_verified": false,
+                "head_valid": 1,
+                "head_xyxy": [
+                  308.304,
+                  302.982,
+                  330.837,
+                  326.823
+                ]
+              },
+              "source_class": null,
+              "source_frame": 0,
+              "transformations": [
+                "TOP_body_columns_candidate",
+                "person_from_dataset_protocol"
+              ],
+              "visibility": null
+            }
+          ],
+          "explicit_empty_xml_frame_ranges": [],
+          "explicit_xml_frames": 0,
+          "frames_outside_expected_ranges": [],
+          "frames_with_any_valid_rows": 3090,
+          "frames_without_rows_ranges": [
+            [
+              3090,
+              7501
+            ]
+          ],
+          "identity_gap_count": 0,
+          "ignore_policy_unknown_rows": 0,
+          "ignored_rows": 0,
+          "invalid_rows": 1,
+          "missing_explicit_xml_frame_ranges": null,
+          "non_person_target_rows": 0,
+          "source_classes": {
+            "absent": 47746
+          },
+          "source_frame_max": 3089,
+          "source_frame_min": 0,
+          "unique_ids": 157,
+          "valid_rows": 47746,
+          "visibility_unknown_rows": 47746
+        }
+      },
+      "evaluation_ready": false,
+      "id": "OxfordTownCentre",
+      "issues": [
+        "Malformed annotation rows: 1 (not repaired)",
+        "Some decoded frames lack annotation rows; negative/excluded/truncated status needs interpretation",
+        "TOP origin/body policy unverified; head/body validity are not visibility fractions; calibration is not GT",
+        "Video length cannot be inferred from last TOP row; existing annotation tail may be incomplete",
+        "Temporal registration and evaluation exclusions require documented verification; matching FPS/counts is insufficient"
+      ],
+      "kind": "oxford",
+      "original_sequence": "TownCentre",
+      "recording_group": "TownCentre",
+      "status": "NEEDS_VERIFICATION",
+      "verification": {
+        "evaluation_policy_verified": false,
+        "temporal_alignment_verified": false,
+        "visual_review": "not_performed_by_this_command"
+      },
+      "video": {
+        "backend": "FFMPEG",
+        "decode_reason": "EOF consistente con frames informados; no certifica integridad.",
+        "decode_status": "completed",
+        "decoded_frames": 7502,
+        "duration_seconds_nominal": 300.04,
+        "height": 1080.0,
+        "identical_adjacent_decoded_frames": 1,
+        "observed_dimensions": [
+          [
+            1920,
+            1080
+          ]
+        ],
+        "pts_integrity_certified": false,
+        "reported_fps": 25.00333288894814,
+        "reported_frames": 7502,
+        "timestamp_fallback_frames": 0,
+        "timestamp_first_ms": 0.0,
+        "timestamp_last_ms": 300000.0,
+        "width": 1920.0
+      },
+      "video_asset": {
+        "bytes": 86033276,
+        "sha256": "988263dd7aa8dd52f03f052d13c81d57239c6d0ef3478e9c17a10ef3d0fa41f2"
+      },
+      "video_path": "dev/TownCentreXVID.mp4"
+    },
+    {
+      "annotations": {
+        "annotation_dimensions": [
+          384,
+          288
+        ],
+        "candidate_annotation_to_video_scale": [
+          1.0,
+          1.0
+        ],
+        "coordinate_origin_verified": false,
+        "expected_fps": 25,
+        "expected_frames": 383,
+        "format": "CAVIAR_CVML_XML",
+        "groups_are_person_detections": false,
+        "path": "annotations/CAVIAR/ceecp1gt.xml",
+        "source_asset": {
+          "bytes": 1227399,
+          "sha256": "3525985d2ee60fdd91a584a1c6fd8b70f335c19c9bc26280d785b1c4e8ae123f"
+        },
+        "source_mpg": "source/CAVIAR/EnterExitCrossingPaths1cor.mpg",
+        "source_mpg_metadata": {
+          "backend": "FFMPEG",
+          "decode_reason": "Frames leídos exceden metadatos.",
+          "decode_status": "incomplete",
+          "decoded_frames": 383,
+          "duration_seconds_nominal": 15.32,
+          "height": 288.0,
+          "identical_adjacent_decoded_frames": 4,
+          "observed_dimensions": [
+            [
+              384,
+              288
+            ]
+          ],
+          "pts_integrity_certified": false,
+          "reported_fps": 25.0,
+          "reported_frames": 4,
+          "timestamp_fallback_frames": 1,
+          "timestamp_first_ms": 0.0,
+          "timestamp_last_ms": 15280.0,
+          "width": 384.0
+        },
+        "source_tar": "source/CAVIAR/EnterExitCrossingPaths1cor.tar.gz",
+        "summary": {
+          "active_person_rows": 0,
+          "bbox_outside_image_rows": 0,
+          "coverage_caveat": "Missing row != verified negative frame; gaps may be legitimate occlusions.",
+          "duplicate_frame_id_pairs": 0,
+          "errors": [],
+          "examples": [
+            {
+              "bbox_xyxy": [
+                130.0,
+                71.5,
+                160.0,
+                150.5
+              ],
+              "class_label": "person",
+              "frame_index": 0,
+              "ignored": null,
+              "object_id": "0",
+              "raw": {
+                "appearance": "appear",
+                "box": {
+                  "h": "79",
+                  "w": "30",
+                  "xc": "145",
+                  "yc": "111"
+                },
+                "coordinate_origin_verified": false,
+                "id": "0",
+                "roles": [
+                  "walker"
+                ]
+              },
+              "source_class": null,
+              "source_frame": 0,
+              "transformations": [
+                "center_wh_to_xyxy",
+                "walker_to_person_if_applicable"
+              ],
+              "visibility": null
+            },
+            {
+              "bbox_xyxy": [
+                165.0,
+                75.5,
+                193.0,
+                150.5
+              ],
+              "class_label": "person",
+              "frame_index": 0,
+              "ignored": null,
+              "object_id": "1",
+              "raw": {
+                "appearance": "appear",
+                "box": {
+                  "h": "75",
+                  "w": "28",
+                  "xc": "179",
+                  "yc": "113"
+                },
+                "coordinate_origin_verified": false,
+                "id": "1",
+                "roles": [
+                  "walker"
+                ]
+              },
+              "source_class": null,
+              "source_frame": 0,
+              "transformations": [
+                "center_wh_to_xyxy",
+                "walker_to_person_if_applicable"
+              ],
+              "visibility": null
+            }
+          ],
+          "explicit_empty_xml_frame_ranges": [],
+          "explicit_xml_frames": 383,
+          "frames_outside_expected_ranges": [],
+          "frames_with_any_valid_rows": 383,
+          "frames_without_rows_ranges": [],
+          "identity_gap_count": 0,
+          "ignore_policy_unknown_rows": 1385,
+          "ignored_rows": 0,
+          "invalid_rows": 0,
+          "missing_explicit_xml_frame_ranges": [],
+          "non_person_target_rows": 0,
+          "source_classes": {
+            "absent": 1385
+          },
+          "source_frame_max": 382,
+          "source_frame_min": 0,
+          "unique_ids": 5,
+          "valid_rows": 1385,
+          "visibility_unknown_rows": 1385
+        }
+      },
+      "evaluation_ready": false,
+      "id": "CAVIAR-EnterExitCrossingPaths1cor",
+      "issues": [
+        "CVML: preserve appearance, object IDs and explicit empty frames; resolve origin and ignore policy; moving-target labels may omit static people",
+        "Temporal registration and evaluation exclusions require documented verification; matching FPS/counts is insufficient"
+      ],
+      "kind": "caviar",
+      "original_sequence": "EnterExitCrossingPaths1cor",
+      "recording_group": "EnterExitCrossingPaths1cor",
+      "status": "NEEDS_VERIFICATION",
+      "verification": {
+        "evaluation_policy_verified": false,
+        "temporal_alignment_verified": false,
+        "visual_review": "not_performed_by_this_command"
+      },
+      "video": {
+        "backend": "FFMPEG",
+        "decode_reason": "EOF consistente con frames informados; no certifica integridad.",
+        "decode_status": "completed",
+        "decoded_frames": 383,
+        "duration_seconds_nominal": 15.32,
+        "height": 288.0,
+        "identical_adjacent_decoded_frames": 0,
+        "observed_dimensions": [
+          [
+            384,
+            288
+          ]
+        ],
+        "pts_integrity_certified": false,
+        "reported_fps": 25.0,
+        "reported_frames": 383,
+        "source_image_comparison": {
+          "caveat": "Compression permits nonzero error. Offset probes are samples, not proof of identity or complete people labels.",
+          "compared_frames": 383,
+          "incompatible_frames": [],
+          "max_frame_mean_absolute_pixel_error": 5.095251012731482,
+          "mean_absolute_pixel_error": 4.6940506227864205,
+          "offset_probe_mean_errors": {
+            "-1": 5.409780243296682,
+            "-2": 5.574402608989198,
+            "0": 4.727156876929013,
+            "1": 5.021271128713349,
+            "2": 5.8908616054205245
+          },
+          "reference_frames": 383,
+          "reference_index_ranges": [
+            [
+              0,
+              382
+            ]
+          ]
+        },
+        "timestamp_fallback_frames": 0,
+        "timestamp_first_ms": 0.0,
+        "timestamp_last_ms": 15280.000000000002,
+        "width": 384.0
+      },
+      "video_asset": {
+        "bytes": 1747971,
+        "sha256": "8a24f775da0f6e20b32a35df88d6f826ecc3f4b7cd24c16e8ef60260caa60ba6"
+      },
+      "video_path": "dev/CAVIAR-EnterExitCrossingPaths1cor.mp4"
+    },
+    {
+      "annotations": {
+        "annotation_dimensions": [
+          384,
+          288
+        ],
+        "candidate_annotation_to_video_scale": [
+          1.0,
+          1.0
+        ],
+        "coordinate_origin_verified": false,
+        "expected_fps": 25,
+        "expected_frames": 390,
+        "format": "CAVIAR_CVML_XML",
+        "groups_are_person_detections": false,
+        "path": "annotations/CAVIAR/colsr1gt.xml",
+        "source_asset": {
+          "bytes": 311783,
+          "sha256": "fc97f3a9168869a6f380b5491ab91dba1dd6f3f241e97a34a021836cbd73fe88"
+        },
+        "source_mpg": "source/CAVIAR/OneLeaveShopReenter1cor.mpg",
+        "source_mpg_metadata": {
+          "backend": "FFMPEG",
+          "decode_reason": "Frames leídos exceden metadatos.",
+          "decode_status": "incomplete",
+          "decoded_frames": 390,
+          "duration_seconds_nominal": 15.6,
+          "height": 288.0,
+          "identical_adjacent_decoded_frames": 1,
+          "observed_dimensions": [
+            [
+              384,
+              288
+            ]
+          ],
+          "pts_integrity_certified": false,
+          "reported_fps": 25.0,
+          "reported_frames": 4,
+          "timestamp_fallback_frames": 1,
+          "timestamp_first_ms": 0.0,
+          "timestamp_last_ms": 15560.0,
+          "width": 384.0
+        },
+        "source_tar": "source/CAVIAR/OneLeaveShopReenter1cor.tar.gz",
+        "summary": {
+          "active_person_rows": 0,
+          "bbox_outside_image_rows": 0,
+          "coverage_caveat": "Missing row != verified negative frame; gaps may be legitimate occlusions.",
+          "duplicate_frame_id_pairs": 0,
+          "errors": [],
+          "examples": [
+            {
+              "bbox_xyxy": [
+                54.5,
+                152.5,
+                57.5,
+                165.5
+              ],
+              "class_label": "person",
+              "frame_index": 104,
+              "ignored": null,
+              "object_id": "1",
+              "raw": {
+                "appearance": "appear",
+                "box": {
+                  "h": "13",
+                  "w": "3",
+                  "xc": "56",
+                  "yc": "159"
+                },
+                "coordinate_origin_verified": false,
+                "id": "1",
+                "roles": [
+                  "walker"
+                ]
+              },
+              "source_class": null,
+              "source_frame": 104,
+              "transformations": [
+                "center_wh_to_xyxy",
+                "walker_to_person_if_applicable"
+              ],
+              "visibility": null
+            },
+            {
+              "bbox_xyxy": [
+                55.0,
+                90.5,
+                63.0,
+                193.5
+              ],
+              "class_label": "person",
+              "frame_index": 105,
+              "ignored": null,
+              "object_id": "1",
+              "raw": {
+                "appearance": "visible",
+                "box": {
+                  "h": "103",
+                  "w": "8",
+                  "xc": "59",
+                  "yc": "142"
+                },
+                "coordinate_origin_verified": false,
+                "id": "1",
+                "roles": [
+                  "walker"
+                ]
+              },
+              "source_class": null,
+              "source_frame": 105,
+              "transformations": [
+                "center_wh_to_xyxy",
+                "walker_to_person_if_applicable"
+              ],
+              "visibility": null
+            }
+          ],
+          "explicit_empty_xml_frame_ranges": [
+            [
+              0,
+              103
+            ]
+          ],
+          "explicit_xml_frames": 390,
+          "frames_outside_expected_ranges": [],
+          "frames_with_any_valid_rows": 286,
+          "frames_without_rows_ranges": [
+            [
+              0,
+              103
+            ]
+          ],
+          "identity_gap_count": 0,
+          "ignore_policy_unknown_rows": 408,
+          "ignored_rows": 0,
+          "invalid_rows": 0,
+          "missing_explicit_xml_frame_ranges": [],
+          "non_person_target_rows": 0,
+          "source_classes": {
+            "absent": 408
+          },
+          "source_frame_max": 389,
+          "source_frame_min": 104,
+          "unique_ids": 2,
+          "valid_rows": 408,
+          "visibility_unknown_rows": 408
+        }
+      },
+      "evaluation_ready": false,
+      "id": "CAVIAR-OneLeaveShopReenter1cor",
+      "issues": [
+        "CVML: preserve appearance, object IDs and explicit empty frames; resolve origin and ignore policy; moving-target labels may omit static people",
+        "Temporal registration and evaluation exclusions require documented verification; matching FPS/counts is insufficient"
+      ],
+      "kind": "caviar",
+      "original_sequence": "OneLeaveShopReenter1cor",
+      "recording_group": "OneLeaveShopReenter1cor",
+      "status": "NEEDS_VERIFICATION",
+      "verification": {
+        "evaluation_policy_verified": false,
+        "temporal_alignment_verified": false,
+        "visual_review": "not_performed_by_this_command"
+      },
+      "video": {
+        "backend": "FFMPEG",
+        "decode_reason": "EOF consistente con frames informados; no certifica integridad.",
+        "decode_status": "completed",
+        "decoded_frames": 390,
+        "duration_seconds_nominal": 15.6,
+        "height": 288.0,
+        "identical_adjacent_decoded_frames": 0,
+        "observed_dimensions": [
+          [
+            384,
+            288
+          ]
+        ],
+        "pts_integrity_certified": false,
+        "reported_fps": 25.0,
+        "reported_frames": 390,
+        "source_image_comparison": {
+          "caveat": "Compression permits nonzero error. Offset probes are samples, not proof of identity or complete people labels.",
+          "compared_frames": 390,
+          "incompatible_frames": [],
+          "max_frame_mean_absolute_pixel_error": 4.975007233796297,
+          "mean_absolute_pixel_error": 4.673936106412237,
+          "offset_probe_mean_errors": {
+            "-1": 5.060544614438657,
+            "-2": 5.183838644145448,
+            "0": 4.7037428867669755,
+            "1": 5.204430850935571,
+            "2": 5.586189929349922
+          },
+          "reference_frames": 390,
+          "reference_index_ranges": [
+            [
+              0,
+              389
+            ]
+          ]
+        },
+        "timestamp_fallback_frames": 0,
+        "timestamp_first_ms": 0.0,
+        "timestamp_last_ms": 15560.0,
+        "width": 384.0
+      },
+      "video_asset": {
+        "bytes": 1716600,
+        "sha256": "456d654d679a92a1a4150f129cc2edbbb051f0c94e3fd5f62fed0af572aac4bd"
+      },
+      "video_path": "dev/CAVIAR-OneLeaveShopReenter1cor.mp4"
+    },
+    {
+      "annotations": null,
+      "evaluation_ready": false,
+      "id": "prueba_01",
+      "issues": [
+        "Visual/manual use only; tracker predictions and draft annotations are not GT"
+      ],
+      "kind": "exploratory",
+      "original_sequence": "prueba_01",
+      "recording_group": "prueba_01",
+      "status": "EXPLORATORY",
+      "verification": {
+        "evaluation_policy_verified": false,
+        "temporal_alignment_verified": false,
+        "visual_review": "not_performed_by_this_command"
+      },
+      "video": {
+        "backend": "FFMPEG",
+        "decode_reason": "EOF consistente con frames informados; no certifica integridad.",
+        "decode_status": "completed",
+        "decoded_frames": 734,
+        "duration_seconds_nominal": 30.583333333333332,
+        "height": 720.0,
+        "identical_adjacent_decoded_frames": 0,
+        "observed_dimensions": [
+          [
+            1280,
+            720
+          ]
+        ],
+        "pts_integrity_certified": false,
+        "reported_fps": 24.0,
+        "reported_frames": 734,
+        "timestamp_fallback_frames": 0,
+        "timestamp_first_ms": 0.0,
+        "timestamp_last_ms": 30541.666666666664,
+        "width": 1280.0
+      },
+      "video_asset": {
+        "bytes": 3524934,
+        "sha256": "a76ee127f7f45b48b93c1e68a9ef607c1c8463d4c8ae7994c0a3df75246185fd"
+      },
+      "video_path": "exploratory/prueba_01.mp4"
+    }
+  ],
+  "states": [
+    "READY",
+    "NEEDS_ADAPTER",
+    "NEEDS_VERIFICATION",
+    "NOT_EVALUABLE",
+    "EXPLORATORY"
+  ],
+  "unregistered_mp4": [],
+  "validation_split_files": []
+}
