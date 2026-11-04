@@ -1,4 +1,4 @@
-# HigieneSmart — Reporte Hito 4: calibrador visual y zonas persistentes
+# LimpIA — Reporte Hito 4: calibrador visual y zonas persistentes
 
 Fecha de trabajo: 27 de octubre de 2026 en Chile / registros del entorno del 28 de octubre UTC.
 

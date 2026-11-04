@@ -1,5 +1,5 @@
 ==================================================
-HIGIENESMART - VERSIONES DEL PROYECTO
+LimpIA - VERSIONES DEL PROYECTO
 ==================================================
 
 ENTORNO DE DESARROLLO

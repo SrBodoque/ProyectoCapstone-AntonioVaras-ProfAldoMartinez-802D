@@ -139,7 +139,7 @@ AUTH_USER_MODEL = "usuarios.Usuario"
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-DEFAULT_FROM_EMAIL = "HigieneSmart <noreply@higienesmart.local>"
+DEFAULT_FROM_EMAIL = "LimpIA <noreply@LimpIA.local>"
 
 # ==================================================
 # ARCHIVOS SUBIDOS POR USUARIOS

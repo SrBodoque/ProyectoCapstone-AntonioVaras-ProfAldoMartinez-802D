@@ -1,40 +1,35 @@
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
 
-body {
-    min-height: 100vh;
-
-    background-color: var(--color-background);
-    color: var(--color-text-primary);
-
-    font-family: Arial, sans-serif;
-}
+/* =========================
+   CONTENEDOR PRINCIPAL
+   ========================= */
 
 .asignaciones-container {
     width: 100%;
     max-width: 1160px;
 
     margin: 0 auto;
-    padding: 32px 24px;
 }
+
+/* =========================
+   ENCABEZADO
+   ========================= */
 
 .asignaciones-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
 
     gap: 20px;
-
-    margin-bottom: 20px;
+    margin-bottom: 26px;
 }
 
 .asignaciones-header h1 {
-    margin-bottom: 5px;
+    margin-bottom: 6px;
 
-    font-size: 28px;
+    color: var(--color-brand-dark);
+
+    font-size: 30px;
+    font-weight: 700;
 }
 
 .asignaciones-header p {
@@ -43,31 +38,24 @@ body {
     font-size: 15px;
 }
 
-.asignaciones-actions {
-    margin-bottom: 22px;
-}
-
-.volver-link {
-    color: var(--color-text-secondary);
-
-    font-size: 14px;
-    text-decoration: none;
-}
-
-.volver-link:hover {
-    color: var(--color-primary);
-}
+/* =========================
+   CONTENEDOR DE LA TABLA
+   ========================= */
 
 .asignaciones-card {
     overflow: hidden;
 
     border: 1px solid var(--color-border);
-    border-radius: 12px;
+    border-radius: 14px;
 
     background-color: var(--color-surface);
 
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+    box-shadow: var(--shadow-soft);
 }
+
+/* =========================
+   TABLA DE ASIGNACIONES
+   ========================= */
 
 .asignaciones-table {
     width: 100%;
@@ -76,7 +64,8 @@ body {
     border-collapse: collapse;
 }
 
-/* Ancho fijo de cada columna */
+/* Ancho de las columnas */
+
 .asignaciones-table th:nth-child(1),
 .asignaciones-table td:nth-child(1) {
     width: 7%;
@@ -97,9 +86,7 @@ body {
     width: 46%;
 }
 
-.asignaciones-table thead {
-    background-color: var(--color-input-background);
-}
+/* Encabezados y celdas */
 
 .asignaciones-table th,
 .asignaciones-table td {
@@ -114,51 +101,70 @@ body {
 }
 
 .asignaciones-table th {
-    color: var(--color-text-secondary);
+    background: linear-gradient(
+        90deg,
+        #eaf6fc 0%,
+        #f5fbfe 100%
+    );
 
-    font-weight: 600;
+    color: var(--color-brand-deep);
+
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+
+    border-bottom: 2px solid #c8eaf2;
+}
+
+.asignaciones-table td {
+    overflow: hidden;
+
+    color: var(--color-text-primary);
+}
+
+/* Evitar desbordamiento en usuario y correo */
+
+.asignaciones-table td:nth-child(2),
+.asignaciones-table td:nth-child(3) {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Resaltado de filas */
+
+.asignaciones-table tbody tr {
+    transition: background-color 200ms ease;
+}
+
+.asignaciones-table tbody tr:hover {
+    background-color: #effaff;
+}
+
+.asignaciones-table tbody tr:hover td:first-child {
+    box-shadow: inset 3px 0 0 var(--color-accent);
 }
 
 .asignaciones-table tbody tr:last-child td {
     border-bottom: none;
 }
 
-.asignaciones-table tbody tr:hover {
-    background-color: #fafbfe;
-}
-
-.asignaciones-table td {
-    overflow: hidden;
-}
-
-.asignaciones-table td:nth-child(2),
-.asignaciones-table td:nth-child(3) {
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.sin-registros {
-    padding: 36px 20px;
-
-    text-align: center;
-}
-
-.sin-registros p {
-    color: var(--color-text-secondary);
-
-    font-size: 14px;
-}
+/* =========================
+   FORMULARIO DE ASIGNACIÓN
+   ========================= */
 
 .asignacion-form {
     display: flex;
     align-items: center;
 
     width: 100%;
+    min-width: 0;
 
     gap: 10px;
 }
+
+/* =========================
+   SELECTOR DE BAÑOS
+   ========================= */
 
 .bano-select {
     flex: 1;
@@ -169,27 +175,52 @@ body {
 
     padding: 0 36px 0 12px;
 
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
+    border: 1px solid #c7dfea;
+    border-radius: 9px;
 
-    background-color: var(--color-surface);
+    background-color: #ffffff;
     color: var(--color-text-primary);
 
+    font-family: inherit;
     font-size: 14px;
 
     cursor: pointer;
     outline: none;
+
+    transition:
+        border-color var(--transition-normal),
+        box-shadow var(--transition-normal),
+        background-color var(--transition-normal);
+}
+
+.bano-select:hover:not(:disabled) {
+    border-color: var(--color-brand-blue);
 }
 
 .bano-select:focus {
     border-color: var(--color-primary);
 
-    box-shadow: 0 0 0 3px rgba(47, 71, 149, 0.1);
+    box-shadow: 0 0 0 3px rgba(29, 143, 216, 0.12);
 }
 
 .bano-select option:disabled {
     color: var(--color-text-secondary);
 }
+
+/* Selector bloqueado por limpieza activa */
+
+.bano-select:disabled {
+    border-color: var(--color-border);
+
+    background-color: #f0f5f9;
+    color: var(--color-text-secondary);
+
+    cursor: not-allowed;
+}
+
+/* =========================
+   BOTÓN GUARDAR
+   ========================= */
 
 .btn-guardar-asignacion {
     display: inline-flex;
@@ -203,35 +234,48 @@ body {
 
     padding: 0 16px;
 
-    border: none;
-    border-radius: 8px;
+    border: 1px solid transparent;
+    border-radius: 9px;
 
-    background-color: var(--color-primary);
+    background: linear-gradient(
+        115deg,
+        var(--color-brand-deep),
+        var(--color-primary),
+        var(--color-brand-blue)
+    );
+
     color: #ffffff;
 
+    font-family: inherit;
     font-size: 13px;
     font-weight: 600;
 
     cursor: pointer;
 
-    transition: background-color 0.2s ease;
+    box-shadow: 0 4px 12px rgba(8, 119, 189, 0.15);
+
+    transition:
+        transform var(--transition-normal),
+        box-shadow var(--transition-normal),
+        filter var(--transition-normal);
 }
 
 .btn-guardar-asignacion:hover {
-    background-color: var(--color-primary-hover);
+    filter: brightness(1.08);
+
+    transform: translateY(-2px);
+
+    box-shadow: 0 7px 18px rgba(8, 119, 189, 0.22);
 }
 
 .btn-guardar-asignacion:focus-visible {
-    outline: 3px solid rgba(47, 71, 149, 0.2);
-    outline-offset: 2px;
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
 }
 
-.bano-select:disabled {
-    background-color: var(--color-input-background);
-    color: var(--color-text-secondary);
-
-    cursor: not-allowed;
-}
+/* =========================
+   LIMPIEZA EN CURSO
+   ========================= */
 
 .estado-limpieza-curso {
     display: inline-flex;
@@ -242,12 +286,13 @@ body {
 
     min-height: 40px;
 
-    padding: 0 14px;
+    padding: 0 12px;
 
-    border-radius: 8px;
+    border: 1px solid #c5e4f2;
+    border-radius: 9px;
 
-    background-color: #e5ebfb;
-    color: var(--color-primary);
+    background-color: #e8f5fc;
+    color: #075a94;
 
     font-size: 12px;
     font-weight: 600;
@@ -255,16 +300,54 @@ body {
     white-space: nowrap;
 }
 
-@media (max-width: 800px) {
-    .asignaciones-container {
-        padding: 24px 15px;
-    }
+/* =========================
+   SIN REGISTROS
+   ========================= */
 
+.sin-registros {
+    padding: 40px 20px;
+
+    background: linear-gradient(
+        135deg,
+        #ffffff 0%,
+        #f4fbfe 100%
+    );
+
+    text-align: center;
+}
+
+.sin-registros p {
+    color: var(--color-text-secondary);
+
+    font-size: 14px;
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 800px) {
     .asignaciones-card {
         overflow-x: auto;
     }
 
     .asignaciones-table {
         min-width: 900px;
+    }
+}
+
+/* =========================
+   MOVIMIENTO REDUCIDO
+   ========================= */
+
+@media (prefers-reduced-motion: reduce) {
+    .asignaciones-table tbody tr,
+    .bano-select,
+    .btn-guardar-asignacion {
+        transition: none;
+    }
+
+    .btn-guardar-asignacion:hover {
+        transform: none;
     }
 }

@@ -214,9 +214,9 @@ def agregar_trabajador(request):
 
             # En desarrollo, este correo aparecerá en la terminal.
             send_mail(
-                subject="Activa tu cuenta de HigieneSmart",
+                subject="Activa tu cuenta de LimpIA",
                 message=(
-                    "Has sido registrado como trabajador en HigieneSmart.\n\n"
+                    "Has sido registrado como trabajador en LimpIA.\n\n"
                     "Para configurar tu contraseña y activar tu cuenta, "
                     "ingresa al siguiente enlace:\n\n"
                     f"{url_activacion}\n\n"

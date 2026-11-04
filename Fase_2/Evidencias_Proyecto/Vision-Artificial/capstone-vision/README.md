@@ -1,6 +1,6 @@
 # capstone-vision
 
-Módulo de visión artificial de **HigieneSmart**, proyecto CAPSTONE de Ingeniería en Informática — Duoc UC.
+Módulo de visión artificial de **LimpIA**, proyecto CAPSTONE de Ingeniería en Informática — Duoc UC.
 
 El objetivo es detectar el flujo real de personas en el acceso a servicios higiénicos para generar eventos de **entrada (IN)** y **salida (OUT)**. Estos eventos permitirán que el sistema de gestión de limpieza tome decisiones basadas en demanda real y no únicamente en horarios fijos.
 
@@ -750,4 +750,4 @@ La máquina de estados será implementada en el siguiente hito.
 
 ## Proyecto CAPSTONE
 
-**HigieneSmart** busca utilizar datos de uso real para apoyar la gestión de limpieza de servicios higiénicos, reduciendo la dependencia de frecuencias fijas y permitiendo una gestión basada en demanda.
+**limpIA** busca utilizar datos de uso real para apoyar la gestión de limpieza de servicios higiénicos, reduciendo la dependencia de frecuencias fijas y permitiendo una gestión basada en demanda.

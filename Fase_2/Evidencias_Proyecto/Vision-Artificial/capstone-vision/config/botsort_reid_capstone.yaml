@@ -1,4 +1,4 @@
-# HigieneSmart — BoT-SORT + ReID experimental.
+# limpIA — BoT-SORT + ReID experimental.
 # No modifica ByteTrack, FastTracker ni Recovery.
 tracker_type: botsort
 track_high_thresh: 0.25

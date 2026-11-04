@@ -1,34 +1,30 @@
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
 
-body {
-    min-height: 100vh;
-
-    background-color: var(--color-background);
-    color: var(--color-text-primary);
-
-    font-family: Arial, sans-serif;
-}
+/* =========================
+   CONTENEDOR PRINCIPAL
+   ========================= */
 
 .historial-container {
     width: 100%;
     max-width: 1250px;
 
     margin: 0 auto;
-    padding: 32px 24px;
 }
 
+/* =========================
+   ENCABEZADO
+   ========================= */
+
 .historial-header {
-    margin-bottom: 20px;
+    margin-bottom: 26px;
 }
 
 .historial-header h1 {
-    margin-bottom: 5px;
+    margin-bottom: 6px;
 
-    font-size: 28px;
+    color: var(--color-brand-dark);
+
+    font-size: 30px;
+    font-weight: 700;
 }
 
 .historial-header p {
@@ -37,46 +33,217 @@ body {
     font-size: 15px;
 }
 
-.historial-actions {
-    margin-bottom: 22px;
-}
+/* =========================
+   CONTENEDOR DE FILTROS
+   ========================= */
 
-.volver-link {
-    color: var(--color-text-secondary);
+.filtros-form {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: end;
 
-    font-size: 14px;
-    text-decoration: none;
-}
+    gap: 16px;
 
-.volver-link:hover {
-    color: var(--color-primary);
-}
-
-.historial-card {
-    overflow: hidden;
+    margin-bottom: 24px;
+    padding: 22px;
 
     border: 1px solid var(--color-border);
-    border-radius: 12px;
+    border-radius: 14px;
+
+    background: linear-gradient(
+        135deg,
+        #ffffff 70%,
+        #f4fbfe 100%
+    );
+
+    box-shadow: var(--shadow-soft);
+}
+
+/* =========================
+   GRUPOS DE FILTROS
+   ========================= */
+
+.filtro-grupo {
+    display: flex;
+    flex-direction: column;
+
+    min-width: 0;
+    gap: 8px;
+}
+
+.filtro-grupo label {
+    color: var(--color-brand-deep);
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* =========================
+   SELECTORES Y FECHAS
+   ========================= */
+
+.filtro-select,
+.filtro-input {
+    width: 100%;
+    height: 42px;
+
+    border: 1px solid #c7dfea;
+    border-radius: 9px;
+
+    background-color: #ffffff;
+    color: var(--color-text-primary);
+
+    font-family: inherit;
+    font-size: 13px;
+
+    outline: none;
+
+    transition:
+        border-color var(--transition-normal),
+        box-shadow var(--transition-normal);
+}
+
+.filtro-select {
+    padding: 0 34px 0 12px;
+    cursor: pointer;
+}
+
+.filtro-input {
+    min-width: 0;
+    padding: 0 12px;
+}
+
+.filtro-select:hover,
+.filtro-input:hover {
+    border-color: var(--color-brand-blue);
+}
+
+.filtro-select:focus,
+.filtro-input:focus {
+    border-color: var(--color-primary);
+
+    box-shadow: 0 0 0 3px rgba(29, 143, 216, 0.12);
+}
+
+/* =========================
+   ACCIONES DE FILTRADO
+   ========================= */
+
+.filtros-acciones {
+    display: flex;
+    align-items: center;
+    align-self: end;
+
+    gap: 10px;
+}
+
+/* Estilos compartidos de los botones */
+
+.btn-filtrar,
+.btn-limpiar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 42px;
+    padding: 0 18px;
+
+    border: 1px solid transparent;
+    border-radius: 9px;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+
+    text-decoration: none;
+    white-space: nowrap;
+
+    cursor: pointer;
+
+    transition:
+        transform var(--transition-normal),
+        box-shadow var(--transition-normal),
+        background-color var(--transition-normal),
+        border-color var(--transition-normal),
+        filter var(--transition-normal);
+}
+
+/* Botón Filtrar */
+
+.btn-filtrar {
+    background: linear-gradient(
+        115deg,
+        var(--color-brand-deep),
+        var(--color-primary),
+        var(--color-brand-blue)
+    );
+
+    color: #ffffff;
+
+    box-shadow: 0 4px 12px rgba(8, 119, 189, 0.15);
+}
+
+.btn-filtrar:hover {
+    color: #ffffff;
+
+    filter: brightness(1.08);
+    transform: translateY(-2px);
+
+    box-shadow: 0 7px 18px rgba(8, 119, 189, 0.22);
+}
+
+/* Botón Limpiar */
+
+.btn-limpiar {
+    border-color: #bbddeb;
+
+    background-color: #eaf7fd;
+    color: var(--color-brand-deep);
+}
+
+.btn-limpiar:hover {
+    border-color: var(--color-brand-blue);
+
+    background-color: #d8f1fa;
+    color: var(--color-brand-deep);
+
+    text-decoration: none;
+
+    transform: translateY(-2px);
+
+    box-shadow: 0 4px 12px rgba(7, 25, 61, 0.08);
+}
+
+/* =========================
+   CONTENEDOR DE LA TABLA
+   ========================= */
+
+.historial-card {
+    overflow-x: auto;
+
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
 
     background-color: var(--color-surface);
 
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+    box-shadow: var(--shadow-soft);
 }
+
+/* =========================
+   TABLA DE INTERVENCIONES
+   ========================= */
 
 .historial-table {
     width: 100%;
+    min-width: 1000px;
 
     table-layout: fixed;
     border-collapse: collapse;
 }
 
-.historial-table thead {
-    background-color: var(--color-input-background);
-}
-
 .historial-table th,
 .historial-table td {
-    padding: 15px 14px;
+    padding: 16px 14px;
 
     text-align: left;
     vertical-align: middle;
@@ -87,20 +254,49 @@ body {
 }
 
 .historial-table th {
-    color: var(--color-text-secondary);
+    background: linear-gradient(
+        90deg,
+        #eaf6fc 0%,
+        #f5fbfe 100%
+    );
 
-    font-weight: 600;
+    color: var(--color-brand-deep);
+
+    font-weight: 700;
+    letter-spacing: 0.01em;
+
+    border-bottom: 2px solid #c8eaf2;
+}
+
+.historial-table td {
+    color: var(--color-text-primary);
+}
+
+.historial-table td:first-child {
+    overflow-wrap: anywhere;
+}
+
+/* Resaltado de filas */
+
+.historial-table tbody tr {
+    transition: background-color 200ms ease;
+}
+
+.historial-table tbody tr:hover {
+    background-color: #effaff;
+}
+
+.historial-table tbody tr:hover td:first-child {
+    box-shadow: inset 3px 0 0 var(--color-accent);
 }
 
 .historial-table tbody tr:last-child td {
     border-bottom: none;
 }
 
-.historial-table tbody tr:hover {
-    background-color: #fafbfe;
-}
-
-/* Anchos de las columnas */
+/* =========================
+   ANCHOS DE COLUMNAS
+   ========================= */
 
 .historial-table th:nth-child(1),
 .historial-table td:nth-child(1) {
@@ -137,6 +333,15 @@ body {
     width: 13%;
 }
 
+/* =========================
+   INFORMACIÓN DEL BAÑO
+   ========================= */
+
+.historial-table td strong {
+    color: var(--color-brand-deep);
+    font-weight: 650;
+}
+
 .ubicacion-bano {
     display: block;
 
@@ -148,13 +353,16 @@ body {
     font-weight: 400;
 }
 
+/* =========================
+   ESTADOS DE LAS LIMPIEZAS
+   ========================= */
+
 .estado {
     display: inline-flex;
     align-items: center;
     justify-content: center;
 
     min-height: 28px;
-
     padding: 5px 10px;
 
     border-radius: 999px;
@@ -165,45 +373,68 @@ body {
     white-space: nowrap;
 }
 
+/* Finalizada */
+
 .estado-finalizada {
-    background-color: #e7f5ec;
-    color: var(--color-success);
+    background-color: #e5f7ef;
+    color: #17734b;
 }
 
+/* En proceso */
+
 .estado-en-proceso {
-    background-color: #e5ebfb;
-    color: var(--color-primary);
+    background-color: #e8f5fc;
+    color: #075a94;
 }
+
+/* =========================
+   BOTÓN VER EVIDENCIA
+   ========================= */
 
 .evidencia-link {
     display: inline-flex;
     align-items: center;
     justify-content: center;
 
-    min-height: 34px;
-
+    min-height: 36px;
     padding: 0 12px;
 
-    border: 1px solid var(--color-primary);
-    border-radius: 7px;
+    border: 1px solid #bbddeb;
+    border-radius: 9px;
 
-    background-color: var(--color-surface);
-    color: var(--color-primary);
+    background-color: #eaf7fd;
+    color: var(--color-brand-deep);
 
+    font-family: inherit;
     font-size: 12px;
     font-weight: 600;
 
     text-decoration: none;
+    white-space: nowrap;
 
     transition:
-        background-color 0.2s ease,
-        color 0.2s ease;
+        background-color var(--transition-normal),
+        border-color var(--transition-normal),
+        transform var(--transition-normal),
+        box-shadow var(--transition-normal);
 }
 
 .evidencia-link:hover {
-    background-color: var(--color-primary);
-    color: #ffffff;
+    border-color: var(--color-brand-blue);
+
+    background-color: #d8f1fa;
+    color: var(--color-brand-deep);
+
+    text-decoration: none;
+
+    transform: translateY(-2px);
+
+    box-shadow: 0 4px 12px rgba(7, 25, 61, 0.08);
 }
+
+/* =========================
+   SIN EVIDENCIA
+   ========================= */
 
 .sin-evidencia {
     color: var(--color-text-secondary);
@@ -211,8 +442,18 @@ body {
     font-size: 12px;
 }
 
+/* =========================
+   SIN REGISTROS
+   ========================= */
+
 .sin-registros {
-    padding: 36px 20px;
+    padding: 40px 20px;
+
+    background: linear-gradient(
+        135deg,
+        #ffffff 0%,
+        #f4fbfe 100%
+    );
 
     text-align: center;
 }
@@ -223,135 +464,31 @@ body {
     font-size: 14px;
 }
 
-.filtros-form {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    align-items: end;
+/* =========================
+   ACCESIBILIDAD
+   ========================= */
 
-    gap: 14px;
-
-    margin-bottom: 22px;
-    padding: 18px;
-
-    border: 1px solid var(--color-border);
-    border-radius: 12px;
-
-    background-color: var(--color-surface);
-
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+.btn-filtrar:focus-visible,
+.btn-limpiar:focus-visible,
+.evidencia-link:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
 }
 
-.filtro-grupo {
-    display: flex;
-    flex-direction: column;
+/* =========================
+   RESPONSIVE
+   ========================= */
 
-    gap: 7px;
-}
-
-.filtro-grupo label {
-    font-size: 13px;
-    font-weight: 600;
-}
-
-.filtro-select {
-    width: 100%;
-    height: 40px;
-
-    padding: 0 34px 0 12px;
-
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-
-    background-color: var(--color-surface);
-    color: var(--color-text-primary);
-
-    font-size: 13px;
-
-    outline: none;
-    cursor: pointer;
-}
-
-.filtro-select:focus {
-    border-color: var(--color-primary);
-
-    box-shadow: 0 0 0 3px rgba(47, 71, 149, 0.1);
-}
-
-.filtros-acciones {
-    display: flex;
-    align-items: center;
-
-    gap: 8px;
-}
-
-.btn-filtrar,
-.btn-limpiar {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    min-height: 40px;
-
-    padding: 0 16px;
-
-    border-radius: 8px;
-
-    font-size: 13px;
-    font-weight: 600;
-
-    text-decoration: none;
-
-    cursor: pointer;
-}
-
-.btn-filtrar {
-    border: none;
-
-    background-color: var(--color-primary);
-    color: #ffffff;
-}
-
-.btn-filtrar:hover {
-    background-color: var(--color-primary-hover);
-}
-
-.btn-limpiar {
-    border: 1px solid var(--color-border);
-
-    background-color: var(--color-surface);
-    color: var(--color-text-primary);
-}
-
-.btn-limpiar:hover {
-    background-color: var(--color-input-background);
-}
-
-.filtro-input {
-    width: 100%;
-    height: 40px;
-
-    padding: 0 12px;
-
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-
-    background-color: var(--color-surface);
-    color: var(--color-text-primary);
-
-    font-size: 13px;
-
-    outline: none;
-}
-
-.filtro-input:focus {
-    border-color: var(--color-primary);
-
-    box-shadow: 0 0 0 3px rgba(47, 71, 149, 0.1);
+@media (max-width: 950px) {
+    .filtros-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 600px) {
     .filtros-form {
         grid-template-columns: 1fr;
+        padding: 16px;
     }
 
     .filtros-acciones {
@@ -364,24 +501,23 @@ body {
     }
 }
 
-@media (max-width: 950px) {
-    .historial-container {
-        padding: 24px 15px;
+/* =========================
+   MOVIMIENTO REDUCIDO
+   ========================= */
+
+@media (prefers-reduced-motion: reduce) {
+    .filtro-select,
+    .filtro-input,
+    .btn-filtrar,
+    .btn-limpiar,
+    .historial-table tbody tr,
+    .evidencia-link {
+        transition: none;
     }
 
-    .historial-card {
-        overflow-x: auto;
-    }
-
-    .historial-table {
-        min-width: 1050px;
-    }
-
-    .filtros-form {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .filtros-acciones {
-        align-self: end;
+    .btn-filtrar:hover,
+    .btn-limpiar:hover,
+    .evidencia-link:hover {
+        transform: none;
     }
 }

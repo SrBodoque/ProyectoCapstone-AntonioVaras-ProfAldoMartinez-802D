@@ -1,5 +1,5 @@
 ==================================================
-HIGIENESMART - INSTRUCCIONES DE EJECUCIÓN
+LimpIA - INSTRUCCIONES DE EJECUCIÓN
 ==================================================
 
 REQUISITOS
