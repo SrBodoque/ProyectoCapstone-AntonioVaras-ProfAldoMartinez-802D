@@ -8,6 +8,7 @@
 {% endblock %}
 {% block content %}
   <main class="banos-container">
+    <!-- ENCABEZADO -->
     <header class="banos-header">
       <div>
         <h1>Gestión de baños</h1>
@@ -15,7 +16,8 @@
       </div>
       <a href="{% url 'crear_bano' %}" class="btn-primary">Agregar baño</a>
     </header>
-    <section class="banos-card">
+    <!-- LISTADO DE BAÑOS -->
+    <section class="banos-card" data-datos-url="{% url 'datos_gestion_banos' %}">
       {% if banos %}
         <table class="banos-table">
           <thead>
@@ -23,16 +25,30 @@
               <th>ID</th>
               <th>Nombre</th>
               <th>Ubicación</th>
+              <th>Entradas / Límite</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {% for bano in banos %}
-              <tr>
+              <tr data-bano-id="{{ bano.id }}">
                 <td>{{ bano.id }}</td>
                 <td>{{ bano.nombre }}</td>
                 <td>{{ bano.ubicacion }}</td>
+                <!-- CONTEO DEL CICLO DE LIMPIEZA -->
+                <td>
+                  <strong data-entradas-limite>
+                    {{ bano.entradas_ciclo }}
+                    /
+                    {% if bano.umbral_entradas %}
+                      {{ bano.umbral_entradas }}
+                    {% else %}
+                      —
+                    {% endif %}
+                  </strong>
+                </td>
+                <!-- ESTADO DEL BAÑO -->
                 <td>
                   {% if bano.activo %}
                     <span class="estado estado-activo">Activo</span>
@@ -40,6 +56,7 @@
                     <span class="estado estado-inactivo">Inactivo</span>
                   {% endif %}
                 </td>
+                <!-- ACCIONES -->
                 <td>
                   <a href="{% url 'editar_bano' bano.id %}" class="btn-editar">Editar</a>
                 </td>
@@ -54,4 +71,6 @@
       {% endif %}
     </section>
   </main>
+  <!-- ACTUALIZACIÓN AUTOMÁTICA DE ENTRADAS Y LÍMITES -->
+  <script src="{% static 'js/supervisor/banos.js' %}" defer></script>
 {% endblock %}

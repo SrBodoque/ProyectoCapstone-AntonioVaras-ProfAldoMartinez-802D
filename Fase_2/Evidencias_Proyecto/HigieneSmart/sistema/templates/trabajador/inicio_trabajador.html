@@ -11,6 +11,7 @@
     </head>
     <body>
         <main class="trabajador-container">
+            <!-- ENCABEZADO -->
             <header class="trabajador-header">
                 <div>
                     <h1>Inicio</h1>
@@ -21,98 +22,114 @@
                     <button type="submit" class="btn-cerrar-sesion">Cerrar sesión</button>
                 </form>
             </header>
-            <section class="asignacion-section">
-                <div class="section-header">
-                    <h2>Baño asignado</h2>
-                    <p>Revisa el baño que tienes asignado actualmente.</p>
-                </div>
-                {% if asignacion %}
-                    <article class="bano-card">
-                        <div class="bano-info">
-                            <span class="bano-label">Baño</span>
-                            <h3>{{ asignacion.bano.nombre }}</h3>
-                            <p>{{ asignacion.bano.ubicacion }}</p>
-                        </div>
-                        <span class="estado-asignado">Asignado</span>
-                    </article>
-                {% else %}
-                    <div class="sin-asignacion">
-                        <h3>Sin baño asignado</h3>
-                        <p>
-                            Actualmente no tienes un baño asignado.
-                            Consulta con tu supervisor si necesitas una asignación.
-                        </p>
-                    </div>
-                {% endif %}
-            </section>
-            {% if intervencion_activa or asignacion %}
-                <section class="alertas-section">
+            <!-- CONTENEDOR PARA ACTUALIZACIÓN AUTOMÁTICA -->
+            <div id="panel-trabajador-dinamico"
+                 data-estado-url="{% url 'datos_inicio_trabajador' %}"
+                 data-asignacion-id="{{ asignacion.id|default_if_none:'' }}"
+                 data-alerta-id="{{ alerta_pendiente.id|default_if_none:'' }}"
+                 data-intervencion-id="{{ intervencion_activa.id|default_if_none:'' }}">
+                <!-- BAÑO ASIGNADO -->
+                <section class="asignacion-section">
                     <div class="section-header">
-                        <h2>Alertas</h2>
-                        <p>Revisa el estado de las intervenciones de limpieza.</p>
+                        <h2>Baño asignado</h2>
+                        <p>Revisa el baño que tienes asignado actualmente.</p>
                     </div>
-                    {% if intervencion_activa %}
-                        <article class="limpieza-proceso-card">
-                            <div class="limpieza-proceso-superior">
-                                <span class="estado-en-proceso">En proceso</span>
-                                <span class="limpieza-fecha">
-                                    Iniciada:
-                                    {{ intervencion_activa.fecha_inicio|date:"d/m/Y H:i" }}
-                                </span>
+                    {% if asignacion %}
+                        <article class="bano-card">
+                            <div class="bano-info">
+                                <span class="bano-label">Baño</span>
+                                <h3>{{ asignacion.bano.nombre }}</h3>
+                                <p>{{ asignacion.bano.ubicacion }}</p>
                             </div>
-                            <h3>Limpieza en proceso</h3>
-                            <p class="limpieza-bano">{{ intervencion_activa.bano.nombre }}</p>
-                            <p class="limpieza-ubicacion">{{ intervencion_activa.bano.ubicacion }}</p>
-                            <p class="limpieza-mensaje">La intervención se encuentra actualmente en curso.</p>
-                            <form method="post"
-                                  action="{% url 'finalizar_limpieza' intervencion_activa.id %}"
-                                  enctype="multipart/form-data"
-                                  class="finalizar-limpieza-form">
-                                {% csrf_token %}
-                                <div class="evidencia-group">
-                                    <label for="id_evidencia">Evidencia fotográfica</label>
-                                    <input type="file"
-                                           name="evidencia"
-                                           id="id_evidencia"
-                                           accept="image/*"
-                                           required />
-                                    <p class="evidencia-ayuda">
-                                        Adjunta una fotografía del baño después de realizar la limpieza.
-                                        Tamaño máximo: 5 MB.
-                                    </p>
-                                </div>
-                                <button type="submit" class="btn-finalizar-limpieza">Finalizar limpieza</button>
-                            </form>
-                        </article>
-                    {% elif alerta_pendiente %}
-                        <article class="alerta-card">
-                            <div class="alerta-contenido">
-                                <div class="alerta-superior">
-                                    <span class="alerta-estado">Pendiente</span>
-                                    <span class="alerta-fecha">{{ alerta_pendiente.fecha_creacion|date:"d/m/Y H:i" }}</span>
-                                </div>
-                                <h3>Limpieza requerida</h3>
-                                <p class="alerta-motivo">{{ alerta_pendiente.motivo }}</p>
-                                <p class="alerta-bano">{{ alerta_pendiente.bano.nombre }}</p>
-                                <form method="post"
-                                      action="{% url 'iniciar_limpieza' alerta_pendiente.id %}"
-                                      class="iniciar-limpieza-form">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn-iniciar-limpieza">Iniciar limpieza</button>
-                                </form>
-                            </div>
+                            <span class="estado-asignado">Asignado</span>
                         </article>
                     {% else %}
-                        <div class="sin-alertas">
-                            <h3>Sin alertas pendientes</h3>
+                        <div class="sin-asignacion">
+                            <h3>Sin baño asignado</h3>
                             <p>
-                                Actualmente tu baño asignado no requiere una intervención
-                                de limpieza.
+                                Actualmente no tienes un baño asignado.
+                                Consulta con tu supervisor si necesitas una asignación.
                             </p>
                         </div>
                     {% endif %}
                 </section>
-            {% endif %}
+                <!-- ALERTAS Y LIMPIEZAS -->
+                {% if intervencion_activa or asignacion %}
+                    <section class="alertas-section">
+                        <div class="section-header">
+                            <h2>Alertas</h2>
+                            <p>Revisa el estado de las intervenciones de limpieza.</p>
+                        </div>
+                        {% if intervencion_activa %}
+                            <!-- LIMPIEZA EN PROCESO -->
+                            <article class="limpieza-proceso-card">
+                                <div class="limpieza-proceso-superior">
+                                    <span class="estado-en-proceso">En proceso</span>
+                                    <span class="limpieza-fecha">
+                                        Iniciada:
+                                        {{ intervencion_activa.fecha_inicio|date:"d/m/Y H:i" }}
+                                    </span>
+                                </div>
+                                <h3>Limpieza en proceso</h3>
+                                <p class="limpieza-bano">{{ intervencion_activa.bano.nombre }}</p>
+                                <p class="limpieza-ubicacion">{{ intervencion_activa.bano.ubicacion }}</p>
+                                <p class="limpieza-mensaje">La intervención se encuentra actualmente en curso.</p>
+                                <form method="post"
+                                      action="{% url 'finalizar_limpieza' intervencion_activa.id %}"
+                                      enctype="multipart/form-data"
+                                      class="finalizar-limpieza-form">
+                                    {% csrf_token %}
+                                    <div class="evidencia-group">
+                                        <label for="id_evidencia">Evidencia fotográfica</label>
+                                        <input type="file"
+                                               name="evidencia"
+                                               id="id_evidencia"
+                                               accept="image/*"
+                                               required />
+                                        <p class="evidencia-ayuda">
+                                            Adjunta una fotografía del baño después de
+                                            realizar la limpieza. Tamaño máximo: 5 MB.
+                                        </p>
+                                    </div>
+                                    <button type="submit" class="btn-finalizar-limpieza">Finalizar limpieza</button>
+                                </form>
+                            </article>
+                        {% elif alerta_pendiente %}
+                            <!-- ALERTA PENDIENTE -->
+                            <article class="alerta-card">
+                                <div class="alerta-contenido">
+                                    <div class="alerta-superior">
+                                        <span class="alerta-estado">Pendiente</span>
+                                        <span class="alerta-fecha">
+                                            {{ alerta_pendiente.fecha_creacion|date:"d/m/Y H:i" }}
+                                        </span>
+                                    </div>
+                                    <h3>Limpieza requerida</h3>
+                                    <p class="alerta-motivo">{{ alerta_pendiente.motivo }}</p>
+                                    <p class="alerta-bano">{{ alerta_pendiente.bano.nombre }}</p>
+                                    <form method="post"
+                                          action="{% url 'iniciar_limpieza' alerta_pendiente.id %}"
+                                          class="iniciar-limpieza-form">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn-iniciar-limpieza">Iniciar limpieza</button>
+                                    </form>
+                                </div>
+                            </article>
+                        {% else %}
+                            <!-- SIN ALERTAS -->
+                            <div class="sin-alertas">
+                                <h3>Sin alertas pendientes</h3>
+                                <p>
+                                    Actualmente tu baño asignado no requiere
+                                    una intervención de limpieza.
+                                </p>
+                            </div>
+                        {% endif %}
+                    </section>
+                {% endif %}
+            </div>
         </main>
+        <!-- ACTUALIZACIÓN AUTOMÁTICA DEL TRABAJADOR -->
+        <script src="{% static 'js/trabajador/inicio_trabajador.js' %}" defer></script>
     </body>
 </html>

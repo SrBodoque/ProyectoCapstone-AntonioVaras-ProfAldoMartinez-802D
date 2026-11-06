@@ -8,12 +8,15 @@
           href="{% static 'css/supervisor/inicio_supervisor.css' %}" />
 {% endblock %}
 {% block content %}
-    <header class="dashboard-header">
+    <!-- ENCABEZADO DEL DASHBOARD -->
+    <header class="dashboard-header"
+            data-datos-url="{% url 'datos_dashboard_supervisor' %}">
         <div>
             <h1>Dashboard</h1>
             <p>Resumen general de la operación de limpieza.</p>
         </div>
     </header>
+    <!-- TARJETAS DE RESUMEN GENERAL -->
     <section class="resumen-grid">
         <article class="resumen-card">
             <span class="resumen-label">Baños activos</span>
@@ -27,20 +30,47 @@
         </article>
         <article class="resumen-card">
             <span class="resumen-label">Alertas pendientes</span>
-            <strong class="resumen-valor">{{ alertas_pendientes }}</strong>
+            <strong class="resumen-valor" id="alertas-pendientes-valor">{{ alertas_pendientes }}</strong>
             <span class="resumen-descripcion">Requieren atención</span>
         </article>
         <article class="resumen-card">
             <span class="resumen-label">Limpiezas en curso</span>
-            <strong class="resumen-valor">{{ limpiezas_en_curso }}</strong>
+            <strong class="resumen-valor" id="limpiezas-en-curso-valor">{{ limpiezas_en_curso }}</strong>
             <span class="resumen-descripcion">Intervenciones activas</span>
         </article>
         <article class="resumen-card">
             <span class="resumen-label">Limpiezas realizadas hoy</span>
-            <strong class="resumen-valor">{{ limpiezas_hoy }}</strong>
+            <strong class="resumen-valor" id="limpiezas-hoy-valor">{{ limpiezas_hoy }}</strong>
             <a href="{% url 'historial_limpiezas' %}" class="resumen-link">Ver historial</a>
         </article>
     </section>
+    <!-- CONTEO DEL BAÑO CONECTADO A DROIDCAM -->
+    {% if conteo_demo %}
+        <section class="dashboard-section">
+            <div class="dashboard-section-header">
+                <div>
+                    <h2>Conteo de entradas</h2>
+                    <p>Baño conectado a la fuente DroidCam Demo.</p>
+                </div>
+            </div>
+            <div class="resumen-grid">
+                <article class="resumen-card">
+                    <span class="resumen-label">{{ conteo_demo.bano }}</span>
+                    <strong class="resumen-valor" id="conteo-demo-valor">
+                        {{ conteo_demo.entradas }}
+                        /
+                        {% if conteo_demo.limite %}
+                            {{ conteo_demo.limite }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </strong>
+                    <span class="resumen-descripcion">Entradas del ciclo / límite de limpieza</span>
+                </article>
+            </div>
+        </section>
+    {% endif %}
+    <!-- ÚLTIMAS INTERVENCIONES -->
     <section class="dashboard-section">
         <div class="dashboard-section-header">
             <div>
@@ -81,4 +111,6 @@
             {% endif %}
         </div>
     </section>
+    <!-- ACTUALIZACIÓN AUTOMÁTICA DEL DASHBOARD -->
+    <script src="{% static 'js/supervisor/inicio_supervisor.js' %}" defer></script>
 {% endblock %}

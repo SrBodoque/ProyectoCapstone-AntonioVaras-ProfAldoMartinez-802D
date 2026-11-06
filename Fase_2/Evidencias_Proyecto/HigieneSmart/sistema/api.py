@@ -15,6 +15,8 @@ from django.views.decorators.http import require_POST
 
 from .models import Bano, EventoConteo, FuenteConteo
 
+from sistema.services.alertas import verificar_alerta_por_entradas
+
 
 # ==========================================
 # API - RECEPCIÓN DE EVENTOS DE CONTEO
@@ -204,6 +206,12 @@ def recibir_evento_conteo(request):
                 "fecha_evento": fecha_evento,
             },
         )
+
+        if creado:
+            verificar_alerta_por_entradas(
+                bano_id=evento.bano_id,
+                fecha_evento=evento.fecha_evento,
+            )
 
         if not creado:
 

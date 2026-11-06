@@ -9,20 +9,28 @@ from sistema.models import (
 )
 
 
-def verificar_alerta_por_entradas(bano_id):
+# ==========================================
+# VERIFICAR ALERTAS POR LÍMITE DE ENTRADAS
+# ==========================================
+
+def verificar_alerta_por_entradas(bano_id, fecha_evento=None):
     """
-    Comprueba si un baño alcanzó su límite de entradas.
+    Comprueba si un baño alcanzó su límite de entradas
+    durante el ciclo de limpieza actual.
 
-    Si corresponde, crea una alerta de limpieza.
+    Si corresponde, crea una alerta PENDIENTE.
 
-    Devuelve la alerta creada o None si no
-    es necesario generar una nueva.
+    fecha_evento permite ignorar eventos atrasados
+    que pertenecen a ciclos anteriores.
+
+    Devuelve la alerta creada o None.
     """
 
     with transaction.atomic():
 
-        # Bloquear el baño para evitar que dos
-        # comprobaciones creen alertas simultáneas.
+        # 1. Bloquear el baño para evitar
+        # comprobaciones simultáneas.
+
         bano = (
             Bano.objects
             .select_for_update()
@@ -33,15 +41,16 @@ def verificar_alerta_por_entradas(bano_id):
             .first()
         )
 
-        # El baño no existe o está inactivo.
         if bano is None:
             return None
 
-        # El supervisor no configuró un límite.
+        # 2. Verificar si tiene límite configurado.
+
         if bano.umbral_entradas is None:
             return None
 
-        # Evitar alertas duplicadas.
+        # 3. Evitar generar alertas duplicadas.
+
         alerta_abierta = Alerta.objects.filter(
             bano=bano,
             estado__in=[
@@ -53,7 +62,8 @@ def verificar_alerta_por_entradas(bano_id):
         if alerta_abierta:
             return None
 
-        # Buscar la última limpieza finalizada.
+        # 4. Buscar la última limpieza finalizada.
+
         ultima_limpieza = (
             IntervencionLimpieza.objects
             .filter(
@@ -65,26 +75,41 @@ def verificar_alerta_por_entradas(bano_id):
             .first()
         )
 
-        # Contar solamente eventos de ENTRADA.
-        entradas = EventoConteo.objects.filter(
+        # 5. Determinar el inicio del ciclo actual.
+
+        inicio_ciclo = bano.inicio_ciclo_conteo
+
+        if (
+            ultima_limpieza is not None
+            and ultima_limpieza > inicio_ciclo
+        ):
+            inicio_ciclo = ultima_limpieza
+
+        # 6. Ignorar eventos atrasados que
+        # pertenecen a un ciclo anterior.
+
+        if (
+            fecha_evento is not None
+            and fecha_evento <= inicio_ciclo
+        ):
+            return None
+
+        # 7. Contar solamente las entradas
+        # posteriores al inicio del ciclo.
+
+        total_entradas = EventoConteo.objects.filter(
             bano=bano,
             tipo=EventoConteo.Tipo.ENTRADA,
-        )
+            fecha_evento__gt=inicio_ciclo,
+        ).count()
 
-        # Si el baño ya tuvo limpiezas, contar
-        # solo las entradas posteriores a la última.
-        if ultima_limpieza is not None:
-            entradas = entradas.filter(
-                fecha_evento__gt=ultima_limpieza,
-            )
+        # 8. Comprobar si alcanzó el límite.
 
-        total_entradas = entradas.count()
-
-        # Todavía no alcanza el límite.
         if total_entradas < bano.umbral_entradas:
             return None
 
-        # Se alcanzó el límite: crear la alerta.
+        # 9. Crear una alerta automática.
+
         alerta = Alerta.objects.create(
             bano=bano,
             motivo=(

@@ -11,10 +11,13 @@ from django.db import transaction
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.contrib import messages
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET
 
 from usuarios.models import Usuario
 from .forms import LoginForm, BanoForm, TrabajadorForm, ActivarCuentaForm, FinalizarLimpiezaForm
-from .models import Bano, AsignacionBano, Alerta, IntervencionLimpieza
+from .models import Bano, AsignacionBano, Alerta, IntervencionLimpieza, EventoConteo, FuenteConteo
+
 
 
 def login_view(request):
@@ -115,6 +118,52 @@ def inicio_supervisor(request):
         .order_by("-fecha_fin")[:5]
     )
 
+    
+    # Conteo del baño asociado a DroidCam Demo.
+    conteo_demo = None
+
+    fuente_demo = (
+        FuenteConteo.objects
+        .select_related("bano")
+        .filter(
+            identificador="droidcam-demo",
+            activa=True,
+            bano__activo=True,
+        )
+        .first()
+    )
+
+    if fuente_demo is not None:
+        bano_demo = fuente_demo.bano
+
+        ultima_limpieza = (
+            IntervencionLimpieza.objects
+            .filter(
+                bano=bano_demo,
+                fecha_fin__isnull=False,
+            )
+            .order_by("-fecha_fin")
+            .values_list("fecha_fin", flat=True)
+            .first()
+        )
+
+        inicio_ciclo = bano_demo.inicio_ciclo_conteo
+
+        if ultima_limpieza and ultima_limpieza > inicio_ciclo:
+            inicio_ciclo = ultima_limpieza
+
+        entradas_actuales = EventoConteo.objects.filter(
+            bano=bano_demo,
+            tipo=EventoConteo.Tipo.ENTRADA,
+            fecha_evento__gt=inicio_ciclo,
+        ).count()
+
+        conteo_demo = {
+            "bano": bano_demo.nombre,
+            "entradas": entradas_actuales,
+            "limite": bano_demo.umbral_entradas,
+        }
+
     return render(
         request,
         "supervisor/inicio_supervisor.html",
@@ -125,15 +174,56 @@ def inicio_supervisor(request):
             "limpiezas_en_curso": limpiezas_en_curso,
             "limpiezas_hoy": limpiezas_hoy,
             "ultimas_intervenciones": ultimas_intervenciones,
+            "conteo_demo": conteo_demo,
         },
     )
 
+
 @login_required(login_url="login")
 def gestion_banos(request):
+
     if request.user.rol != Usuario.Rol.SUPERVISOR:
         return redirect("inicio_trabajador")
 
-    banos = Bano.objects.all().order_by("id")
+    # Obtener todos los baños registrados.
+    banos = list(
+        Bano.objects.all().order_by("id")
+    )
+
+    # Calcular las entradas del ciclo actual de cada baño.
+    for bano in banos:
+
+        # Buscar la última limpieza finalizada.
+        ultima_limpieza = (
+            IntervencionLimpieza.objects
+            .filter(
+                bano=bano,
+                fecha_fin__isnull=False,
+            )
+            .order_by("-fecha_fin")
+            .values_list("fecha_fin", flat=True)
+            .first()
+        )
+
+        # Determinar desde cuándo contar entradas.
+        inicio_ciclo = bano.inicio_ciclo_conteo
+
+        if (
+            ultima_limpieza is not None
+            and ultima_limpieza > inicio_ciclo
+        ):
+            inicio_ciclo = ultima_limpieza
+
+        # Contar las entradas del ciclo actual.
+        bano.entradas_ciclo = (
+            EventoConteo.objects
+            .filter(
+                bano=bano,
+                tipo=EventoConteo.Tipo.ENTRADA,
+                fecha_evento__gt=inicio_ciclo,
+            )
+            .count()
+        )
 
     return render(
         request,
@@ -142,6 +232,7 @@ def gestion_banos(request):
             "banos": banos,
         },
     )
+
 
 @login_required(login_url="login")
 def gestion_trabajadores(request):
@@ -981,3 +1072,217 @@ def guardar_limite_entradas(request):
         )
 
     return redirect("gestion_alertas")
+
+
+
+# ==========================================
+# DATOS DEL DASHBOARD EN TIEMPO CASI REAL
+# ==========================================
+
+@require_GET
+@login_required(login_url="login")
+def datos_dashboard_supervisor(request):
+
+    if request.user.rol != Usuario.Rol.SUPERVISOR:
+        return JsonResponse(
+            {"error": "No autorizado"},
+            status=403,
+        )
+
+    # Obtener las alertas pendientes actuales.
+    alertas_pendientes = Alerta.objects.filter(
+        estado=Alerta.Estado.PENDIENTE,
+    ).count()
+
+    # Obtener las limpiezas en curso.
+    limpiezas_en_curso = IntervencionLimpieza.objects.filter(
+        fecha_fin__isnull=True,
+        alerta__estado=Alerta.Estado.EN_PROCESO,
+    ).count()
+
+    # Contar las limpiezas finalizadas hoy.
+    hoy = timezone.localdate()
+
+    limpiezas_hoy = IntervencionLimpieza.objects.filter(
+        fecha_fin__date=hoy,
+    ).count()
+
+    # Buscar el baño conectado a DroidCam Demo.
+    fuente = (
+        FuenteConteo.objects
+        .select_related("bano")
+        .filter(
+            identificador="droidcam-demo",
+            activa=True,
+            bano__activo=True,
+        )
+        .first()
+    )
+
+    conteo_demo = None
+
+    if fuente is not None:
+        bano = fuente.bano
+
+        # Buscar la última limpieza terminada.
+        ultima_limpieza = (
+            IntervencionLimpieza.objects
+            .filter(
+                bano=bano,
+                fecha_fin__isnull=False,
+            )
+            .order_by("-fecha_fin")
+            .values_list("fecha_fin", flat=True)
+            .first()
+        )
+
+        # Calcular el inicio del ciclo actual.
+        inicio_ciclo = bano.inicio_ciclo_conteo
+
+        if ultima_limpieza and ultima_limpieza > inicio_ciclo:
+            inicio_ciclo = ultima_limpieza
+
+        # Contar entradas del ciclo actual.
+        entradas = EventoConteo.objects.filter(
+            bano=bano,
+            tipo=EventoConteo.Tipo.ENTRADA,
+            fecha_evento__gt=inicio_ciclo,
+        ).count()
+
+        conteo_demo = {
+            "bano": bano.nombre,
+            "entradas": entradas,
+            "limite": bano.umbral_entradas,
+        }
+
+    respuesta = JsonResponse({
+        "alertas_pendientes": alertas_pendientes,
+        "limpiezas_en_curso": limpiezas_en_curso,
+        "limpiezas_hoy": limpiezas_hoy,
+        "conteo_demo": conteo_demo,
+    })
+
+    respuesta["Cache-Control"] = "no-store"
+
+    return respuesta
+
+
+# ==========================================
+# DATOS ACTUALIZADOS DEL PANEL DEL TRABAJADOR
+# ==========================================
+
+@require_GET
+@login_required(login_url="login")
+def datos_inicio_trabajador(request):
+
+    # Solo los trabajadores pueden consultar estos datos.
+    if request.user.rol != Usuario.Rol.TRABAJADOR:
+        return JsonResponse(
+            {"error": "No autorizado"},
+            status=403,
+        )
+
+    # Buscar la asignación activa del trabajador.
+    asignacion = (
+        AsignacionBano.objects
+        .filter(
+            trabajador=request.user,
+            activa=True,
+        )
+        .first()
+    )
+
+    # Buscar la alerta pendiente de su baño asignado.
+    alerta_pendiente_id = None
+
+    if asignacion is not None:
+        alerta_pendiente_id = (
+            Alerta.objects
+            .filter(
+                bano_id=asignacion.bano_id,
+                estado=Alerta.Estado.PENDIENTE,
+            )
+            .order_by("fecha_creacion")
+            .values_list("id", flat=True)
+            .first()
+        )
+
+    # Buscar una limpieza que el trabajador tenga en curso.
+    intervencion_activa_id = (
+        IntervencionLimpieza.objects
+        .filter(
+            trabajador=request.user,
+            fecha_fin__isnull=True,
+            alerta__estado=Alerta.Estado.EN_PROCESO,
+        )
+        .values_list("id", flat=True)
+        .first()
+    )
+
+    respuesta = JsonResponse({
+        "asignacion_id": asignacion.id if asignacion else None,
+        "alerta_pendiente_id": alerta_pendiente_id,
+        "intervencion_activa_id": intervencion_activa_id,
+    })
+
+    respuesta["Cache-Control"] = "no-store"
+
+    return respuesta
+
+
+# ==========================================
+# DATOS ACTUALIZADOS DE GESTIÓN DE BAÑOS
+# ==========================================
+
+@require_GET
+@login_required(login_url="login")
+def datos_gestion_banos(request):
+
+    if request.user.rol != Usuario.Rol.SUPERVISOR:
+        return JsonResponse(
+            {"error": "No autorizado"},
+            status=403,
+        )
+
+    datos_banos = []
+
+    for bano in Bano.objects.all().order_by("id"):
+
+        # Buscar la última limpieza finalizada.
+        ultima_limpieza = (
+            IntervencionLimpieza.objects
+            .filter(
+                bano=bano,
+                fecha_fin__isnull=False,
+            )
+            .order_by("-fecha_fin")
+            .values_list("fecha_fin", flat=True)
+            .first()
+        )
+
+        # Calcular el inicio del ciclo actual.
+        inicio_ciclo = bano.inicio_ciclo_conteo
+
+        if ultima_limpieza and ultima_limpieza > inicio_ciclo:
+            inicio_ciclo = ultima_limpieza
+
+        # Contar las entradas del ciclo.
+        entradas = EventoConteo.objects.filter(
+            bano=bano,
+            tipo=EventoConteo.Tipo.ENTRADA,
+            fecha_evento__gt=inicio_ciclo,
+        ).count()
+
+        datos_banos.append({
+            "id": bano.id,
+            "entradas": entradas,
+            "limite": bano.umbral_entradas,
+        })
+
+    respuesta = JsonResponse({
+        "banos": datos_banos,
+    })
+
+    respuesta["Cache-Control"] = "no-store"
+
+    return respuesta

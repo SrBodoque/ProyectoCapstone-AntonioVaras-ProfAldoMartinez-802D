@@ -18,6 +18,14 @@ class Bano(models.Model):
         validators=[MinValueValidator(1)],
         help_text="Cantidad de entradas necesarias para generar una alerta.",
     )
+    
+    inicio_ciclo_conteo = models.DateTimeField(
+        default=timezone.now,
+        help_text=(
+            "Fecha desde la que comienzan a contarse "
+            "las entradas del ciclo de limpieza."
+        ),
+    )
 
     def __str__(self):
         return f"{self.nombre} - {self.ubicacion}"

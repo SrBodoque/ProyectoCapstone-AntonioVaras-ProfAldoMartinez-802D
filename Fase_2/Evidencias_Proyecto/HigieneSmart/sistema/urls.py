@@ -8,6 +8,7 @@ urlpatterns = [
     path("supervisor/banos/", views.gestion_banos, name="gestion_banos"),
     path("supervisor/banos/crear/", views.crear_bano, name="crear_bano"),
     path("supervisor/banos/<int:bano_id>/editar/", views.editar_bano, name="editar_bano"),
+    path("supervisor/banos/datos/", views.datos_gestion_banos, name="datos_gestion_banos"),
     path("supervisor/trabajadores/", views.gestion_trabajadores, name="gestion_trabajadores"),
     path("supervisor/trabajadores/agregar/", views.agregar_trabajador, name="agregar_trabajador"),
     path("supervisor/trabajadores/<int:trabajador_id>/estado/", views.cambiar_estado_trabajador, name="cambiar_estado_trabajador"),
@@ -17,9 +18,11 @@ urlpatterns = [
     path("supervisor/alertas/", views.gestion_alertas, name="gestion_alertas"),
     path("supervisor/alertas/crear/", views.crear_alerta_manual, name="crear_alerta_manual"),
     path("supervisor/alertas/limite/guardar/", views.guardar_limite_entradas, name="guardar_limite_entradas"),
+    path("supervisor/dashboard/datos/",views.datos_dashboard_supervisor, name="datos_dashboard_supervisor"),
     path("trabajador/", views.inicio_trabajador, name="inicio_trabajador"),
     path("trabajador/alertas/<int:alerta_id>/iniciar/", views.iniciar_limpieza, name="iniciar_limpieza"),
     path("trabajador/limpiezas/<int:intervencion_id>/finalizar/", views.finalizar_limpieza, name="finalizar_limpieza"),
+    path("trabajador/inicio/datos/", views.datos_inicio_trabajador, name="datos_inicio_trabajador"),
     path("logout/", views.cerrar_sesion, name="cerrar_sesion"),
 
 
