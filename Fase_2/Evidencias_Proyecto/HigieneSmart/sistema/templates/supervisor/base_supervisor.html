@@ -51,6 +51,10 @@
                     </div>
                     <div class="sidebar-section">
                         <span class="sidebar-section-title">Operación</span>
+                        <a href="{% url 'gestion_alertas' %}"
+                           class="sidebar-link {% if request.resolver_match.url_name == 'gestion_alertas' %}sidebar-link-active{% endif %}">
+                            Alertas
+                        </a>
                         <a href="{% url 'historial_limpiezas' %}"
                            class="sidebar-link {% if request.resolver_match.url_name == 'historial_limpiezas' %}sidebar-link-active{% endif %}">
                             Historial de limpiezas

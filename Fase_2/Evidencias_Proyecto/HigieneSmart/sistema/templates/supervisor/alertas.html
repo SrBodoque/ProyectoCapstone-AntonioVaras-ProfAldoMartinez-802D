@@ -1,0 +1,177 @@
+{% extends "supervisor/base_supervisor.html" %}
+{% load static %}
+{% block title %}Alertas - limpIAvision{% endblock %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/supervisor/alertas.css' %}">
+{% endblock %}
+{% block content %}
+    <div class="alertas-container">
+        <!-- ENCABEZADO -->
+        <header class="alertas-header">
+            <h1>Gestión de alertas</h1>
+            <p>
+                Crea alertas de limpieza y configura los límites
+                de entradas para cada baño.
+            </p>
+        </header>
+        <!-- MENSAJES DEL SISTEMA -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alertas-info" role="status">
+                    <strong>
+                        {% if message.tags == "success" %}
+                            Operación exitosa
+                        {% else %}
+                            Aviso
+                        {% endif %}
+                    </strong>
+                    <p>{{ message }}</p>
+                </div>
+            {% endfor %}
+        {% endif %}
+        <!-- OPCIONES DE ALERTAS -->
+        <div class="alertas-opciones">
+            <!-- ALERTA INMEDIATA -->
+            <form method="post"
+                  action="{% url 'crear_alerta_manual' %}"
+                  class="alertas-opcion-card">
+                {% csrf_token %}
+                <div class="alertas-opcion-header">
+                    <span class="alertas-opcion-icono">!</span>
+                    <div>
+                        <h2>Alerta inmediata</h2>
+                        <p>
+                            Solicita una limpieza sin esperar
+                            a alcanzar el límite de entradas.
+                        </p>
+                    </div>
+                </div>
+                <div class="alertas-campo">
+                    <label for="bano-alerta">Seleccionar baño</label>
+                    <select id="bano-alerta" name="bano" required>
+                        <option value="">Selecciona un baño</option>
+                        {% for bano in banos %}
+                            <option value="{{ bano.id }}">{{ bano.nombre }} - {{ bano.ubicacion }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="alertas-campo">
+                    <label for="motivo-alerta">Motivo de la alerta</label>
+                    <textarea id="motivo-alerta"
+                              name="motivo"
+                              rows="3"
+                              maxlength="200"
+                              required
+                              placeholder="Ej.: El baño necesita una limpieza urgente."></textarea>
+                </div>
+                <button type="submit" class="btn-crear-alerta">Crear alerta ahora</button>
+                <p class="alertas-ayuda">
+                    La alerta se enviará al trabajador
+                    que tenga asignado este baño.
+                </p>
+            </form>
+            <!-- LÍMITE AUTOMÁTICO -->
+            <form method="post"
+                  action="{% url 'guardar_limite_entradas' %}"
+                  class="alertas-opcion-card">
+                {% csrf_token %}
+                <div class="alertas-opcion-header">
+                    <span class="alertas-opcion-icono">#</span>
+                    <div>
+                        <h2>Límite automático</h2>
+                        <p>
+                            Configura cuántas entradas debe registrar
+                            un baño para generar una alerta de limpieza.
+                        </p>
+                    </div>
+                </div>
+                <div class="alertas-campo">
+                    <label for="bano-limite">Seleccionar baño</label>
+                    <select id="bano-limite" name="bano" required>
+                        <option value="">Selecciona un baño</option>
+                        {% for bano in banos %}
+                            <option value="{{ bano.id }}"
+                                    data-limite="{{ bano.umbral_entradas|default_if_none:'' }}">
+                                {{ bano.nombre }} - {{ bano.ubicacion }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="alertas-campo">
+                    <label for="limite-entradas">Límite de entradas</label>
+                    <input type="number"
+                           id="limite-entradas"
+                           name="limite_entradas"
+                           min="1"
+                           max="2147483647"
+                           step="1"
+                           placeholder="Ej.: 300">
+                </div>
+                <div class="alertas-info">
+                    <strong>Configuración actual</strong>
+                    <p id="limite-actual" aria-live="polite">
+                        Selecciona un baño para consultar
+                        su límite de entradas.
+                    </p>
+                </div>
+                <button type="submit" class="btn-guardar-limite">Guardar límite</button>
+                <p class="alertas-ayuda">
+                    Deja vacío el límite para desactivar
+                    las alertas automáticas de este baño.
+                </p>
+            </form>
+        </div>
+        <!-- HISTORIAL DE ALERTAS -->
+        <section class="alertas-historial">
+            <div class="alertas-historial-header">
+                <div>
+                    <h2>Historial de alertas</h2>
+                    <p>
+                        Consulta las alertas registradas y
+                        su estado actual.
+                    </p>
+                </div>
+                <span class="alertas-total">{{ alertas|length }} alertas</span>
+            </div>
+            <div class="alertas-tabla-card">
+                <table class="alertas-tabla">
+                    <thead>
+                        <tr>
+                            <th>Baño</th>
+                            <th>Ubicación</th>
+                            <th>Motivo</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alerta in alertas %}
+                            <tr>
+                                <td class="alertas-bano">{{ alerta.bano.nombre }}</td>
+                                <td>{{ alerta.bano.ubicacion }}</td>
+                                <td>{{ alerta.motivo }}</td>
+                                <td>{{ alerta.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    {% if alerta.estado == "PENDIENTE" %}
+                                        <span class="alertas-estado estado-pendiente">Pendiente</span>
+                                    {% elif alerta.estado == "EN_PROCESO" %}
+                                        <span class="alertas-estado estado-proceso">En proceso</span>
+                                    {% elif alerta.estado == "ATENDIDA" %}
+                                        <span class="alertas-estado estado-atendida">Atendida</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="alertas-sin-registros">Todavía no hay alertas registradas.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+{% endblock %}
+{% block extra_js %}
+    <script src="{% static 'js/supervisor/alertas.js' %}"></script>
+{% endblock %}

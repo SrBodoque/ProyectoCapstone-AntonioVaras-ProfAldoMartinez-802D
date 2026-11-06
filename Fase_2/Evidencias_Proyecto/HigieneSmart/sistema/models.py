@@ -4,14 +4,24 @@ from django.utils import timezone
 from django.conf import settings
 from django.db.models import Q
 
+from django.core.validators import MinValueValidator
+
 
 class Bano(models.Model):
     nombre = models.CharField(max_length=100)
     ubicacion = models.CharField(max_length=150)
     activo = models.BooleanField(default=True)
 
+    umbral_entradas = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1)],
+        help_text="Cantidad de entradas necesarias para generar una alerta.",
+    )
+
     def __str__(self):
         return f"{self.nombre} - {self.ubicacion}"
+
 
 
 class AsignacionBano(models.Model):
@@ -163,6 +173,51 @@ class IntervencionLimpieza(models.Model):
             f"{self.bano.nombre}"
         )
 
+    
+class FuenteConteo(models.Model):
+    nombre = models.CharField(
+        max_length=100,
+    )
+
+    identificador = models.SlugField(
+        max_length=80,
+        unique=True,
+        help_text="Ejemplo: droidcam-demo",
+    )
+
+    bano = models.ForeignKey(
+        Bano,
+        on_delete=models.PROTECT,
+        related_name="fuentes_conteo",
+    )
+
+    activa = models.BooleanField(
+        default=True,
+    )
+    
+    credencial_hash = models.CharField(
+        max_length=64,
+        unique=True,
+        null=True,
+        blank=True,
+        editable=False,
+        help_text=(
+            "Hash SHA-256 de la credencial privada "
+            "utilizada para autenticar esta fuente."
+        ),
+    )
+
+    fecha_creacion = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    class Meta:
+        ordering = ["nombre"]
+
+    def __str__(self):
+        return f"{self.nombre} - {self.bano.nombre}"
+
+
 
 class EventoConteo(models.Model):
     class Tipo(models.TextChoices):
@@ -178,6 +233,16 @@ class EventoConteo(models.Model):
         on_delete=models.PROTECT,
         related_name="eventos_conteo",
     )
+
+    
+    fuente = models.ForeignKey(
+        FuenteConteo,
+        on_delete=models.PROTECT,
+        related_name="eventos",
+        null=True,
+        blank=True,
+    )
+
 
     tipo = models.CharField(
         max_length=10,

@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.db import transaction
 from django.utils import timezone
 from django.utils.dateparse import parse_date
+from django.contrib import messages
 
 from usuarios.models import Usuario
 from .forms import LoginForm, BanoForm, TrabajadorForm, ActivarCuentaForm, FinalizarLimpiezaForm
@@ -796,3 +797,187 @@ def historial_limpiezas(request):
             "filtro_fecha_hasta": fecha_hasta or "",
         },
     )
+
+
+# =========================
+# GESTIÓN DE ALERTAS
+# =========================
+
+@login_required(login_url="login")
+def gestion_alertas(request):
+    if request.user.rol != Usuario.Rol.SUPERVISOR:
+        return redirect("inicio_trabajador")
+
+    alertas = (
+        Alerta.objects
+        .select_related("bano")
+        .order_by("-fecha_creacion")
+    )
+
+    banos = Bano.objects.filter(
+        activo=True,
+    ).order_by("nombre", "id")
+
+    return render(
+        request,
+        "supervisor/alertas.html",
+        {
+            "alertas": alertas,
+            "banos": banos,
+        },
+    )
+
+
+# =========================
+# CREAR ALERTA MANUAL
+# =========================
+
+@require_POST
+@login_required(login_url="login")
+def crear_alerta_manual(request):
+    if request.user.rol != Usuario.Rol.SUPERVISOR:
+        return redirect("inicio_trabajador")
+
+    bano_id = (request.POST.get("bano") or "").strip()
+    motivo = (request.POST.get("motivo") or "").strip()
+
+    # Validar que se haya seleccionado un baño.
+    if not bano_id.isdecimal():
+        messages.error(
+            request,
+            "Debes seleccionar un baño válido.",
+        )
+        return redirect("gestion_alertas")
+
+    # El motivo es obligatorio.
+    if not motivo:
+        messages.error(
+            request,
+            "Debes indicar el motivo de la alerta.",
+        )
+        return redirect("gestion_alertas")
+
+    # Respetar el máximo definido en el modelo Alerta.
+    if len(motivo) > 200:
+        messages.error(
+            request,
+            "El motivo no puede superar los 200 caracteres.",
+        )
+        return redirect("gestion_alertas")
+
+    with transaction.atomic():
+
+        # Bloquear el baño durante la comprobación
+        # para evitar alertas duplicadas simultáneas.
+        bano = get_object_or_404(
+            Bano.objects.select_for_update(),
+            id=int(bano_id),
+            activo=True,
+        )
+
+        # No crear otra alerta si ya existe una
+        # pendiente o en proceso para este baño.
+        alerta_existente = Alerta.objects.filter(
+            bano=bano,
+            estado__in=[
+                Alerta.Estado.PENDIENTE,
+                Alerta.Estado.EN_PROCESO,
+            ],
+        ).exists()
+
+        if alerta_existente:
+            messages.warning(
+                request,
+                "Este baño ya tiene una alerta pendiente "
+                "o en proceso.",
+            )
+            return redirect("gestion_alertas")
+
+        # Crear la alerta con estado PENDIENTE.
+        Alerta.objects.create(
+            bano=bano,
+            motivo=motivo,
+            estado=Alerta.Estado.PENDIENTE,
+        )
+
+    messages.success(
+        request,
+        "La alerta de limpieza se creó correctamente.",
+    )
+
+    return redirect("gestion_alertas")
+
+
+
+# =========================
+# CONFIGURAR LÍMITE DE ENTRADAS
+# =========================
+
+@require_POST
+@login_required(login_url="login")
+def guardar_limite_entradas(request):
+    if request.user.rol != Usuario.Rol.SUPERVISOR:
+        return redirect("inicio_trabajador")
+
+    bano_id = (request.POST.get("bano") or "").strip()
+    limite_texto = (
+        request.POST.get("limite_entradas") or ""
+    ).strip()
+
+    # Validar que se haya seleccionado un baño.
+    if not bano_id.isdecimal():
+        messages.error(
+            request,
+            "Debes seleccionar un baño válido.",
+        )
+        return redirect("gestion_alertas")
+
+    # Un campo vacío significa que el baño
+    # queda sin límite automático configurado.
+    if not limite_texto:
+        limite = None
+    else:
+        try:
+            limite = int(limite_texto)
+        except ValueError:
+            messages.error(
+                request,
+                "El límite debe ser un número entero.",
+            )
+            return redirect("gestion_alertas")
+
+        # Validar que el límite sea positivo
+        # y compatible con PostgreSQL.
+        if limite < 1 or limite > 2147483647:
+            messages.error(
+                request,
+                "El límite debe ser un número entero "
+                "entre 1 y 2147483647.",
+            )
+            return redirect("gestion_alertas")
+
+    # Buscar el baño y comprobar que esté activo.
+    bano = get_object_or_404(
+        Bano,
+        id=int(bano_id),
+        activo=True,
+    )
+
+    # Guardar el límite configurado.
+    bano.umbral_entradas = limite
+    bano.save(update_fields=["umbral_entradas"])
+
+    if limite is None:
+        messages.success(
+            request,
+            f"Se desactivó el límite automático "
+            f"del baño {bano.nombre}.",
+        )
+    else:
+        messages.success(
+            request,
+            f"El límite del baño {bano.nombre} "
+            f"se configuró en {limite} entradas.",
+        )
+
+    return redirect("gestion_alertas")

@@ -1,12 +1,6 @@
 from django.contrib import admin
 
-from .models import (
-    Alerta,
-    AsignacionBano,
-    Bano,
-    EventoConteo,
-    IntervencionLimpieza,
-)
+from .models import (Alerta, AsignacionBano, Bano, EventoConteo, IntervencionLimpieza, FuenteConteo,)
 
 
 @admin.register(Bano)
@@ -144,4 +138,37 @@ class EventoConteoAdmin(admin.ModelAdmin):
 
     ordering = (
         "-fecha_evento",
+    )
+
+
+
+# =========================
+# FUENTES DE CONTEO
+# =========================
+
+@admin.register(FuenteConteo)
+class FuenteConteoAdmin(admin.ModelAdmin):
+    list_display = (
+        "nombre",
+        "identificador",
+        "bano",
+        "activa",
+        "fecha_creacion",
+    )
+
+    list_filter = (
+        "activa",
+        "bano",
+    )
+
+    search_fields = (
+        "nombre",
+        "identificador",
+        "bano__nombre",
+    )
+
+    list_select_related = ("bano",)
+
+    readonly_fields = (
+        "fecha_creacion",
     )
