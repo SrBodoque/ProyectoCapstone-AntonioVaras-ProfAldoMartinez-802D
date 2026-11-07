@@ -9,18 +9,21 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 from .config import (PROJECT_ROOT, load_detection_config, load_tracking_config,
-                     load_tracker_config, resolve_tracker_path)
+                     load_tracker_config, resolve_tracker_path, DETECTION_CONFIG_PATH, TRACKING_CONFIG_PATH)
 from .detector import PersonDetector
 from .devices import load_torch, validate_device
 from .tracker import PersonTracker
 from .video_results import SCHEMA_VERSION, VideoResults, create_run, utc_now, write_json
 from .video_source import VideoCase, VideoSource, file_sha256
+from .tracker_runtime import check_backend, local_processing, local_weights_root, resolve_resources
 
 
 @dataclass(frozen=True)
 class RunOptions:
     mode: str
     device: str
+    tracker: str = "bytetrack"
+    weights_dir: str | None = None
 
 
 @dataclass(frozen=True)
@@ -38,6 +41,9 @@ class PreparedRun:
     tracking: dict | None
     provenance: dict
     torch: object
+    confidence_override: float | None = None
+    weights: tuple = ()
+    working_directory: Path | None = None
 
     def synchronize(self, device):
         if device.startswith("cuda:"):
@@ -48,20 +54,33 @@ def prepare_runtime(options: RunOptions) -> PreparedRun:
     if options.mode not in ("detection", "tracking"):
         raise ValueError("mode debe ser detection o tracking.")
     detection = load_detection_config()
-    tracking = load_tracking_config() if options.mode == "tracking" else None
+    original_detection = dict(detection)
+    weights_root = local_weights_root(options.weights_dir if options.weights_dir else PROJECT_ROOT)
+    selection = None
+    if options.mode == "tracking":
+        selection, weights = resolve_resources(options.tracker, weights_root, detection["model"])
+        tracking = selection.tracking_config
+    else:
+        if options.tracker != "bytetrack":
+            raise ValueError("La selección de tracker solo se aplica al modo tracking.")
+        tracking = None
+        model_path = weights_root / detection["model"]
+        if not model_path.is_file() or model_path.stat().st_size == 0:
+            raise RuntimeError(f"Faltan pesos locales no vacíos: {model_path}. No se descargarán.")
+        weights = [{"role": "detector", "path": str(model_path), "sha256": file_sha256(model_path)}]
     tracker_path = resolve_tracker_path(tracking["tracker_config"]) if tracking else None
     tracker_params = load_tracker_config(tracker_path) if tracker_path else None
-    if tracker_path and tracker_path != (PROJECT_ROOT / "config/bytetrack_capstone.yaml").resolve():
-        raise ValueError("Etapa 1 solo admite el perfil ByteTrack baseline actual.")
-    if tracker_params and tracker_params["tracker_type"] != "bytetrack":
-        raise ValueError("Etapa 1 requiere ByteTrack baseline.")
-    model_path = PROJECT_ROOT / detection["model"]
-    if not model_path.is_file() or model_path.stat().st_size == 0:
-        raise RuntimeError(f"Faltan pesos locales no vacíos: {model_path}. No se descargarán.")
+    model_path = Path(weights[0]["path"])
+    if options.weights_dir:
+        detection = {**detection, "model": str(model_path)}
     # No se instancia YOLO antes de verificar recursos locales y dispositivo.
     torch = load_torch()
     validate_device(options.device, torch_module=torch)
     import cv2
+    backend_class = None
+    if tracker_params:
+        with local_processing([w["path"] for w in weights]):
+            backend_class = check_backend(tracker_params["tracker_type"])
     versions = {}
     for name in ("opencv-python", "ultralytics", "torch", "torchvision", "numpy", "PyYAML", "lap"):
         try:
@@ -69,9 +88,9 @@ def prepare_runtime(options: RunOptions) -> PreparedRun:
         except PackageNotFoundError:
             versions[name] = None
     provenance = {
-        "profile": "bytetrack_baseline" if tracking else "detection_baseline",
-        "model": detection["model"], "model_sha256": file_sha256(model_path),
-        "detection_config": dict(detection),
+        "profile": ("bytetrack_baseline" if selection.name == "bytetrack" else selection.name) if selection else "detection_baseline",
+        "model": original_detection["model"], "model_sha256": file_sha256(model_path),
+        "detection_config": original_detection,
         "tracking_config": dict(tracking) if tracking else None,
         "tracker_parameters": tracker_params,
         "tracker_yaml_sha256": file_sha256(tracker_path) if tracker_path else None,
@@ -80,13 +99,24 @@ def prepare_runtime(options: RunOptions) -> PreparedRun:
         "device_name": torch.cuda.get_device_name(int(options.device[5:]))
                        if options.device.startswith("cuda:") else "CPU",
         "opencv_version": cv2.__version__, "ultralytics_version": versions["ultralytics"],
+        "tracker_name": selection.name if selection else None,
+        "backend_class": backend_class,
+        "confidence_override": selection.confidence_override if selection else None,
+        "weights_verified_local": weights,
+        "config_files": {
+            "detection": {"path": str(DETECTION_CONFIG_PATH), "sha256": file_sha256(DETECTION_CONFIG_PATH)},
+            "tracking": ({"path": str(TRACKING_CONFIG_PATH), "sha256": file_sha256(TRACKING_CONFIG_PATH)}
+                         if tracking else None),
+        },
     }
-    return PreparedRun(detection, tracking, provenance, torch)
+    return PreparedRun(detection, tracking, provenance, torch,
+                       selection.confidence_override if selection else None,
+                       tuple(weights), weights_root if selection and selection.name == "botsort_reid" else None)
 
 
 def process_case(case: VideoCase, options: RunOptions, prepared: PreparedRun,
                  run_directory: Path) -> VideoRunResult:
-    directory = run_directory / case.case_id
+    directory = (run_directory / case.case_id).resolve()
     metadata = {
         "schema_version": SCHEMA_VERSION, "run_id": run_directory.name,
         "case_id": case.case_id, "input_path": str(case.path), "input_sha256": case.sha256,
@@ -100,7 +130,8 @@ def process_case(case: VideoCase, options: RunOptions, prepared: PreparedRun,
     output = VideoResults(directory)
     started = time.perf_counter()
     try:
-        with output:
+        with local_processing([case.path, *[w["path"] for w in prepared.weights]],
+                              prepared.working_directory), output:
             write_json(directory / "metadata.json", metadata)
             # Es un archivo local mutable: detectar cambios posteriores a la enumeración.
             if file_sha256(case.path) != case.sha256:
@@ -112,8 +143,10 @@ def process_case(case: VideoCase, options: RunOptions, prepared: PreparedRun,
                     engine = PersonDetector(prepared.detection, device_override=options.device)
                     process = engine.detect
                 else:
+                    constructor_options = ({} if prepared.confidence_override is None else
+                                           {"tracking_confidence_override": prepared.confidence_override})
                     engine = PersonTracker(prepared.detection, prepared.tracking,
-                                           device_override=options.device)
+                                           device_override=options.device, **constructor_options)
                     process = engine.track
                 prepared.synchronize(options.device)
                 metadata["model_load_ms"] = (time.perf_counter() - loading) * 1000
@@ -134,6 +167,16 @@ def process_case(case: VideoCase, options: RunOptions, prepared: PreparedRun,
                         metadata["first_frame_processing_ms"] = processing_ms
                 metadata["status"] = source.status
                 metadata["termination_reason"] = source.reason
+                used = [dict(w) for w in prepared.weights if w["role"] == "detector"]
+                diagnostics = getattr(engine, "reid_diagnostics", None)
+                if diagnostics is not None:
+                    metadata["reid_model_effective"] = diagnostics.effective_model
+                    if diagnostics.effective_model == "yolo26n-cls.pt":
+                        used.extend(dict(w) for w in prepared.weights if w["role"] == "reid")
+                metadata["weights_used"] = used
+                for weight in prepared.weights:
+                    if file_sha256(Path(weight["path"])) != weight["sha256"]:
+                        raise RuntimeError("Un peso cambió durante la ejecución; procedencia no válida.")
     except KeyboardInterrupt:
         metadata["status"] = "interrupted"
         metadata["error"] = "Interrupción solicitada por el usuario."

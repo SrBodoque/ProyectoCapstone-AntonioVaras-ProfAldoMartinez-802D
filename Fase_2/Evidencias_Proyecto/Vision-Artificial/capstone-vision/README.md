@@ -14,6 +14,20 @@ El sistema está diseñado bajo principios de privacidad:
 
 ---
 
+## Hito 5.2 — MP4 con tracker seleccionable
+
+El flujo independiente `src.count_mp4` permite generar tracking con ByteTrack,
+FastTrack o BoT-SORT/ReID, elegir CPU/CUDA y contar predicciones guardadas sin
+repetir inferencia. Cada ejecución crea resultados propios. Las zonas del video
+se calibran con `src.calibrate_mp4_zones` y se vinculan al hash del MP4.
+`src.view_count_results` reproduce el conteo guardado con cajas, IDs, confianza,
+trayectorias, zonas, motivos por ID y contadores IN/OUT, sin repetir inferencia.
+
+Consulte [comandos, calibración y resultados H5.2](docs/HITO5_2_MP4_TRACKERS.md).
+La primera prueba ByteTrack de `prueba_02.mp4` completó 690/690 frames en RTX 5060,
+`cuda:0`. Su conteo real está pendiente de zonas manuales. No hay descargas de
+pesos, selección automática del mejor tracker ni comparación de eventos anotados.
+
 ## INICIO RÁPIDO — MP4 y visualización offline
 
 Desde la raíz del repositorio, en PowerShell:
@@ -139,13 +153,21 @@ la desaparición temporal de los recursos locales sigue indeterminada.
 
 ## Estado actual
 
+Hito 5.1 en validación: **A exterior → B puerta = IN; B → A = OUT**.
+Solo cuenta cambios estables del mismo ID. No utiliza línea final ni requiere
+salir de B. La aceptación en cámara de la corrección sigue pendiente.
+Consulte [diagnóstico, orientación de perfiles y aceptación](docs/hito5_1_conteo_entradas.md).
+Antes de ejecutar `python -m src.track_count` se debe confirmar explícitamente la
+orientación del perfil con `python -m src.count_orientation`; un perfil H4 antiguo
+no se reinterpreta automáticamente. Los perfiles y pesos son recursos locales.
+
 | Hito | Funcionalidad                     | Estado       |
 | ---- | --------------------------------- | ------------ |
 | 1    | Webcam + OpenCV                   | ✅           |
 | 2    | Detección de personas con YOLO26n | ✅           |
 | 3    | Tracking temporal con ByteTrack   | ✅           |
-| 4    | Zona B + Zona A + línea final     | ⏳ Siguiente |
-| 5    | Máquina de estados IN/OUT         | ⏳           |
+| 4    | Calibrador y zonas A/B            | Implementado |
+| 5    | Transiciones estables IN/OUT      | En validación |
 | 6    | Robustez del conteo               | ⏳           |
 | 7    | Pruebas formales                  | ⏳           |
 | 8    | Portabilidad entre ubicaciones    | ⏳           |
@@ -175,11 +197,9 @@ Webcam
    ↓
 YOLO + ByteTrack
    ↓
-Zona B
+Zona A exterior
    ↓
-Zona A
-   ↓
-Línea final
+Zona B puerta
    ↓
 Máquina de estados
    ↓
@@ -654,11 +674,9 @@ El sistema final no contará una persona solamente porque YOLO genere una detecc
 Para producir un evento válido será necesario cumplir una trayectoria:
 
 ```text
-Zona B
+Zona A exterior estable
    ↓
-Zona A
-   ↓
-Cruce de línea
+Zona B puerta estable
    ↓
 IN
 ```
@@ -718,18 +736,16 @@ Los siguientes hitos continuarán esta estructura.
 
 # Próximo paso
 
-## Hito 4 — Calibración espacial
+## Validación Hito 5.1 — Dos zonas
 
-El siguiente objetivo será definir gráficamente:
+El calibrador H4 conserva sus perfiles. El contador usa orientación confirmada:
 
 ```text
               INTERIOR
 
-══════════ LÍNEA FINAL ══════════
+               ZONA B — PUERTA
 
-               ZONA A
-
-               ZONA B
+               ZONA A — EXTERIOR
 
               EXTERIOR
 ```
@@ -737,14 +753,12 @@ El siguiente objetivo será definir gráficamente:
 Cada `track_id` podrá determinar:
 
 ```text
-ID 4 → Zona B
-ID 4 → Zona A
-ID 4 → Cruce de línea
+ID 4 → A estable → B estable → IN
+ID 4 → B estable → A estable → OUT
 ```
 
-Todavía no se generarán eventos `IN/OUT`.
-
-La máquina de estados será implementada en el siguiente hito.
+El contador comienza en cero por sesión, sin persistencia ni ocupación.
+Queda pendiente la aceptación en cámara según la guía de Hito 5.1.
 
 ---
 
