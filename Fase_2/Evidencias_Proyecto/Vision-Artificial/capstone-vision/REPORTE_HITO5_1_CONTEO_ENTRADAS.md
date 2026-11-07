@@ -1,5 +1,12 @@
 # HigieneSmart — Reporte Hito 5.1: conteo de entradas
 
+> Reporte histórico de la implementación 895c911. Sus reglas de salida frontal,
+> ocho umbrales y resultados de pruebas corresponden a esa versión, no a la lógica
+> vigente. La especificación actual usa únicamente A exterior ↔ B puerta para
+> IN/OUT, con orientación explícita del perfil. Consulte
+> [la guía vigente](docs/hito5_1_conteo_entradas.md). La aceptación en cámara de la
+> corrección está pendiente a cargo del equipo; no se hereda la aceptación de H4.
+
 Fecha: 29 de octubre de 2026, America/Santiago. Fuente de verdad: `capstone-vision(5).zip` y `Texto pegado(9).txt` adjuntos. Implementación realizada únicamente sobre esa versión, sin instalar dependencias ni descargar pesos.
 
 ## 1. Estado general

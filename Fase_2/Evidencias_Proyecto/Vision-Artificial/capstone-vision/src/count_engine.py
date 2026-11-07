@@ -1,253 +1,183 @@
-"""FSM de entradas por episodio. Datos normalizados + reloj; sin cámara ni IA."""
+"""Transiciones estables A exterior <-> B puerta por ID. Sin IA ni línea final."""
 
 import math
 from dataclasses import dataclass, fields
 from enum import Enum
 
-from .count_geometry import RouteGeometry
+from .count_geometry import ZoneGeometry
 
 
 @dataclass(frozen=True)
 class CountSettings:
     zone_dwell_seconds: float = .12
-    exit_dwell_seconds: float = .12
     min_observations: int = 2
-    position_margin: float = .04
-    max_gap_seconds: float = .5
-    episode_timeout_seconds: float = 12.
+    max_gap_seconds: float = 2.
     state_ttl_seconds: float = 30.
-    max_speed_per_second: float = 4.
 
     def __post_init__(self):
         for item in fields(self):
             value = getattr(self, item.name)
-            if type(value) not in (int, float) or not 0 < value < 1e6 or not math.isfinite(value):
-                raise ValueError(f"Umbral {item.name} debe ser positivo y finito.")
-        if type(self.min_observations) is not int or not 2 <= self.min_observations <= 10:
-            raise ValueError("min_observations debe ser un entero de 2 a 10.")
-        if not .005 <= self.position_margin <= .2:
-            raise ValueError("position_margin debe estar entre 0.005 y 0.2 distancias A/B.")
-        if not (max(self.zone_dwell_seconds, self.exit_dwell_seconds) < self.episode_timeout_seconds
-                and self.max_gap_seconds < self.episode_timeout_seconds < self.state_ttl_seconds):
-            raise ValueError("Dwell y max_gap deben ser menores que episode_timeout, y este menor que state_ttl.")
+            if type(value) not in (int, float) or not math.isfinite(value):
+                raise ValueError(f"Umbral {item.name} debe ser numérico y finito.")
+        if not 0 <= self.zone_dwell_seconds <= 60:
+            raise ValueError("zone_dwell_seconds debe estar entre 0 y 60 segundos.")
+        if type(self.min_observations) is not int or not 2 <= self.min_observations <= 100:
+            raise ValueError("min_observations debe ser un entero de 2 a 100.")
+        if not 0 < self.max_gap_seconds < self.state_ttl_seconds <= 86400:
+            raise ValueError("Se requiere 0 < max_gap_seconds < state_ttl_seconds <= 86400.")
 
 
 class Phase(str, Enum):
-    IDLE = "SIN_RECORRIDO"
-    AT_A = "INICIO_EN_A"
-    APPROACHING = "AVANZANDO_A_B"
-    AT_B = "EN_B"
-    CONFIRMING = "CONFIRMANDO_SALIDA_B"
-    CONFIRMED = "ENTRADA_CONFIRMADA"
-    CANCELLED = "CANCELADO"
-    REVERSE = "SALIDA_OBSERVADA"
+    IDLE = "SIN_ORIGEN_ESTABLE"
+    AT_A = "ESTABLE_A"
+    AT_B = "ESTABLE_B"
+    CANDIDATE_A = "CONFIRMANDO_A"
+    CANDIDATE_B = "CONFIRMANDO_B"
+    MISSING = "ID_AUSENTE"
 
 
 @dataclass(frozen=True)
 class Observation:
     track_id: int
-    point: tuple[float, float]  # (x / ancho, y / alto), bottom-center del frame.
+    point: tuple[float, float]
 
 
 @dataclass(frozen=True)
-class EntryEvent:
+class CountEvent:
     number: int
     track_id: int
     episode: int
     timestamp: float
+    direction: str
+    origin: str
+    destination: str
 
 
 @dataclass
 class TrackState:
     phase: Phase = Phase.IDLE
     episode: int = 0
-    started: float | None = None
+    stable_zone: str | None = None
+    candidate: str | None = None
+    candidate_since: float = 0.
+    candidate_count: int = 0
     last_seen: float = 0.
-    last_point: tuple | None = None
     zone: str = "FUERA"
-    peak: float = -math.inf
-    evidence: str | None = None
-    evidence_since: float = 0.
-    evidence_count: int = 0
-    crossing: object | None = None
     missing: bool = False
-    first_in_b: bool = False
-    return_a: bool = False
-    reason: str = "sin recorrido"
+    reason: str = "sin origen estable; aparecer en una zona no cuenta"
+    reset_reason: str | None = None
 
 
-BLOCKED = (Phase.CONFIRMED, Phase.CANCELLED, Phase.REVERSE)
-ACTIVE = (Phase.AT_A, Phase.APPROACHING, Phase.AT_B, Phase.CONFIRMING)
-
-
-class EntryCounter:
-    """Una instancia = una sesión, total inicial cero. No conserva lista de eventos."""
+class TransitionCounter:
+    """Una sesión; una confirmación por cambio de zona estable del mismo ID."""
     MAX_STATES = 512
 
     def __init__(self, profile, settings=None):
         self.settings = CountSettings() if settings is None else settings
         if not isinstance(self.settings, CountSettings):
             raise ValueError("Se requiere CountSettings validado.")
-        self.geometry = RouteGeometry(profile, self.settings.position_margin)
-        self.total_entries = 0
+        self.geometry = ZoneGeometry(profile)
         self.states = {}
+        self.total_entries = self.total_exits = self.total_events = 0
         self._timestamp = None
 
-    def _stable(self, state, kind, now, duration):
-        if kind is None:
-            state.evidence, state.evidence_count = None, 0
-            return False
-        if state.evidence != kind:
-            state.evidence, state.evidence_since, state.evidence_count = kind, now, 1
-        else:
-            state.evidence_count = min(state.evidence_count + 1, self.settings.min_observations)
-        return (state.evidence_count >= self.settings.min_observations
-                and now - state.evidence_since + 1e-9 >= duration)
+    @staticmethod
+    def _clear_candidate(state):
+        state.candidate, state.candidate_count = None, 0
 
-    def _cancel(self, state, reason):
-        state.phase, state.reason = Phase.CANCELLED, reason
-        state.crossing, state.return_a = None, False
-        self._stable(state, None, 0, 0)
+    def _reset(self, state, reason):
+        state.stable_zone = None
+        state.phase, state.reason = Phase.IDLE, reason
+        state.reset_reason = reason
+        self._clear_candidate(state)
 
     def update(self, timestamp, observations):
-        """Un frame completo, incluso vacío. Valida todo antes de mutar el contador."""
-        if (type(timestamp) not in (int, float) or not 0 <= timestamp < 1e100
-                or not math.isfinite(timestamp)
-                or self._timestamp is not None and timestamp <= self._timestamp):
-            raise ValueError("Timestamp inválido: use segundos finitos, no negativos y estrictamente crecientes.")
+        if (type(timestamp) not in (int, float) or not math.isfinite(timestamp)
+                or timestamp < 0 or self._timestamp is not None and timestamp <= self._timestamp):
+            raise ValueError("Timestamp: segundos finitos, no negativos y estrictamente crecientes.")
         items = list(observations)
         seen = set()
         for obs in items:
-            if (not isinstance(obs, Observation) or type(obs.track_id) is not int or obs.track_id <= 0
-                    or obs.track_id in seen):
-                raise ValueError("Cada observación necesita un ID positivo único dentro del frame.")
-            if (not isinstance(obs.point, (tuple, list)) or len(obs.point) != 2
-                    or any(type(v) not in (int, float) or not 0 <= v <= 1 or not math.isfinite(v) for v in obs.point)):
-                raise ValueError("Posición inválida: bottom-center normalizado finito dentro de la imagen.")
+            if (not isinstance(obs, Observation) or type(obs.track_id) is not int
+                    or obs.track_id <= 0 or obs.track_id in seen):
+                raise ValueError("Cada observación necesita un ID positivo único en el frame.")
             seen.add(obs.track_id)
-        surviving = {i for i, s in self.states.items() if timestamp - s.last_seen <= self.settings.state_ttl_seconds}
+        surviving = {i for i, s in self.states.items()
+                     if timestamp - s.last_seen <= self.settings.state_ttl_seconds}
         if len(surviving | seen) > self.MAX_STATES:
-            raise ValueError("Demasiados tracks recientes; se detiene el conteo sin descartar protecciones de episodios.")
-        self._timestamp = timestamp
+            raise ValueError("Demasiados IDs recientes; no se descartan protecciones para seguir contando.")
+        expired = set(self.states) - surviving
         self.states = {i: s for i, s in self.states.items() if i in surviving}
+        self._timestamp = timestamp
         for identifier, state in self.states.items():
+            state.reset_reason = None
             if identifier not in seen:
+                self._clear_candidate(state)
                 state.missing = True
-                self._stable(state, None, 0, 0)
-                if state.phase == Phase.CONFIRMING:
-                    self._cancel(state, "salida B interrumpida; falta evidencia espacial continua")
-                elif state.phase in ACTIVE and (timestamp - state.last_seen > self.settings.max_gap_seconds
-                                                or timestamp - state.started > self.settings.episode_timeout_seconds):
-                    self._cancel(state, "recorrido perdido o expirado")
+                if timestamp - state.last_seen > self.settings.max_gap_seconds:
+                    self._reset(state, "perdida_prolongada: se necesita un origen estable nuevo")
+                else:
+                    state.phase, state.reason = Phase.MISSING, "perdida_breve: sin evento; se reinicia la estabilidad pendiente"
         events = []
         for obs in items:
-            point = self.geometry.project(obs.point)
-            zone = self.geometry.classify(obs.point)
             state = self.states.setdefault(obs.track_id, TrackState(last_seen=timestamp))
-            gap = timestamp - state.last_seen
-            if state.last_point is not None:
-                if gap > self.settings.max_gap_seconds:
-                    if state.phase not in BLOCKED: self._cancel(state, "intervalo sin evidencia suficiente")
-                    state.crossing, state.return_a = None, False
-                    self._stable(state, None, 0, 0)
-                elif (math.dist(point, state.last_point) > self.settings.max_speed_per_second * gap
-                      + self.settings.position_margin):
-                    self._cancel(state, "salto de posición incompatible con continuidad")
-                elif state.missing and (zone != state.zone or state.phase == Phase.CONFIRMING):
-                    if state.phase not in BLOCKED: self._cancel(state, "cambio de zona durante una pérdida")
-                    state.crossing, state.return_a = None, False
-            if state.phase in ACTIVE and timestamp - state.started > self.settings.episode_timeout_seconds:
-                self._cancel(state, "recorrido expirado")
-            event = self._advance(obs.track_id, state, zone, point, timestamp,
-                                  continuous=not state.missing and gap <= self.settings.max_gap_seconds)
-            state.last_seen, state.last_point, state.zone, state.missing = timestamp, point, zone, False
-            if event is not None: events.append(event)
+            if obs.track_id in expired:
+                self._reset(state, "estado_expirado: este ID necesita establecer nuevamente su origen")
+            if timestamp - state.last_seen > self.settings.max_gap_seconds:
+                self._reset(state, "intervalo_excesivo: no se atribuye continuidad a este ID")
+            elif state.missing:
+                self._clear_candidate(state)
+            state.last_seen, state.missing = timestamp, False
+            point = obs.point
+            if (not isinstance(point, (tuple, list)) or len(point) != 2
+                    or any(type(v) not in (int, float) or not math.isfinite(v) for v in point)):
+                self._reset(state, "punto_invalido_del_tracker: se descarta la historia de este ID")
+                state.zone = "INVALIDO"
+                continue
+            if any(not 0 <= v <= 1 for v in point):
+                self._reset(state, "fuera_de_imagen: no se recorta ni cuenta; revisar caja/resolucion del tracker")
+                state.zone = "INVALIDO"
+                continue
+            zone = self.geometry.classify(point)
+            state.zone = zone
+            if zone == "FUERA":
+                self._clear_candidate(state)
+                state.phase = Phase.AT_A if state.stable_zone == "A" else Phase.AT_B if state.stable_zone == "B" else Phase.IDLE
+                state.reason = "fuera_de_zonas: esperando destino; no es fuera de imagen ni una cancelacion"
+                continue
+            if zone == state.stable_zone:
+                self._clear_candidate(state)
+                state.phase = Phase.AT_A if zone == "A" else Phase.AT_B
+                state.reason = "misma_zona: sin duplicar; preparado para la zona contraria"
+                continue
+            if state.candidate != zone:
+                state.candidate, state.candidate_since, state.candidate_count = zone, timestamp, 1
+            else:
+                state.candidate_count = min(state.candidate_count + 1, self.settings.min_observations)
+            state.phase = Phase.CANDIDATE_A if zone == "A" else Phase.CANDIDATE_B
+            state.reason = "estabilidad_insuficiente: requiere tiempo y observaciones configurados"
+            if (state.candidate_count < self.settings.min_observations
+                    or timestamp - state.candidate_since + 1e-9 < self.settings.zone_dwell_seconds):
+                continue
+            origin = state.stable_zone
+            state.stable_zone = zone
+            self._clear_candidate(state)
+            state.phase = Phase.AT_A if zone == "A" else Phase.AT_B
+            if origin is None:
+                state.reason = "origen_estable: aparicion inicial sin evento"
+                continue
+            direction = "IN" if (origin, zone) == ("A", "B") else "OUT"
+            state.episode += 1
+            self.total_events += 1
+            if direction == "IN":
+                self.total_entries += 1
+            else:
+                self.total_exits += 1
+            state.reason = f"confirmado_{direction}: {origin} -> {zone}; rearmado desde {zone}"
+            events.append(CountEvent(self.total_events, obs.track_id, state.episode,
+                                     timestamp, direction, origin, zone))
         return tuple(events)
 
-    def _advance(self, identifier, state, zone, point, now, continuous):
-        margin = self.settings.position_margin
-        deep = self.geometry.deep(zone, point)
-        if state.phase in BLOCKED:
-            self._rearm(state, zone, point, now, deep, continuous)
-            return None
-        if state.phase == Phase.IDLE:
-            # Una observación en B sin A previa ya impide inventar un inicio
-            # de entrada al retroceder a A, aunque B no alcance el dwell.
-            if zone == "B": state.first_in_b = True
-            stable = self._stable(state, zone if deep else None, now, self.settings.zone_dwell_seconds)
-            if stable and zone == "B":
-                state.first_in_b, state.reason = True, "observado en B sin recorrido desde A"
-            if stable and zone == "A":
-                if state.first_in_b:
-                    state.phase, state.return_a, state.reason = Phase.REVERSE, True, "sentido B -> A; salida sin conteo"
-                    self._stable(state, None, now, 0)
-                else:
-                    state.phase, state.started, state.peak = Phase.AT_A, now, point[0]
-                    state.episode += 1
-                    state.reason = "inicio estable en A"
-            return None
-        if point[0] < state.peak - 2 * margin:
-            self._cancel(state, "retroceso longitudinal")
-            return None
-        state.peak = max(state.peak, point[0])
-        if state.phase == Phase.AT_A and zone != "A":
-            crossing = (self.geometry.exit_through("A", state.last_point, point)
-                        if continuous and state.last_point is not None and state.zone == "A" else None)
-            if crossing is None:
-                self._cancel(state, "salida de A lateral, inversa o no observada")
-                return None
-            state.phase, state.reason = Phase.APPROACHING, "avanzando A -> B"
-            self._stable(state, None, now, 0)
-        if state.phase == Phase.APPROACHING:
-            if zone == "A":
-                self._cancel(state, "regresó a A antes de completar")
-                return None
-            if self._stable(state, "B" if zone == "B" and deep else None, now, self.settings.zone_dwell_seconds):
-                state.phase, state.reason = Phase.AT_B, "B estable después de A; aún sin entrada"
-            return None
-        if state.phase == Phase.AT_B and zone != "B":
-            if zone != "FUERA" or not continuous or state.zone != "B":
-                self._cancel(state, "salida de B sin continuidad o en sentido inverso")
-                return None
-            state.crossing = self.geometry.exit_through("B", state.last_point, point)
-            if state.crossing is None:
-                self._cancel(state, "salida de B lateral, inversa o junto a vértice ambiguo")
-                return None
-            state.phase, state.reason = Phase.CONFIRMING, "comprobando salida frontal de B"
-            self._stable(state, None, now, 0)
-        if state.phase == Phase.CONFIRMING:
-            if zone == "B":
-                state.phase, state.crossing, state.reason = Phase.AT_B, None, "regresó al borde B; confirmación anulada"
-                self._stable(state, None, now, 0)
-                return None
-            eligible = zone == "FUERA" and self.geometry.beyond(state.crossing, point)
-            if self._stable(state, "SALIDA_B" if eligible else None, now, self.settings.exit_dwell_seconds):
-                state.phase, state.reason = Phase.CONFIRMED, "entrada confirmada una vez; esperar recorrido de regreso"
-                state.crossing, state.return_a = None, False
-                self.total_entries += 1
-                return EntryEvent(self.total_entries, identifier, state.episode, now)
-        return None
 
-    def _rearm(self, state, zone, point, now, deep, continuous):
-        """Rearme espacial: volver a A y salir de A hacia exterior, ambos estables."""
-        if zone == "A":
-            state.crossing = None
-            if self._stable(state, "RETORNO_A" if deep else None, now, self.settings.zone_dwell_seconds):
-                state.return_a = True
-                if state.phase == Phase.CONFIRMED: state.phase = Phase.REVERSE
-                state.reason = "retorno en A; falta salir hacia exterior para rearmar"
-            return
-        if not state.return_a or zone != "FUERA":
-            self._stable(state, None, now, 0)
-            if zone == "B": state.return_a = False
-            state.crossing = None
-            return
-        if state.zone == "A":
-            state.crossing = (self.geometry.exit_through("A", state.last_point, point, -1) if continuous else None)
-        eligible = (continuous and state.crossing is not None
-                    and self.geometry.beyond(state.crossing, point))
-        if self._stable(state, "EXTERIOR" if eligible else None, now, self.settings.exit_dwell_seconds):
-            state.phase, state.started, state.peak = Phase.IDLE, None, -math.inf
-            state.first_in_b, state.return_a, state.crossing = False, False, None
-            state.reason = "rearmado tras retorno A -> exterior; necesita un recorrido nuevo completo"
-            self._stable(state, None, now, 0)
+# Conserva el nombre público del primer H5.1; ahora cuenta ambos sentidos.
+EntryCounter = TransitionCounter

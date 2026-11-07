@@ -54,7 +54,7 @@ def load_counting_config(path=COUNTING_PATH):
         raise ValueError("Tracker de conteo inválido. Valores: " + ", ".join(TRACKERS))
     values = data["thresholds"]
     if not isinstance(values, dict) or set(values) != {f.name for f in fields(CountSettings)}:
-        raise ValueError("thresholds debe conservar los ocho parámetros documentados del contador.")
+        raise ValueError("thresholds requiere zone_dwell_seconds, min_observations, max_gap_seconds y state_ttl_seconds. La configuracion antigua con salida final ya no es valida.")
     return CountingConfig(data["tracker"], CountSettings(**values))
 
 

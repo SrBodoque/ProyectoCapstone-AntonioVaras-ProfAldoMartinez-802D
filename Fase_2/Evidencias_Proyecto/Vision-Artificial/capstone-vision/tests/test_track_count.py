@@ -9,6 +9,7 @@ from src import track_count
 from src.config import load_config, load_detection_config
 from src.count_engine import EntryCounter, Phase
 from src.counting_config import load_counting_config, select_tracker
+from src.count_orientation import OrientedProfile
 from src.detector import Detection
 from src.tracker import FrameTracks, Track
 from src.zones import ZoneError
@@ -17,6 +18,42 @@ from zone_test_support import make_ui, camera_module
 
 
 class IntegrationTests(unittest.TestCase):
+    def test_console_keeps_gap_cause_when_candidate_state_replaces_it(self):
+        path=((0.,.28,.5),(.15,.28,.5),(3.,.62,.5),(3.2,.62,.5))
+        ui,_,engine,selection=self.setup_run("bytetrack")
+        ui.waitKey.side_effect=[-1,-1,-1,ord("q")]
+        engine.track.side_effect=[
+            FrameTracks((Track(x*480-12,y*480-100,x*480+12,y*480,.9,0,1),),(),1.,2.)
+            for _,x,y in path]
+        timestamps=iter(t for t,_,_ in path)
+        with self.assertLogs(track_count.LOGGER,level="INFO") as captured:
+            total,_=self.run_app(ui,engine,selection,clock=lambda:next(timestamps))
+        self.assertEqual(total,0)
+        self.assertTrue(any("intervalo_excesivo" in line for line in captured.output))
+
+    def test_entry_then_exit_visible_as_two_separate_totals(self):
+        from count_test_support import RETURN
+        path = ENTRY + tuple((t+1.35,x,y) for t,x,y in RETURN)
+        ui,_,engine,selection = self.setup_run("bytetrack")
+        ui.waitKey.side_effect = [-1]*(len(path)-1)+[ord("q")]
+        engine.track.side_effect = [
+            FrameTracks((Track(x*480-12,y*480-100,x*480+12,y*480,.9,0,1),),(),1.,2.)
+            for _,x,y in path]
+        counter=EntryCounter(profile())
+        timestamps=iter(t for t,_,_ in path)
+        self.run_app(ui,engine,selection,counter,clock=lambda:next(timestamps))
+        self.assertEqual((counter.total_entries,counter.total_exits),(1,1))
+        texts=[c.args[1] for c in ui.putText.call_args_list]
+        self.assertTrue(any("SALIDAS DEL BANO: 1" in text for text in texts))
+
+    def test_outside_image_box_is_reported_without_stopping_other_tracks(self):
+        ui,_,engine,selection=self.setup_run("bytetrack")
+        engine.track.return_value=FrameTracks((Track(480,10,600,520,.9,0,7),),(),1.,2.)
+        counter=EntryCounter(profile())
+        self.run_app(ui,engine,selection,counter)
+        self.assertIn("fuera_de_imagen",counter.states[7].reason)
+        self.assertEqual(counter.total_events,0)
+
     def setup_run(self, name='botsort_reid'):
         ui, capture, _ = make_ui()
         frame = np.full((480,480,3),70,dtype=np.uint8)
@@ -149,16 +186,18 @@ class IntegrationTests(unittest.TestCase):
         for message in ('No existe una configuración activa. Ejecute python -m src.zone_calibrator','JSON inválido'):
             with patch.object(track_count,'ZoneStore') as store,patch.object(track_count,'PersonTracker') as factory:
                 store.return_value.load_active.side_effect=ZoneError(message)
-                with self.assertLogs(track_count.LOGGER,level='ERROR'):self.assertEqual(track_count.main(),1)
+                with self.assertLogs(track_count.LOGGER,level='ERROR'):self.assertEqual(track_count.main([]),1)
                 factory.assert_not_called()
                 store.return_value.save_and_activate.assert_not_called()
 
     def test_main_loads_existing_profile_and_config_without_selectors(self):
         ui,_,_,_=self.setup_run()
         with patch.dict(sys.modules,{'cv2':ui}),patch.dict('os.environ',{'DISPLAY':':simulated'}), \
-             patch.object(track_count,'ZoneStore') as store,patch.object(track_count,'run_count') as run:
+             patch.object(track_count,'ZoneStore') as store,patch.object(track_count,'run_count') as run, \
+             patch.object(track_count,'load_orientation',return_value=OrientedProfile(profile(),"test","exterior")), \
+             patch.object(track_count,'ensure_local_models'):
             store.return_value.load_active.return_value=profile()
-            self.assertEqual(track_count.main(),0)
+            self.assertEqual(track_count.main([]),0)
             args=run.call_args.args
             self.assertEqual(args[3].name,'botsort_reid')
             self.assertEqual(args[4].geometry.profile,profile())
@@ -169,13 +208,15 @@ class IntegrationTests(unittest.TestCase):
 
     def test_main_reports_invalid_count_config_and_handles_ctrl_c(self):
         ui,_,_,_=self.setup_run()
-        with patch.object(track_count,'ZoneStore') as store:
+        with patch.object(track_count,'ZoneStore') as store, \
+             patch.object(track_count,'load_orientation',return_value=OrientedProfile(profile(),"test","exterior")), \
+             patch.object(track_count,'ensure_local_models'):
             store.return_value.load_active.return_value=profile()
             with patch.object(track_count,'load_counting_config',side_effect=ValueError('bad config')):
-                with self.assertLogs(track_count.LOGGER,level='ERROR'):self.assertEqual(track_count.main(),1)
+                with self.assertLogs(track_count.LOGGER,level='ERROR'):self.assertEqual(track_count.main([]),1)
             with patch.dict(sys.modules,{'cv2':ui}),patch.dict('os.environ',{'DISPLAY':':simulated'}), \
                  patch.object(track_count,'run_count',side_effect=KeyboardInterrupt()):
-                self.assertEqual(track_count.main(),0)
+                self.assertEqual(track_count.main([]),0)
 
 
 if __name__=='__main__':unittest.main()

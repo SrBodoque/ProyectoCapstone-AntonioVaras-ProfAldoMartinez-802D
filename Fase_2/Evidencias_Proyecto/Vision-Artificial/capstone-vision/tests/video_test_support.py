@@ -1,27 +1,29 @@
-"""Compatibilidad del auxiliar que importan los tests H4 del ZIP recibido.
-
-El ZIP no incluía este archivo. Solo provee temporales locales con cleanup;
-no implementa video, no sustituye tests y no altera permisos ni paquetes.
-"""
+"""Fixtures locales sin mkdir(mode=0o700), incompatible con algunos tokens Windows."""
 
 import shutil
 import uuid
 from pathlib import Path
 
-from src.config import PROJECT_ROOT
-
 
 class temporary_directory:
+    """Temporal exclusivo bajo logs; no modifica ACL ni usa temporales personales."""
+
     def __init__(self):
-        path = PROJECT_ROOT / "logs" / "test_temp" / uuid.uuid4().hex
-        path.mkdir(parents=True, exist_ok=False)
-        self.name = str(path)
+        self.root = (Path(__file__).resolve().parent.parent / "logs" / "video_test_temp").resolve()
+        self.root.mkdir(parents=True, exist_ok=True)
+        self.path = self.root / uuid.uuid4().hex
+        self.path.mkdir(exist_ok=False)
+        self.name = str(self.path)
 
     def __enter__(self):
         return self.name
 
-    def __exit__(self, *args):
+    def __exit__(self, *exc):
         self.cleanup()
 
     def cleanup(self):
-        if Path(self.name).exists(): shutil.rmtree(self.name)
+        target = self.path.resolve()
+        if target.parent != self.root or not target.name:
+            raise RuntimeError("Temporal fuera del directorio de pruebas.")
+        if target.exists():
+            shutil.rmtree(target)

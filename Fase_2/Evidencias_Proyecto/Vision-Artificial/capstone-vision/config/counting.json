@@ -2,12 +2,8 @@
   "tracker": "botsort_reid",
   "thresholds": {
     "zone_dwell_seconds": 0.12,
-    "exit_dwell_seconds": 0.12,
     "min_observations": 2,
-    "position_margin": 0.04,
-    "max_gap_seconds": 0.5,
-    "episode_timeout_seconds": 12.0,
-    "state_ttl_seconds": 30.0,
-    "max_speed_per_second": 4.0
+    "max_gap_seconds": 2.0,
+    "state_ttl_seconds": 30.0
   }
 }

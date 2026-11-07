@@ -1,178 +1,266 @@
-# Hito 5.1 — Conteo de entradas con A/B
+# Hito 5.1 — Entradas y salidas con dos zonas
 
-Este comando cuenta ingresos observados durante una sesión: **A → B → salida frontal de B hacia el baño**. No suma por aparecer en B, permanecer allí o perder un ID. No hay contador OUT, restas ni ocupación. El contador comienza en cero en cada ejecución y permanece solo en memoria.
+Convención definitiva del contador: **A exterior del baño**, **B junto a la puerta**.
+La primera presencia estable solo establece un origen. Un cambio estable A → B
+confirma IN; B → A confirma OUT. No se exige cruzar una línea, salir de B,
+un ángulo, una velocidad ni completar el recorrido dentro de un plazo fijo.
+Los totales son acumulados por sesión; no representan ocupación ni personas únicas.
+No hay envío a Django, persistencia de eventos ni grabación de imágenes.
 
-## Revisar el significado de las zonas antes de probar
+## Diagnóstico del comportamiento anterior
 
-**En este encargo A es la aproximación exterior y B es la zona cercana al baño.** La documentación histórica del Hito 4 describe el significado contrario. El calibrador conserva las mismas letras y los mismos archivos; no se ha modificado ni se intercambian polígonos automáticamente. Revise visualmente su perfil: para H5.1, una persona que entra debe atravesar primero A y después B.
+Se compararon los commits f6a1f1e y 895c911. H4 (f6a1f1e) dibujaba zonas y
+transiciones observadas, con la etiqueta "sin conteo IN/OUT"; no tenía acumuladores.
+No hay evidencia en ese commit de una versión anterior del mismo contador que
+sumara entradas. El recuerdo de funcionamiento de H4 puede corresponder a sus
+transiciones visuales, no acredita conteo.
 
-No hace falta recalibrar en cada ejecución. Solo ajuste el perfil si su disposición física no corresponde a ese orden o si se movió la cámara. El programa informa este significado al iniciar, pero no puede identificar por sí mismo dónde está realmente el baño.
+El primer H5.1 (895c911) exigía A estable, salida frontal de A, B estable,
+salida frontal de B y permanencia fuera de B. Además imponía convexidad,
+corredor y ángulos de 45°, margen espacial, velocidad máxima de 4 D/s,
+retroceso acumulado máximo de dos márgenes, gap de 0,5 s y episodio de 12 s.
+Esperar en una zona, girar, cruzar un borde lateral, perder un ID o no poder
+observar el espacio posterior a B podía impedir la confirmación. Una persona
+que llegaba correctamente a B aún no se contaba.
 
-## Ejecución en Windows
+"FUERA" en H4 significa fuera de ambos polígonos, no fuera de la imagen ni
+desaparición del ID. El motor anterior también rechazaba puntos normalizados
+fuera de [0,1], deteniendo ese frame mediante excepción. Ahora se distinguen
+esos casos y se invalida solamente la historia del ID con punto defectuoso,
+sin recortar sus coordenadas para inventar una transición.
 
-Abra PowerShell en la carpeta habitual `capstone-vision`, con el `.venv` y los modelos que ya utiliza. La entrega no incluye entornos, pesos ni preferencias personales. No recree un entorno funcional.
+No se localizaron logs ni el perfil exacto de la sesión física con cero entradas:
+estas son causas comprobables en el código, no una atribución definitiva de cada
+rechazo observado. La aceptación física de la corrección sigue pendiente.
 
-Si necesita seleccionar o cambiar cámara/dispositivo, ejecute voluntariamente los selectores existentes; no se ejecutan desde el contador:
+## Orientación explícita y compatibilidad H4
 
-```powershell
-& .\.venv\Scripts\python.exe -m src.camera_selector
-& .\.venv\Scripts\python.exe -m src.device_selector
-```
+La guía H4 asignaba A a la puerta y B al exterior. Sus archivos se preservan.
+El contador requiere una confirmación humana vinculada al SHA-256 del perfil
+activo, incluyendo nombre, cámara, resolución y polígonos. No adivina orientación.
 
-Para crear, revisar o editar A/B:
+Localizar el perfil de la prueba en la copia de capstone-vision usada allí:
 
-```powershell
+- config/zones/active.json contiene la copia completa activa.
+- config/zones/<nombre>.json contiene el perfil guardado.
+- El calibrador permite revisar o seleccionar perfiles; no hay que editar su JSON.
+
+Desde capstone-vision, con el Python existente y sin recrear el entorno:
+
+~~~powershell
 & .\.venv\Scripts\python.exe -m src.zone_calibrator
-```
+~~~
 
-A/B seleccionan zona; clic izquierdo agrega o permite arrastrar vértices; Enter o clic derecho cierra; S guarda y activa. P permite cargar otro perfil y G activarlo después de revisarlo. Los controles completos permanecen en `docs/hito4_zonas.md`, teniendo presente el nuevo significado A exterior/B baño.
+Revise físicamente exterior y puerta. Cierre el calibrador. Si su H4 A ya es
+exterior, cree una confirmación nueva:
 
-Cierre el calibrador y ejecute:
-
-```powershell
+~~~powershell
+& .\.venv\Scripts\python.exe -m src.count_orientation --h4-a-role exterior --reviewer "Nombre del responsable" --confirm-exterior-door
 & .\.venv\Scripts\python.exe -m src.track_count
-```
+~~~
 
-Con el entorno ya activado, el comando equivalente es `python -m src.track_count`. Las siguientes ejecuciones cargan automáticamente el mismo perfil activo. Q, Esc, X o Ctrl+C cierran y liberan la cámara. Cada reapertura inicia otra sesión con cero entradas; el total anterior no se recupera ni se guarda.
+Si el perfil antiguo tiene H4 A en la puerta, use --h4-a-role puerta. El contador
+mapea explícitamente H4 B a Conteo A exterior y H4 A a Conteo B puerta, solo en
+memoria. La consola anuncia el mapa y la ventana dibuja las letras del conteo.
+Los comandos H4 y sus archivos siguen usando sus letras originales.
 
-Los comandos anteriores (`src.main`, `src.detect`, los trackers, `src.zone_calibrator` y `src.track_zones`) siguen independientes. Cierre un visor antes de abrir otro que use la cámara.
+La confirmación por defecto es config/counting.local.json, ignorada por Git.
+No se sobrescribe. Si cambia o recalibra el perfil, cree una confirmación nueva:
 
-## Qué se observa y qué se cuenta
+~~~powershell
+& .\.venv\Scripts\python.exe -m src.count_orientation --h4-a-role exterior --reviewer "Nombre del responsable" --confirm-exterior-door --output config/counting.habitacion-v2.local.json
+& .\.venv\Scripts\python.exe -m src.track_count --orientation config/counting.habitacion-v2.local.json
+~~~
 
-Se reutilizan `ZoneStore.load_active`, la geometría H4 y el punto inferior central de la caja: `((x1+x2)/2, y2)`. Las posiciones se normalizan respecto al frame efectivo. La pertenencia A/B/FUERA sigue calculándose en `ZoneProfile.classify`, con su política de bordes y prioridad A en una frontera compartida.
+Sin confirmación, o si no coincide su hash, el contador se detiene antes de cámara
+y modelos. La confirmación registra revisión humana; no identifica por sí misma
+la puerta física ni reemplaza revisar el encuadre. No copie registros de otra
+calibración para saltarse esta comprobación.
 
-**FUERA es una posición visible fuera de ambos polígonos. No significa que desapareció la detección.** El espacio entre A y B puede ser FUERA, igual que el espacio posterior a B. No se crean FUERA 1/2/3, otra zona ni una línea final.
+## Entorno, modelos y tracker
 
-La secuencia A → B directa también es válida si el muestreo omitió el espacio intermedio: exige estabilidad en ambas zonas, cruce frontal de A y continuidad de movimiento. No se permite que un salto arbitrario complete la historia.
+No hay dependencias nuevas. Use el .venv existente; un worktree no incluye el
+entorno, los pesos ni los perfiles locales de otra copia. Puede invocar el Python
+existente por ruta absoluta estando en el directorio del worktree. Prepare o
+referencie recursos locales mediante un procedimiento autorizado, conservando
+originales; no copie la carpeta de datos completa ni recree entornos.
 
-Las detecciones sin ID muestran su posición y zona mediante la visualización existente; no alimentan la FSM, porque no existe una trayectoria temporal que validar.
+config/counting.json conserva la selección explícita de los cuatro trackers.
+El predeterminado sigue siendo botsort_reid. El baseline de YOLO/ByteTrack y las
+confianzas originales no se cambian. Para elegir bytetrack u otro backend, siga
+docs/cambiar_tracker_hito5.md; no se cambia de tracker automáticamente.
 
-## Dirección y borde de salida
+Antes de abrir cámara se exigen pesos locales no vacíos. Todos necesitan
+yolo26n.pt; BoT-SORT/ReID con YOLO26 auto también requiere yolo26n-cls.pt.
+Si faltan, aparece un error sin iniciar una descarga. No instale ni descargue
+para saltarse esa condición sin autorización. CPU/GPU conserva el selector y
+fallback con advertencia existentes; compruebe el dispositivo efectivo en pantalla.
 
-1. Se calculan los centroides de los polígonos A y B. Antes de medir ángulos se compensa la relación ancho/alto del frame, para trabajar con una métrica proporcional a píxeles cuadrados.
-2. El vector centroide A → centroide B define el sentido de ingreso. La distancia entre ellos, **D**, es la unidad espacial. D no representa metros ni una calibración del suelo.
-3. El contador exige una calibración conservadora: polígonos convexos, separados u ordenados sin superposición de sus proyecciones longitudinales, y solapamiento transversal de al menos la mitad del ancho de la zona más estrecha. Sus interiores deben admitir el margen configurado.
-4. Debe haber un borde frontal utilizable en A y una salida frontal de B visible dentro del frame. La normal exterior del borde debe estar a no más de 45° del sentido A → B. Se admiten varios bordes que cumplan ese criterio.
-5. Para una salida concreta se intersecta el segmento entre la última posición observada dentro del polígono y la primera fuera con **su propio contorno**. Debe cruzar un único borde frontal, apartado de las esquinas al menos el margen configurado. La dirección del desplazamiento también debe estar dentro del cono de 45°.
-6. Después de B se requieren posiciones FUERA que sobrepasen el borde, tanto en su normal exterior como longitudinalmente, al menos el margen. El desplazamiento desde la posición interior de referencia debe seguir siendo coherente con el sentido de ingreso.
+## Estabilidad, pérdidas y rearme
 
-No se almacena ni se dibuja una línea independiente. El punto de intersección y la normal son evidencia temporal del borde del polígono que ya existe.
+config/counting.json contiene solo cuatro umbrales del contador:
 
-La revisión geométrica bloquea el arranque con un mensaje cuando no puede inferirse una orientación adecuada. H4 admite polígonos cóncavos; esta primera versión del contador los rechaza deliberadamente. Una geometría válida en el calibrador no acredita automáticamente un acceso adecuado para conteo.
-
-Un giro pronunciado, perspectiva extrema o zonas mal alineadas puede impedir confirmar entradas. La aplicación tampoco puede detectar que el baño real está en otro sentido pese a que A/B parezcan geométricamente válidas. Revise el encuadre y mida el comportamiento; no se promete precisión física.
-
-## Máquina de estados por ID
-
-| Estado mostrado | Interpretación y avance |
-| --- | --- |
-| SIN_RECORRIDO | Espera observaciones estables en A. Si aparece primero en B, no hereda un origen en A. |
-| INICIO_EN_A | Hay evidencia estable dentro de A; todavía no hay entrada. |
-| AVANZANDO_A_B | Se observó salida frontal de A, avanzando hacia B; puede atravesar FUERA. |
-| EN_B | Se alcanzó B con estabilidad después de A; no se cuenta por quedarse allí. |
-| CONFIRMANDO_SALIDA_B | Se cruzó un borde frontal de B y se comprueban distancia y estabilidad temporal fuera. |
-| ENTRADA_CONFIRMADA | Emitió una entrada una sola vez para ese episodio. |
-| CANCELADO | Retroceso, salida lateral/ambigua, salto, falta de continuidad o expiración. |
-| SALIDA_OBSERVADA | Se observó sentido B → A, o regreso a A después de una entrada. No emite un evento OUT. |
-
-Un evento `EntryEvent` contiene número de entrada de la sesión, ID temporal, episodio y timestamp. Solo se devuelve en el frame de confirmación. El motor no acumula una lista de eventos ni la escribe en disco.
-
-Los estados confirmado/cancelado/salida requieren **rearme espacial**: volver a A de forma estable y cruzar su borde posterior hacia el exterior, con margen y estabilidad. Después deben observarse nuevamente A, B y la salida frontal de B. Esperar un número fijo de segundos o volver inmediatamente a B no rearma el episodio. Una entrada, salida completa y nueva entrada puede sumar dos; el total nunca se resta.
-
-## Umbrales iniciales
-
-`config/counting.json` contiene el tracker y estos ocho parámetros. Son valores iniciales sujetos a pruebas físicas, no parámetros ya optimizados. Mantenga los ocho nombres y JSON válido. Los detalles del tracker están en `docs/cambiar_tracker_hito5.md`.
-
-| Parámetro | Inicial | Interpretación |
+| Parámetro | Inicial | Finalidad |
 | --- | ---: | --- |
-| `zone_dwell_seconds` | 0.12 | Tiempo mínimo de observaciones coherentes dentro de A/B y en el retorno a A. |
-| `exit_dwell_seconds` | 0.12 | Tiempo mínimo con margen fuera de B o fuera de A durante el rearme. |
-| `min_observations` | 2 | Mínimo de observaciones para cada evidencia estable, además del tiempo. |
-| `position_margin` | 0.04 | 4 % de D; interior de zona, distancia tras el borde y separación respecto de vértices. |
-| `max_gap_seconds` | 0.50 | Intervalo máximo para conservar continuidad. |
-| `episode_timeout_seconds` | 12.0 | Duración máxima desde el inicio estable en A para completar la entrada. |
-| `state_ttl_seconds` | 30.0 | Elimina un estado cuando el ID lleva más de este tiempo sin verse. |
-| `max_speed_per_second` | 4.0 | Desplazamiento máximo de 4 D/s, más un margen de tolerancia por observación. |
+| zone_dwell_seconds | 0.12 | Tiempo mínimo continuo para confirmar una zona; admite 0 si se necesita menor latencia. |
+| min_observations | 2 | Observaciones mínimas además del tiempo; evita contar una sola detección. |
+| max_gap_seconds | 2.0 | Máxima discontinuidad para conservar el origen del mismo ID. |
+| state_ttl_seconds | 30.0 | Limpieza de estados de IDs ausentes; no borra totales. |
 
-La estabilidad exige simultáneamente tiempo y observaciones; no asume 30 FPS. El adaptador usa `time.monotonic()`, y los tests proporcionan timestamps explícitos. Se verificó el mismo recorrido sintético muestreado a 5, 10, 20, 30 y 60 FPS; no es una medición de rendimiento real. Con intervalos superiores a `max_gap_seconds`, esta configuración cancela continuidad y puede omitir entradas.
+Permanecer en una zona no repite eventos. Cada destino confirmado pasa a ser el
+origen del próximo recorrido: IN, OUT y otro IN son posibles con el mismo ID.
+No se exige volver fuera de A para rearmar. FUERA intermedio conserva el origen
+si el track sigue observado, pero reinicia la candidatura de destino.
 
-Un retroceso longitudinal superior a **dos márgenes respecto del máximo avance observado** cancela el recorrido, incluso si se acumula mediante pequeños pasos. Una salida lateral o inversa de A/B también cancela. Las posiciones cercanas al borde no acumulan evidencia de residencia interior. Volver a B durante una confirmación anula la evidencia de salida; una oscilación breve no genera múltiples eventos.
+Una ausencia breve conserva el origen del mismo ID y reinicia el tiempo de
+estabilidad pendiente. Al reaparecer, la zona destino debe adquirir nuevamente
+estabilidad. Una pérdida/intervalo mayor que max_gap_seconds borra el origen:
+reaparecer en B no inventa una entrada. Un ID nuevo nunca hereda otro recorrido.
+Los saltos plausibles o IDs duplicados del tracker no pueden resolverse como
+identidad personal por este contador; deben medirse separadamente.
 
-Las políticas geométricas de 45°, alineación transversal del 50 %, convexidad y un máximo de 512 estados recientes son límites conservadores de esta versión, no otros parámetros de ajuste por habitación. Si se supera el límite de estados, se detiene con error sin borrar protecciones de episodios para continuar contando.
+Motivos visibles y en consola: origen_estable, misma_zona,
+estabilidad_insuficiente, fuera_de_zonas, perdida_breve, perdida_prolongada,
+intervalo_excesivo, punto_invalido_del_tracker, fuera_de_imagen y confirmado_IN/OUT.
+El motivo de reinicio se conserva en el diagnóstico del frame aunque la nueva
+observación pase inmediatamente a confirmar otra zona. estado_expirado indica
+que se eliminó la historia antigua del ID por ausencia superior al TTL.
+FUERA de zonas no es una cancelación. Las confirmaciones incluyen ID, sentido y
+timestamp. q, Escape, X o Ctrl+C liberan cámara/ventanas. Cada apertura inicia cero.
+La consola informa al iniciar el tiempo y número mínimo de observaciones, y al
+cerrar muestra ambos totales IN/OUT.
 
-Validación: números positivos y finitos; observaciones enteras de 2 a 10; margen entre 0.005 y 0.2; tiempos de estabilidad y gap menores que el timeout; timeout menor que TTL. Los cambios se leen al iniciar; cierre y vuelva a ejecutar.
+## Prueba corta de aceptación física
 
-## Pérdidas, IDs y casos incompletos
+Esta aceptación la realiza el equipo con cámara. Las pruebas unitarias y sus
+resultados no la sustituyen ni permiten declarar solucionado el fallo físico.
 
-- Una desaparición nunca confirma una entrada. Un frame vacío sigue notificándose al motor.
-- Una ausencia breve puede conservar el recorrido si el mismo ID reaparece en la misma zona, dentro del tiempo y desplazamiento admitidos. Se reinicia la evidencia temporal pendiente. El cruce de un borde no se infiere a través de una ausencia.
-- Si vuelve directamente fuera de B después de perderse dentro, no se acredita una salida observada. Si se pierde durante la confirmación, se cancela esa confirmación.
-- Un ID nuevo empieza con historia propia. No recibe el recorrido de otro ID, no se fusionan tracks por cercanía y no se exporta ReID.
-- Los saltos de posición y los intervalos excesivos cancelan. Los estados antiguos se limpian por tiempo; cada estado conserva unos pocos valores, no una trayectoria ilimitada.
-- Timestamps no finitos, repetidos o hacia atrás; IDs inválidos/duplicados; o posiciones no finitas/fuera del frame producen un error controlado antes de modificar el contador de ese frame. La aplicación libera la cámara.
+1. Revise el perfil en el calibrador, compruebe exterior/puerta y confirme su
+   orientación como se explica arriba. El punto inferior central de la caja,
+   no solo la cabeza o una parte del cuerpo, debe entrar claramente en cada zona.
+2. Compruebe el tracker y dispositivo efectivo. Anote perfil/hash y umbrales.
+   Inicie una sesión nueva y deje que un solo participante establezca su ID en A.
+3. Realice la secuencia siguiente sin oclusiones y comprobando que el ID se
+   conserva. Los totales indicados son acumulados desde esa sesión nueva:
 
-**No se garantiza eliminar todos los errores de un intercambio de IDs geométricamente plausible.** Tampoco se puede distinguir automáticamente dos tracks duplicados de dos personas reales solo con estos datos. Esta versión evita heredar historia entre IDs y cuenta cada episodio una vez, pero prefiere omitir recorridos incompletos a inventar identidades. CNT-10 a CNT-12 deben medir estas limitaciones.
-
-## Presentación, cámara y GPU
-
-La ventana muestra título, entradas acumuladas, tracker, confianza efectiva, dispositivo, cámara, resolución, perfil, FPS, inferencia YOLO y tiempo conjunto YOLO + tracking. Este último conserva la métrica del motor existente; no es un tiempo aislado de asociación ni incluye toda la presentación. Se conservan cajas, confianza, IDs, trails, polígonos, bottom-center y etiquetas H4, agregando el estado de la FSM. Las transiciones `obs:` heredadas del Hito 4 son solo visuales; no controlan el contador.
-
-OpenCV Hershey muestra texto ASCII: en pantalla se lee `ENTRADAS AL BANO`. No se añade otra biblioteca gráfica para la Ñ. No hay contador de salidas.
-
-Se reutiliza la apertura/liberación de cámara existente. Índice o aspecto incompatibles con el perfil bloquean antes de cargar el tracker; el aspecto también se verifica en cada frame. El mismo índice no garantiza la misma cámara física. Si la mueve, cambia zoom o recorta el encuadre, revise/recalibre.
-
-La resolución CPU/GPU continúa en el motor original. Se conserva la preferencia local y su fallback existente con advertencia cuando corresponde; no se fuerza CUDA ni se añade otro selector de dispositivo. Un error o backend de tracker inválido no provoca fallback a otro tracker. El modelo se instancia una vez y se ejecuta una sola inferencia por frame, antes de pintar las superposiciones.
-
-## Validación automatizada reproducible
-
-```powershell
-& .\.venv\Scripts\python.exe -m compileall src tests
-& .\.venv\Scripts\python.exe -m pip check
-& .\.venv\Scripts\python.exe -m unittest discover -s tests -p "test_count*.py" -v
-& .\.venv\Scripts\python.exe -m unittest discover -s tests -p "test_track_count.py" -v
-& .\.venv\Scripts\python.exe -m unittest discover -s tests -v
-& .\.venv\Scripts\python.exe -m src.diagnostics
-& .\.venv\Scripts\python.exe -c "import src.count_geometry; import src.count_engine; import src.counting_config; import src.track_count"
-```
-
-Se añadieron 75 pruebas: 53 del motor/geometría, 9 de configuración/selección y 13 de integración del comando. La integración ejecuta el motor común y la FSM con dobles de inferencia/cámara/GUI. No demuestra precisión con personas reales ni funcionamiento CUDA.
-
-El ZIP recibido no incluía `tests/video_test_support.py`, aunque tres archivos de tests H4 lo importaban. Se agregó únicamente el auxiliar de temporales requerido, sin editar las pruebas ni recuperar módulos MP4 ausentes. Los temporales quedan bajo `logs/test_temp/`, ignorado por las reglas originales y excluido de la entrega.
-
-El arnés H4 existente se conserva y descubre también los nuevos tests:
-
-```powershell
-& .\.venv\Scripts\python.exe tests/hito4_simulated_regression.py
-```
-
-En esta versión ejecuta 389 tests únicos con OpenCV simulado: 314 existentes y 75 nuevos; excluye 28 tests que requieren componentes reales. Las tres ejecuciones finales pasaron. No reemplaza la suite normal. La suite normal de este entorno sigue bloqueada parcialmente por dependencias ausentes; el reporte detalla fallos y exclusiones. No instale ni cambie paquetes solo para repetir la batería simulada.
-
-## Pruebas físicas pendientes
-
-La cámara debe observar solo el acceso, nunca el interior del baño. Para cada prueba registre perfil, posición de cámara, resolución, tracker, dispositivo efectivo, umbrales y resultado. Mantenga las mismas condiciones al comparar trackers.
-
-| Caso | Prueba y resultado esperado | Estado |
+| Paso | Movimiento | IN / OUT esperado |
 | --- | --- | --- |
-| CNT-01 | A → B → salida frontal B: una entrada. | Pendiente |
-| CNT-02 | B → A → exterior: cero entradas adicionales. | Pendiente |
-| CNT-03 | Llega a A y retrocede: cero. | Pendiente |
-| CNT-04 | Llega a B y retrocede: cero. | Pendiente |
-| CNT-05 | Sale por un costado de B: cero sin salida frontal coherente. | Pendiente |
-| CNT-06 | Permanece detenido en A/B: cero repeticiones; observar expiración. | Pendiente |
-| CNT-07 | Entrada seguida de salida: el total conserva una. | Pendiente |
-| CNT-08 | Entrada, retorno completo por A al exterior y nueva entrada: dos si ambos recorridos son válidos. | Pendiente |
-| CNT-09 | Dos personas ingresan consecutivamente: dos entradas. | Pendiente |
-| CNT-10 | Dos personas se cruzan: registrar aciertos, omisiones y duplicados. | Pendiente |
-| CNT-11 | Oclusión: documentar qué recorrido se completa y cuál queda incompleto. | Pendiente |
-| CNT-12 | Cambio/intercambio de ID: registrar el comportamiento real, sin inferir identidad. | Pendiente |
-| CNT-13 | Habitación y pasillo: revisar geometría y orientación sin editar Python. | Pendiente |
-| CNT-14 | Cambiar BoT-SORT por FastTracker y volver: comprobar backend y contador. | Pendiente |
-| CNT-15 | Comparar FPS con track_zones en la misma escena, dispositivo y resolución. | Pendiente |
+| 1 | Aparecer y permanecer estable en A | 0 / 0 |
+| 2 | A → B y quedarse dentro de B | 1 / 0 |
+| 3 | Permanecer en B | 1 / 0 |
+| 4 | B → A | 1 / 1 |
+| 5 | Desde A aproximarse por FUERA y volver a A, sin confirmar B | 1 / 1 |
+| 6 | Reingresar A → B | 2 / 1 |
 
-Para CNT-15 estabilice el inicio y observe al menos 60 segundos por modo, ejecutados secuencialmente. No interprete un FPS sintético como rendimiento de webcam/GPU.
+Un retroceso antes de confirmar la zona contraria no produce evento. Si B ya se
+confirmó, la entrada ya ocurrió según este contrato: volver establemente a A
+confirma OUT; no elimina ni resta el IN anterior. No hace falta salir de A ni
+cruzar otro borde para permitir el siguiente reingreso.
 
-Para evaluar precisión, anote cada ingreso real y empareje su confirmación: correcto, omitido, falso o duplicado. Registre las salidas y los movimientos laterales como controles negativos. Un total final correcto puede ocultar omisiones compensadas por falsos positivos. Si separa duplicados, inclúyalos una sola vez dentro de los falsos positivos totales al calcular precisión. Cobertura = ingresos correctos / ingresos reales; precisión = ingresos correctos / confirmaciones totales. Si un denominador es cero, indique no evaluable. El objetivo 85–90 % no está demostrado por esta entrega.
+4. Repita en sesiones nuevas a velocidad normal, rápida y lenta. Después pruebe
+   dos personas consecutivas, cruces y pérdidas de ID, usando la tabla completa
+   de abajo. No cambie umbrales entre intentos sin registrar el cambio.
+5. Registre por intento: recorrido real, ID observado, conteos antes/después,
+   mensaje de diagnóstico y resultado correcto/omitido/falso/duplicado. Cierre
+   con q/Escape para revisar también los dos totales en consola.
 
-## Límite del hito
+### Cómo interpretar los mensajes
 
-No hay persistencia de conteos, base de datos, Django, ocupación, identificación personal, imágenes guardadas ni exportación de embeddings. No se implementan `zone_calibrator_extended`, `track_count_extended`, cinco regiones ni selector básico/extendido. H5.2 podrá aportar geometría auxiliar explícita; esta implementación se limita a A/B/FUERA y a sus bordes existentes.
+| Mensaje | Significado para la prueba |
+| --- | --- |
+| origen_estable | Se reconoce la primera zona; todavía no hay recorrido entre zonas. |
+| estabilidad_insuficiente | Está esperando tiempo y/o observaciones; no es una confirmación ni un rechazo definitivo. |
+| misma_zona | No se repite el evento por permanecer allí. |
+| fuera_de_zonas | El punto está en la imagen, fuera de A/B; espera el destino sin sumar. |
+| confirmado_IN / confirmado_OUT | El mismo ID pasó entre zonas estables; se suma una sola vez. |
+| perdida_breve | Conserva el origen del mismo ID, pero reinicia la estabilidad pendiente. |
+| perdida_prolongada / intervalo_excesivo / estado_expirado | Descarta historia; reaparecer en el destino no permite inventar el recorrido. |
+| fuera_de_imagen / punto_invalido_del_tracker | Descarta la historia de ese ID por datos inválidos, sin recortar puntos ni detener otros IDs. |
+
+Ejemplo de formato de confirmación (no es evidencia de una prueba física):
+
+~~~text
+Evento 1 | IN | ID 7 | A -> B | t=0.750
+Evento 2 | OUT | ID 7 | B -> A | t=2.100
+Totales de sesion | IN=1 | OUT=1
+~~~
+
+Si el punto y el mismo ID permanecen válidos y estables en ambas zonas pero el
+evento falta, registre un fallo del contador. Si cambió el ID, faltó la caja o
+el punto nunca entró en la zona, registre un fallo o limitación del tracking.
+Un ID nuevo no demuestra que sea una persona nueva ni hereda el recorrido anterior.
+
+## Interfaz para futuras trayectorias guardadas
+
+El motor no abre cámara, videos, archivos de predicciones, ventanas ni modelos.
+Recibe un perfil semántico A exterior/B puerta y, por cada frame completo:
+
+~~~python
+from src.count_engine import TransitionCounter, Observation
+
+counter = TransitionCounter(perfil_orientado)
+events = counter.update(
+    timestamp_segundos,
+    [Observation(track_id=7, point=(x_normalizado, y_normalizado))]
+)
+~~~
+
+El punto es el bottom-center dividido por el ancho/alto del frame; un frame sin
+tracks se notifica con una lista vacía. El timestamp debe crecer estrictamente.
+Cada evento devuelto incluye IN/OUT, ID, episodio y timestamp, y el motor conserva
+los totales de la sesión. No depende de la velocidad de ejecución de una GUI.
+
+Un adaptador futuro podrá leer MP4 y trayectorias guardadas por frame_index,
+aplicar su perfil JSON/orientación y usar el tiempo del video, no el reloj del
+procesamiento. Después se podrán contrastar los eventos con anotaciones reales.
+Ese lector, la comparación, las métricas y su informe automatizado no se
+implementan en esta corrección. La aprobación MOT17-04 no se usa como aceptación
+de conteo en el acceso al baño.
+
+## Validación y aceptación en cámara
+
+~~~powershell
+& .\.venv\Scripts\python.exe -B -m unittest discover -s tests -p 'test_count*.py' -v
+& .\.venv\Scripts\python.exe -B -m unittest discover -s tests -p 'test_track_count.py' -v
+& .\.venv\Scripts\python.exe -B -m unittest discover -s tests -p 'test*.py' -v
+~~~
+
+La batería del contador usa geometría real y trayectorias sintéticas; cámara,
+modelo y GUI se simulan en las pruebas del loop. No acredita inferencia ni
+precisión física. Repetir la batería relevante tres veces en procesos nuevos
+después del último cambio funcional. Las omisiones no son aprobaciones.
+
+Comprobación automatizada de esta corrección: tres procesos independientes con
+63/63 pruebas relevantes cada uno, sin omisiones. Regresión general: 405 casos
+descubiertos; unittest registra 402, con cero fallos y errores. Quedan cuatro
+casos sin acreditar: tres de la clase de inferencia ReID por pesos ausentes y
+uno de enlaces simbólicos por permisos de Windows (dos entradas de omisión).
+Los logs nuevos se conservan dentro del worktree aislado, no en la rama de
+pruebas automatizadas. No se ejecutó nueva inferencia ni aceptación física.
+
+La aceptación en cámara queda a cargo del equipo. Antes de probar, anote el
+perfil y su hash, orientación, tracker, dispositivo efectivo y cuatro umbrales.
+Mantenga visibles bottom-center e IDs y anote totales antes/después de cada caso:
+
+| Caso | Esperado |
+| --- | --- |
+| A estable → B estable, sin salir de B | IN +1; OUT sin cambio |
+| B estable → A estable | OUT +1; IN sin cambio |
+| A → FUERA sin B | Ningún evento |
+| Aparece o permanece solo en A o B | Ningún evento |
+| Entrada seguida de salida y otra entrada | IN +2, OUT +1 |
+| Dos ingresos consecutivos | IN +2 si ambos IDs tienen recorrido completo |
+| Dos personas cruzándose en sentidos opuestos | IN +1, OUT +1 si sus IDs se conservan |
+| Pérdida breve del mismo ID | Sin evento por pérdida; se exige estabilidad al volver |
+| ID nuevo o pérdida prolongada | Sin herencia de historia ni evento por reaparición |
+| Recorridos rápidos y lentos | Mismo sentido correcto si hay tiempo/observaciones configurados |
+
+Si falta un evento, revise primero si el tracker produjo el mismo ID y puntos
+dentro de ambas zonas. Si esos datos son válidos y estables pero no hay evento,
+es un fallo del contador: conserve mensajes, timestamps, ajustes y el perfil
+exacto para reproducirlo. Si cambió/perdió el ID o no hubo caja utilizable, registre
+el fallo del tracker por separado. No cambie varios umbrales a la vez para ocultarlo.
+
+No recomendar el merge ni declarar aceptación final mientras recorridos
+representativos sigan produciendo cero entradas. El total correcto por sí solo
+no demuestra ausencia de falsos positivos, omisiones o intercambios de identidad.
