@@ -1,10 +1,12 @@
 import math
 import unittest
 from dataclasses import asdict, replace
+from types import SimpleNamespace
 
 from src.count_engine import CountSettings, EntryCounter, Observation, Phase
 from src.count_geometry import RouteGeometry, clearance
-from src.zones import ZoneError
+from src.counting_config import load_counting_config
+from src.zones import ZoneError, _intersects, bottom_center
 from count_test_support import A, B, ENTRY, RETURN, counter_at_b, profile, rotation, run_path
 
 
@@ -349,6 +351,524 @@ class GeometryAndSettingsTests(unittest.TestCase):
         for changes in ({'min_observations': 1}, {'min_observations': 2.5}, {'position_margin': .3},
                         {'max_gap_seconds': 13}, {'state_ttl_seconds': 10}, {'zone_dwell_seconds': 13}):
             with self.subTest(changes=changes), self.assertRaises(ValueError): replace(CountSettings(), **changes)
+
+
+class NarrowRouteSimulationTests(unittest.TestCase):
+    """SIM-03/08: caracterizacion sintetica, sin acreditar entradas fisicas.
+
+    Un total cero documenta un rechazo actual, no su idoneidad para un bano real.
+    SIM-01/02/06 reutilizan tambien los casos existentes de EntryTests.
+    """
+    PREFIX = ((.22, .5), (.23, .5), (.24, .5), (.27, .5), (.37, .5),
+              (.47, .5), (.52, .5), (.53, .5), (.54, .5), (.55, .5))
+    ENTRY = PREFIX + ((.58, .5), (.60, .5), (.62, .5))
+    JITTER = PREFIX[:3] + ((.255, .5), (.262, .5), (.258, .5)) + ENTRY[3:]
+    RETURN = ((.53, .5), (.43, .5), (.33, .5), (.24, .5), (.23, .5),
+              (.22, .5), (.18, .5), (.17, .5), (.16, .5))
+
+    @classmethod
+    def setUpClass(cls):
+        cls.settings = load_counting_config().thresholds
+
+    @staticmethod
+    def strips(zone_width=.06, b_left=.50):
+        def rectangle(left):
+            return ((left, .15), (left + zone_width, .15),
+                    (left + zone_width, .85), (left, .85))
+        return profile(rectangle(.20), rectangle(b_left), width=1280, height=720)
+
+    @staticmethod
+    def frames(points, offset=0., identifier=1, fps=10):
+        return [(round(offset + i / fps, 6), [(identifier, point)])
+                for i, point in enumerate(points)]
+
+    @staticmethod
+    def straight(p, speed, fps):
+        start, end = p.a[0][0] - .03, max(v[0] for v in p.b) + .08
+        count = math.ceil(((end - start) / speed + .3) * fps)
+        return [(round(i / fps, 6), [(1, (min(end, start + speed * i / fps), .5))])
+                for i in range(count + 1)]
+
+    def simulate(self, frames, p=None):
+        """Observa la FSM real; no reconstruye sus decisiones ni guarda archivos."""
+        engine = EntryCounter(self.strips() if p is None else p, self.settings)
+        events, trace = [], []
+        for timestamp, items in frames:
+            events.extend(engine.update(timestamp, [Observation(i, point) for i, point in items]))
+            visible = dict(items)
+            for identifier, state in engine.states.items():
+                point = visible.get(identifier)
+                trace.append(dict(t=timestamp, id=identifier, point=point,
+                                  zone=engine.geometry.classify(point) if point is not None else None,
+                                  phase=state.phase, reason=state.reason, episode=state.episode,
+                                  evidence=state.evidence, crossing=state.crossing,
+                                  elapsed=timestamp - state.evidence_since if state.evidence else 0.))
+        return engine, events, trace
+
+    @staticmethod
+    def first_cancel(trace):
+        return next(row for row in trace if row['phase'] == Phase.CANCELLED)
+
+    def box_frames(self, points, *, fps=10):
+        converted = []
+        for i, (x, y) in enumerate(points):
+            width, height = (.06, .075, .065)[i % 3], (.20, .21, .19)[i % 3]
+            box = SimpleNamespace(x1=(x - width / 2) * 1280, x2=(x + width / 2) * 1280,
+                                  y1=(y - height) * 720, y2=y * 720)
+            bx, by = bottom_center(box)
+            converted.append((bx / 1280, by / 720))
+        return self.frames(converted, fps=fps)
+
+    @staticmethod
+    def direction_step(engine, zone, previous, current):
+        """Diagnostico geometrico; las decisiones siguen en la FSM real."""
+        geometry = engine.geometry
+        a, b = geometry.project(previous), geometry.project(current)
+        angle = math.degrees(math.atan2(b[1] - a[1], b[0] - a[0]))
+        edges = [(geometry.unproject(p), geometry.unproject(q), normal)
+                 for p, q, _, _, normal in geometry._edges(zone)
+                 if _intersects(a, b, p, q)]
+        return dict(angle=angle, edges=edges,
+                    crossing=geometry.exit_through(zone, a, b))
+
+    def test_sim03_turns_at_b_accept_45_degrees_but_reject_46(self):
+        for angle in (0, 15, 30, 44, 45, 46, 60, 75):
+            with self.subTest(metric_angle=angle):
+                tail = tuple((x, .5 + (x - .55) * (1280 / 720) * math.tan(math.radians(angle)))
+                             for x in (.58, .60, .62))
+                engine, events, trace = self.simulate(self.frames(self.PREFIX + tail))
+                self.assertEqual((engine.total_entries, len(events)), (1, 1) if angle <= 45 else (0, 0))
+                if angle > 45:
+                    rejected = self.first_cancel(trace)
+                    self.assertEqual(rejected['t'], 1.)
+                    self.assertEqual(rejected['reason'], 'salida de B lateral, inversa o junto a vértice ambiguo')
+
+    def test_sim04_box_reentry_near_a_edge_preserves_entry_despite_small_jitter(self):
+        engine, events, trace = self.simulate(self.box_frames(self.JITTER))
+        self.assertEqual(engine.total_entries, 1)
+        self.assertEqual([(e.track_id, e.episode, e.timestamp) for e in events], [(1, 1, 1.5)])
+        self.assertFalse(any(row['phase'] == Phase.CANCELLED for row in trace))
+        self.assertEqual(trace[5]['phase'], Phase.APPROACHING)
+        self.assertLess(.004 / .30, self.settings.position_margin)
+        self.assertEqual([row['zone'] for row in trace[3:7]], ['A', 'FUERA', 'A', 'FUERA'])
+
+    def test_sim04_a_reentry_respects_existing_interior_margin(self):
+        for x, expected in ((.248001, 1), (.248, 0), (.245, 0)):
+            with self.subTest(return_x=x):
+                points = self.JITTER[:5] + ((x, .5),) + self.ENTRY[3:]
+                engine, events, trace = self.simulate(self.box_frames(points))
+                self.assertEqual((engine.total_entries, len(events)), (expected, expected))
+                if not expected:
+                    rejected = self.first_cancel(trace)
+                    self.assertEqual(rejected['t'], .5)
+                    self.assertEqual(rejected['reason'], 'regresó a A antes de completar')
+
+    def test_sim04_repeated_shallow_a_oscillations_count_once(self):
+        oscillations = ((.255, .5), (.262, .5), (.258, .5), (.263, .5),
+                        (.257, .5), (.264, .5), (.258, .5))
+        points = self.PREFIX[:3] + oscillations + self.ENTRY[3:] + ((.62, .5),) * 5
+        engine, events, trace = self.simulate(self.box_frames(points))
+        self.assertEqual((engine.total_entries, len(events)), (1, 1))
+        self.assertEqual((events[0].track_id, events[0].episode), (1, 1))
+        self.assertFalse(any(row['phase'] == Phase.CANCELLED for row in trace))
+
+    def test_sim04_shallow_a_return_keeps_longitudinal_reverse_guard(self):
+        points = self.JITTER[:5] + ((.29, .5), (.259, .5)) + self.ENTRY[3:]
+        engine, events, trace = self.simulate(self.box_frames(points))
+        self.assertEqual((engine.total_entries, events), (0, []))
+        self.assertEqual(self.first_cancel(trace)['reason'], 'retroceso longitudinal')
+
+    def test_sim04_unfinished_shallow_a_return_expires_or_is_lost(self):
+        for missing in (False, True):
+            with self.subTest(missing=missing):
+                if missing:
+                    frames = self.box_frames(self.JITTER[:6]) + [(.6, []), (1.1, [])]
+                    reason = 'recorrido perdido o expirado'
+                else:
+                    frames = self.box_frames(self.JITTER[:6] + ((.258, .5),) * 125)
+                    reason = 'recorrido expirado'
+                engine, events, trace = self.simulate(frames)
+                self.assertEqual((engine.total_entries, events), (0, []))
+                self.assertEqual(engine.states[1].phase, Phase.CANCELLED)
+                self.assertEqual(self.first_cancel(trace)['reason'], reason)
+
+    def test_sim04_new_a_exit_after_jitter_still_requires_forward_direction(self):
+        points = self.JITTER[:6] + ((.262, .51),) + self.ENTRY[4:]
+        engine, events, trace = self.simulate(self.box_frames(points))
+        self.assertEqual((engine.total_entries, events), (0, []))
+        rejected = self.first_cancel(trace)
+        self.assertEqual(rejected['t'], .6)
+        self.assertEqual(rejected['reason'], 'salida de A lateral, inversa o no observada')
+
+    def test_sim04_loss_or_new_id_during_shallow_a_return_does_not_count(self):
+        for new_id in (False, True):
+            with self.subTest(new_id=new_id):
+                frames = self.box_frames(self.JITTER)
+                if new_id:
+                    frames = [(t, [(2 if t >= .6 else i, point) for i, point in items])
+                              for t, items in frames]
+                else:
+                    frames.insert(6, (.55, []))
+                engine, events, trace = self.simulate(frames)
+                self.assertEqual((engine.total_entries, events), (0, []))
+                if new_id:
+                    self.assertEqual(engine.states[2].episode, 0)
+                else:
+                    rejected = self.first_cancel(trace)
+                    self.assertEqual(rejected['t'], .6)
+                    self.assertEqual(rejected['reason'], 'cambio de zona durante una pérdida')
+
+    def test_sim04_box_bottom_shift_can_reject_a_forward_edge_crossing(self):
+        points = self.PREFIX[:3] + ((.258, .5), (.262, .51), (.27, .5)) + self.ENTRY[4:]
+        engine, events, trace = self.simulate(self.box_frames(points))
+        rejected = self.first_cancel(trace)
+        self.assertEqual((engine.total_entries, events, rejected['t']), (0, [], .4))
+        self.assertEqual(rejected['reason'], 'salida de A lateral, inversa o no observada')
+        geometry = engine.geometry
+        displacement = math.dist(geometry.project((.258, .5)), geometry.project((.262, .51)))
+        self.assertLess(displacement, self.settings.position_margin)
+
+    def test_sim05_width_gap_speed_and_sampling_matrix(self):
+        # Columnas = 10/20/30 observaciones por segundo. Cambian solo seis casos
+        # antes omitidos por el margen de permanencia en las geometrías 1 y 3.
+        profiles = (profile(), self.strips(), self.strips(b_left=.32), self.strips(.04, .60))
+        expected = (((1, 1, 1), (1, 1, 1), (1, 1, 1), (1, 1, 1), (0, 1, 1)),
+                    ((1, 1, 1), (1, 1, 1), (0, 0, 1), (0, 0, 0), (0, 0, 0)),
+                    ((1, 1, 1), (1, 1, 1), (0, 0, 1), (0, 0, 0), (0, 0, 0)),
+                    ((1, 1, 1), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0)))
+        for g, p in enumerate(profiles):
+            for v, speed in enumerate((.10, .20, .30, .40, .60)):
+                for f, fps in enumerate((10, 20, 30)):
+                    with self.subTest(geometry=g, speed=speed, fps=fps):
+                        engine, events, trace = self.simulate(self.straight(p, speed, fps), p)
+                        self.assertEqual((engine.total_entries, len(events)), (expected[g][v][f],) * 2)
+                        if expected[g][v][f]:
+                            for phase in (Phase.AT_A, Phase.AT_B):
+                                stable = next(row for row in trace if row['phase'] == phase)
+                                self.assertGreaterEqual(stable['elapsed'] + 1e-9, self.settings.zone_dwell_seconds)
+        with self.assertRaisesRegex(ZoneError, 'estrechas'):
+            EntryCounter(self.strips(.03, .65), self.settings)
+
+    def test_sim05_local_dwell_counts_without_changing_the_deep_margin(self):
+        engine, _, trace = self.simulate(self.straight(self.strips(), .20, 20))
+        in_a = [row['t'] for row in trace if row['zone'] == 'A']
+        deep = [row['t'] for row in trace if row['zone'] == 'A'
+                and engine.geometry.deep('A', engine.geometry.project(row['point']))]
+        self.assertGreater(max(in_a) - min(in_a), self.settings.zone_dwell_seconds)
+        self.assertAlmostEqual(max(deep) - min(deep), .10)  # Margen de cruces/histeresis intacto.
+        stable = next(row for row in trace if row['phase'] == Phase.AT_A)
+        self.assertAlmostEqual(stable['elapsed'], .15)
+        self.assertGreaterEqual(stable['elapsed'], self.settings.zone_dwell_seconds)
+        self.assertEqual(engine.states[1].phase, Phase.CONFIRMED)
+        self.assertEqual(engine.total_entries, 1)
+
+    def test_sim05_narrow_route_counts_with_full_dwell_at_all_sampling_rates(self):
+        for fps in (10, 20, 30):
+            with self.subTest(fps=fps):
+                engine, events, trace = self.simulate(self.straight(self.strips(), .20, fps))
+                self.assertEqual((engine.total_entries, len(events)), (1, 1))
+                for phase in (Phase.AT_A, Phase.AT_B):
+                    stable = next(row for row in trace if row['phase'] == phase)
+                    self.assertGreaterEqual(stable['elapsed'] + 1e-9, self.settings.zone_dwell_seconds)
+
+    def test_sim05_far_strips_allow_slow_entry_but_reject_too_short_residence(self):
+        p = self.strips(.04, .60)
+        for fps in (10, 20, 30):
+            for speed, expected in ((.10, 1), (.40, 0)):
+                with self.subTest(fps=fps, speed=speed):
+                    engine, events, _ = self.simulate(self.straight(p, speed, fps), p)
+                    self.assertEqual((engine.total_entries, len(events)), (expected, expected))
+
+    def test_sim05_dwell_margin_uses_each_polygon_and_preserves_crossing_margin(self):
+        for b_left in (.50, .65):
+            with self.subTest(b_left=b_left):
+                geometry = RouteGeometry(self.strips(b_left=b_left), self.settings.position_margin)
+                for zone in ('A', 'B'):
+                    pixels = geometry.dwell_margins[zone] * geometry.distance * geometry.profile.height
+                    self.assertAlmostEqual(pixels, 12.8)
+                point = geometry.project((.248001, .5))
+                self.assertFalse(geometry.deep('A', point))  # Banda de histeresis del Paso 3C intacta.
+                self.assertTrue(geometry.dwell_interior('A', point))
+                self.assertFalse(geometry.dwell_interior('FUERA', point))
+                self.assertFalse(geometry.dwell_interior('A', geometry.project((.18, .5))))
+                self.assertEqual(geometry.margin, self.settings.position_margin)
+        for p in (profile(), self.strips(b_left=.32)):
+            geometry = RouteGeometry(p, self.settings.position_margin)
+            self.assertEqual(geometry.dwell_margins, {'A': geometry.margin, 'B': geometry.margin})
+
+    def test_sim05_superficial_contacts_do_not_arm_a_or_confirm_b(self):
+        for fps in (10, 20, 30):
+            for grazed_zone in ('A', 'B'):
+                with self.subTest(fps=fps, grazed_zone=grazed_zone):
+                    frames = []
+                    for timestamp, items in self.straight(self.strips(), .10, fps):
+                        x = items[0][1][0]
+                        y = .1505 if grazed_zone == 'A' else max(.1505, .5 - .3495 * max(0., x - .30) / .20)
+                        frames.append((timestamp, [(1, (x, y))]))
+                    engine, events, trace = self.simulate(frames)
+                    self.assertEqual((engine.total_entries, events), (0, []))
+                    blocked = Phase.AT_A if grazed_zone == 'A' else Phase.AT_B
+                    self.assertFalse(any(row['phase'] == blocked for row in trace))
+                    if grazed_zone == 'B':
+                        self.assertTrue(any(row['phase'] == Phase.AT_A for row in trace))
+
+    def test_sim05_one_observation_or_less_than_dwell_is_still_insufficient(self):
+        frames = self.frames(self.ENTRY)
+        paths = {
+            'one_a': frames[:1] + frames[3:],
+            'one_b': frames[:6] + frames[8:9] + frames[10:],
+            'short_a': self.frames(self.PREFIX[:2], fps=20) + frames[3:],
+            'short_b': frames[:6] + self.frames(self.PREFIX[6:8], offset=.6, fps=20) + frames[10:],
+        }
+        for name, path in paths.items():
+            with self.subTest(path=name):
+                engine, events, trace = self.simulate(path)
+                self.assertEqual((engine.total_entries, events), (0, []))
+                blocked = Phase.AT_A if name.endswith('a') else Phase.AT_B
+                self.assertFalse(any(row['phase'] == blocked for row in trace))
+
+    def test_sim05_box_jitter_interior_counts_but_edge_jitter_does_not(self):
+        for fps in (10, 20, 30):
+            for grazing in (False, True):
+                with self.subTest(fps=fps, grazing=grazing):
+                    points = []
+                    for i, (_, items) in enumerate(self.straight(self.strips(), .10, fps)):
+                        sign = 1 if i % 2 else -1
+                        x = items[0][1][0] + sign * .001
+                        y = .1505 + sign * .0001 if grazing else .5 + sign * .001
+                        points.append((x, y))
+                    engine, events, _ = self.simulate(self.box_frames(points, fps=fps))
+                    self.assertEqual((engine.total_entries, len(events)), (0, 0) if grazing else (1, 1))
+
+    def test_sim05_two_independent_narrow_routes_count_without_duplicates(self):
+        for fps in (10, 20, 30):
+            with self.subTest(fps=fps):
+                base = [items[0][1] for _, items in self.straight(self.strips(), .20, fps)]
+                lag = round(.2 * fps)
+                frames = []
+                for frame in range(len(base) + lag + 5):
+                    items = []
+                    for identifier, delay, y in ((7, 0, .45), (19, lag, .55)):
+                        if frame >= delay:
+                            x = base[min(frame - delay, len(base) - 1)][0]
+                            items.append((identifier, (x, y)))
+                    frames.append((round(frame / fps, 6), items))
+                engine, events, _ = self.simulate(frames)
+                self.assertEqual((engine.total_entries, len(events)), (2, 2))
+                self.assertEqual([e.track_id for e in events], [7, 19])
+                self.assertIsNot(engine.states[7], engine.states[19])
+
+    def test_sim05_a_and_b_use_their_own_polygon_size(self):
+        a = ((.20, .15), (.35, .15), (.35, .85), (.20, .85))
+        b = ((.55, .15), (.59, .15), (.59, .85), (.55, .85))
+        p = profile(a, b, width=1280, height=720)
+        for fps in (10, 20, 30):
+            with self.subTest(fps=fps):
+                engine, events, _ = self.simulate(self.straight(p, .10, fps), p)
+                self.assertEqual((engine.total_entries, len(events)), (1, 1))
+                self.assertGreater(engine.geometry.dwell_margins['A'], engine.geometry.dwell_margins['B'])
+
+    def test_sim07_cancelled_episode_needs_full_return_before_new_entry(self):
+        # La oscilacion superficial ya se tolera; este caso debe cancelar un retorno real.
+        real_return = self.JITTER[:5] + ((.245, .5),) + self.ENTRY[3:]
+        cancelled = self.frames(real_return)
+        offset = round(cancelled[-1][0] + .1, 6)
+        for complete in (False, True):
+            with self.subTest(complete_return=complete):
+                returning = self.RETURN if complete else self.RETURN[:6]
+                frames = cancelled + self.frames(returning, offset)
+                frames += self.frames(self.ENTRY, round(frames[-1][0] + .1, 6))
+                engine, events, trace = self.simulate(frames)
+                self.assertEqual(self.first_cancel(trace)['reason'], 'regresó a A antes de completar')
+                self.assertEqual(engine.total_entries, int(complete))
+                if complete:
+                    self.assertEqual([(e.track_id, e.episode) for e in events], [(1, 2)])
+                    self.assertTrue(any(row['t'] > offset and row['phase'] == Phase.IDLE for row in trace))
+                else:
+                    self.assertEqual(events, [])
+                    self.assertEqual(engine.states[1].phase, Phase.CANCELLED)
+
+    def test_sim08_staggered_people_count_once_per_independent_id(self):
+        frames = []
+        for frame in range(len(self.ENTRY) + 8):
+            items = []
+            for identifier, lag, y in ((101, 0, .45), (202, 2, .55)):
+                index = frame - lag
+                if index >= 0:
+                    items.append((identifier, (self.ENTRY[min(index, len(self.ENTRY) - 1)][0], y)))
+            frames.append((round(frame / 10, 6), items))
+        engine, events, _ = self.simulate(frames)
+        self.assertEqual(engine.total_entries, 2)
+        self.assertEqual([(e.track_id, e.number, e.timestamp) for e in events], [(101, 1, 1.2), (202, 2, 1.4)])
+        self.assertIsNot(engine.states[101], engine.states[202])
+
+
+    def test_dir02_pixel_crossings_expose_local_angle_sensitivity_in_a_and_b(self):
+        for zone in ('A', 'B'):
+            for dx in (1, 2, 4, 8):
+                for dy in (0, 1, 2, 4, 8):
+                    with self.subTest(zone=zone, dx_px=dx, dy_px=dy):
+                        edge = .26 if zone == 'A' else .56
+                        previous = (edge - dx / (2 * 1280), .5)
+                        current = (edge + dx / (2 * 1280), .5 + dy / 720)
+                        if zone == 'A':
+                            points = self.PREFIX[:3] + (previous, current, (.27, .5)) + self.ENTRY[4:]
+                            index, before = 4, Phase.AT_A
+                        else:
+                            points = self.PREFIX + (previous, current) + self.ENTRY[10:]
+                            index, before = 11, Phase.AT_B
+                        engine, events, trace = self.simulate(self.frames(points))
+                        detail = self.direction_step(engine, zone, previous, current)
+                        self.assertEqual(trace[index - 1]['phase'], before)
+                        self.assertAlmostEqual(detail['angle'], math.degrees(math.atan2(dy, dx)))
+                        self.assertEqual(len(detail['edges']), 1)
+                        for actual, expected_normal in zip(detail['edges'][0][2], (1., 0.)):
+                            self.assertAlmostEqual(actual, expected_normal)
+                        expected = int(dy <= dx)  # Incluye el limite existente de 45 grados.
+                        self.assertEqual((engine.total_entries, len(events)), (expected, expected))
+                        self.assertEqual(detail['crossing'] is not None, bool(expected))
+                        if not expected:
+                            rejected = self.first_cancel(trace)
+                            self.assertEqual(rejected['t'], trace[index]['t'])
+                            self.assertEqual(rejected['phase'], Phase.CANCELLED)
+                            self.assertTrue(rejected['reason'].startswith('salida de ' + zone))
+
+    def test_dir03_repeated_interior_jitter_does_not_imply_a_bad_crossing(self):
+        for fps in (10, 20, 30):
+            with self.subTest(fps=fps):
+                frames = []
+                for i, (t, items) in enumerate(self.straight(self.strips(), .10, fps)):
+                    x = items[0][1][0]
+                    jitter = 4 / 720 * (-1 if i % 2 else 1)
+                    y = .5 + jitter if .22 <= x <= .24 or .52 <= x <= .54 else .5
+                    frames.append((t, [(1, (x, y))]))
+                engine, events, trace = self.simulate(frames)
+                self.assertEqual((engine.total_entries, len(events)), (1, 1))
+                self.assertFalse(any(row['phase'] == Phase.CANCELLED for row in trace))
+                angles = [abs(self.direction_step(engine, 'A', a['point'], b['point'])['angle'])
+                          for a, b in zip(trace, trace[1:]) if a['zone'] == b['zone'] == 'A']
+                if fps >= 20:
+                    self.assertGreater(max(angles), 45)
+
+    def test_dir04_gradual_turn_can_fail_at_crossing_or_later_confirmation(self):
+        schedules = {'soft': (10, 20, 30, 30, 30, 30),
+                     'hard': (10, 30, 50, 60, 60, 60),
+                     'late': (0, 0, 30, 60, 75, 75)}
+        for name, angles in schedules.items():
+            with self.subTest(turn=name):
+                points = list(self.PREFIX[:9])
+                x, y = points[-1]
+                for angle in angles:
+                    x, y = x + .01, y + .01 * (1280 / 720) * math.tan(math.radians(angle))
+                    points.append((x, y))
+                if name == 'late':
+                    points += [points[-1]] * 113  # Permite observar la expiracion real.
+                engine, events, trace = self.simulate(self.frames(points))
+                at_crossing = trace[11]  # t=1.1: sale de B despues de tocar su borde.
+                detail = self.direction_step(engine, 'B', trace[10]['point'], at_crossing['point'])
+                self.assertEqual(trace[10]['phase'], Phase.AT_B)
+                self.assertEqual(len(detail['edges']), 1)
+                for actual, expected_normal in zip(detail['edges'][0][2], (1., 0.)):
+                    self.assertAlmostEqual(actual, expected_normal)
+                self.assertAlmostEqual(detail['angle'], angles[2])
+                if name == 'hard':
+                    rejected = self.first_cancel(trace)
+                    self.assertEqual((engine.total_entries, events, rejected['t']), (0, [], 1.1))
+                    self.assertTrue(rejected['reason'].startswith('salida de B'))
+                    self.assertIsNone(detail['crossing'])
+                else:
+                    self.assertEqual(at_crossing['phase'], Phase.CONFIRMING)
+                    self.assertIsNotNone(detail['crossing'])
+                    if name == 'soft':
+                        self.assertEqual((engine.total_entries, len(events)), (1, 1))
+                        self.assertFalse(any(row['phase'] == Phase.CANCELLED for row in trace))
+                    else:
+                        later = trace[12]
+                        crossing = at_crossing['crossing']
+                        point = engine.geometry.project(later['point'])
+                        dx, dy = point[0] - crossing.anchor[0], point[1] - crossing.anchor[1]
+                        self.assertGreater(math.degrees(math.atan2(dy, dx)), 45)
+                        self.assertGreater(point[0] - crossing.point[0], engine.geometry.margin)
+                        self.assertFalse(engine.geometry.beyond(crossing, point))
+                        self.assertEqual((later['phase'], later['evidence']), (Phase.CONFIRMING, None))
+                        rejected = self.first_cancel(trace)
+                        self.assertEqual((engine.total_entries, events, rejected['t']), (0, [], 12.3))
+                        self.assertEqual(rejected['reason'], 'recorrido expirado')
+
+    def test_dir05_real_side_exit_fails_normal_even_with_a_forward_local_angle(self):
+        frames = [(t, [(1, (x, y))]) for t, x, y in ENTRY[:6]]
+        frames += [(.9, [(1, (.62, .60))]), (1.05, [(1, (.62, .64))]),
+                   (1.2, [(1, (.66, .66))]), (1.35, [(1, (.75, .68))])]
+        engine, events, trace = self.simulate(frames, profile())
+        detail = self.direction_step(engine, 'B', (.62, .64), (.66, .66))
+        self.assertLess(detail['angle'], 45)
+        self.assertEqual(len(detail['edges']), 1)
+        for actual, expected_normal in zip(detail['edges'][0][2], (0., 1.)):
+            self.assertAlmostEqual(actual, expected_normal)
+        self.assertIsNone(detail['crossing'])
+        self.assertEqual(trace[7]['phase'], Phase.AT_B)
+        rejected = self.first_cancel(trace)
+        self.assertEqual((engine.total_entries, events, rejected['t']), (0, [], 1.2))
+        self.assertTrue(rejected['reason'].startswith('salida de B'))
+
+    def test_dir07_bbox_size_only_changes_direction_if_bottom_center_moves(self):
+        points = self.PREFIX[:3] + ((.258, .5), (.262, .5), (.27, .5)) + self.ENTRY[4:]
+        for mode in ('width', 'height_fixed_bottom', 'height_fixed_top'):
+            with self.subTest(mode=mode):
+                converted = []
+                for i, (x, y) in enumerate(points):
+                    width = .075 if mode == 'width' and i == 4 else .06
+                    height = .21 if mode != 'width' and i == 4 else .20
+                    top = y - .20 if mode == 'height_fixed_top' else y - height
+                    box = SimpleNamespace(x1=(x - width / 2) * 1280,
+                                          x2=(x + width / 2) * 1280,
+                                          y1=top * 720, y2=(top + height) * 720)
+                    bx, by = bottom_center(box)
+                    converted.append((bx / 1280, by / 720))
+                engine, events, trace = self.simulate(self.frames(converted))
+                detail = self.direction_step(engine, 'A', converted[3], converted[4])
+                if mode == 'height_fixed_top':
+                    self.assertAlmostEqual(detail['angle'], 54.5829447235)
+                    self.assertEqual((engine.total_entries, events), (0, []))
+                    self.assertEqual(self.first_cancel(trace)['t'], .4)
+                else:
+                    self.assertAlmostEqual(detail['angle'], 0)
+                    self.assertEqual((engine.total_entries, len(events)), (1, 1))
+
+    def test_dir08_fixed_pixel_jitter_depends_on_synthetic_sampling_rate(self):
+        for fps, expected in ((10, 1), (20, 0), (30, 0)):
+            with self.subTest(observations_per_second=fps):
+                clean = self.straight(self.strips(), .10, fps)
+                engine, events, _ = self.simulate(clean)
+                self.assertEqual((engine.total_entries, len(events)), (1, 1))
+                jitter = [(t, [(1, (items[0][1][0], .5 + (4 if i % 2 else -4) / 720))])
+                          for i, (t, items) in enumerate(clean)]
+                engine, events, trace = self.simulate(jitter)
+                self.assertEqual((engine.total_entries, len(events)), (expected, expected))
+                if not expected:
+                    rejected = self.first_cancel(trace)
+                    index = trace.index(rejected)
+                    detail = self.direction_step(engine, 'A', trace[index - 1]['point'], rejected['point'])
+                    self.assertEqual(trace[index - 1]['phase'], Phase.AT_A)
+                    self.assertGreater(abs(detail['angle']), 45)
+                    self.assertAlmostEqual(abs(detail['angle']), math.degrees(math.atan2(8, 128 / fps)), places=4)
+                    for actual, expected_normal in zip(detail['edges'][0][2], (1., 0.)):
+                        self.assertAlmostEqual(actual, expected_normal)
+                    self.assertTrue(rejected['reason'].startswith('salida de A'))
+
+    def test_dir09_clean_and_jittering_ids_keep_independent_results(self):
+        for fps in (10, 20, 30):
+            with self.subTest(observations_per_second=fps):
+                frames = [(t, [(101, (items[0][1][0], .45)),
+                               (202, (items[0][1][0], .55 + (4 if i % 2 else -4) / 720))])
+                          for i, (t, items) in enumerate(self.straight(self.strips(), .10, fps))]
+                engine, events, trace = self.simulate(frames)
+                self.assertEqual([e.track_id for e in events], [101, 202] if fps == 10 else [101])
+                self.assertEqual(engine.total_entries, 2 if fps == 10 else 1)
+                self.assertEqual(engine.states[101].phase, Phase.CONFIRMED)
+                self.assertEqual(engine.states[202].phase, Phase.CONFIRMED if fps == 10 else Phase.CANCELLED)
+                self.assertIsNot(engine.states[101], engine.states[202])
+                self.assertFalse(any(row['id'] == 101 and row['phase'] == Phase.CANCELLED for row in trace))
 
 
 if __name__ == '__main__':
