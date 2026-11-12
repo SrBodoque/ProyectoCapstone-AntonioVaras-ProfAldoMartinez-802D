@@ -174,8 +174,7 @@ class EntryCounter:
             # Una observación en B sin A previa ya impide inventar un inicio
             # de entrada al retroceder a A, aunque B no alcance el dwell.
             if zone == "B": state.first_in_b = True
-            interior = self.geometry.dwell_interior(zone, point)
-            stable = self._stable(state, zone if interior else None, now, self.settings.zone_dwell_seconds)
+            stable = self._stable(state, zone if deep else None, now, self.settings.zone_dwell_seconds)
             if stable and zone == "B":
                 state.first_in_b, state.reason = True, "observado en B sin recorrido desde A"
             if stable and zone == "A":
@@ -191,9 +190,7 @@ class EntryCounter:
             self._cancel(state, "retroceso longitudinal")
             return None
         state.peak = max(state.peak, point[0])
-        # Una reentrada superficial no exime de validar la siguiente salida de A.
-        if zone != "A" and (state.phase == Phase.AT_A
-                            or state.phase == Phase.APPROACHING and state.zone == "A"):
+        if state.phase == Phase.AT_A and zone != "A":
             crossing = (self.geometry.exit_through("A", state.last_point, point)
                         if continuous and state.last_point is not None and state.zone == "A" else None)
             if crossing is None:
@@ -203,15 +200,9 @@ class EntryCounter:
             self._stable(state, None, now, 0)
         if state.phase == Phase.APPROACHING:
             if zone == "A":
-                if deep:
-                    self._cancel(state, "regresó a A antes de completar")
-                else:
-                    # Histéresis con el margen existente; no acumula evidencia de B.
-                    self._stable(state, None, now, 0)
-                    state.reason = "reentrada superficial en A; recorrido conservado"
+                self._cancel(state, "regresó a A antes de completar")
                 return None
-            interior_b = zone == "B" and self.geometry.dwell_interior("B", point)
-            if self._stable(state, "B" if interior_b else None, now, self.settings.zone_dwell_seconds):
+            if self._stable(state, "B" if zone == "B" and deep else None, now, self.settings.zone_dwell_seconds):
                 state.phase, state.reason = Phase.AT_B, "B estable después de A; aún sin entrada"
             return None
         if state.phase == Phase.AT_B and zone != "B":

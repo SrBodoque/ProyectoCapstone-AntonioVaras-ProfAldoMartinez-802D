@@ -89,11 +89,8 @@ class RouteGeometry:
         common = min(v[1] for v in lateral) - max(v[0] for v in lateral)
         if common < .5 * min(v[1] - v[0] for v in lateral):
             raise ZoneError("Conteo ambiguo: las zonas no comparten un corredor suficiente. Revise A/B.")
-        radii = {zone: clearance(centroid(poly), poly) for zone, poly in self.polygons.items()}
-        if any(radius <= margin for radius in radii.values()):
+        if any(clearance(centroid(poly), poly) <= margin for poly in (pa, pb)):
             raise ZoneError("Zonas demasiado estrechas para el margen del contador. Revise calibración o position_margin.")
-        # Limita solo la erosion para permanencia; los cruces conservan su margen.
-        self.dwell_margins = {zone: min(margin, radius / 3) for zone, radius in radii.items()}
         if not any(normal[0] >= FORWARD_COS - EPS and length > 2 * margin
                    for _, _, _, length, normal in self._edges("A")):
             raise ZoneError("Conteo ambiguo: A no tiene un borde frontal utilizable hacia B. Revise la calibración.")
@@ -116,12 +113,6 @@ class RouteGeometry:
 
     def deep(self, zone, point):
         return zone in self.polygons and clearance(point, self.polygons[zone]) >= self.margin - EPS
-
-    def dwell_interior(self, zone, point):
-        """Nucleo local para residencia; no cambia histeresis, cruces ni rearme."""
-        return (zone in self.polygons
-                and point_location(point, self.polygons[zone]) == 1
-                and clearance(point, self.polygons[zone]) >= self.dwell_margins[zone] - EPS)
 
     def _edges(self, zone):
         polygon = self.polygons[zone]
