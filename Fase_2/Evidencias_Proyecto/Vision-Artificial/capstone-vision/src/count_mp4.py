@@ -11,7 +11,7 @@ from .video_source import discover_cases, file_sha256
 from .video_zones import load_video_zones
 
 LOGGER = logging.getLogger(__name__)
-TRACKERS = ("bytetrack", "fasttrack", "fasttracker", "botsort_reid", "recovery")
+TRACKERS = ("bytetrack", "fasttrack", "fasttracker", "botsort", "botsort_reid", "recovery")
 
 
 def main(argv=None):
@@ -24,6 +24,7 @@ def main(argv=None):
         if name != "count":
             sub.add_argument("--tracker", choices=TRACKERS, default="bytetrack")
             sub.add_argument("--device", required=True, help="cpu o cuda:N, sin fallback.")
+            sub.add_argument("--confidence", type=float, help="Override experimental explícito solo para BoT-SORT; no modifica detection.json.")
             sub.add_argument("--weights-dir", type=Path, default=PROJECT_ROOT,
                              help="Directorio local de pesos, también externo al worktree; solo lectura.")
         if name != "track":
@@ -46,7 +47,7 @@ def main(argv=None):
         if args.command != "count":
             from .video_runner import RunOptions, run_cases
             from .processing_report import print_processing_report
-            options = RunOptions("tracking", args.device, args.tracker, str(args.weights_dir))
+            options = RunOptions("tracking", args.device, args.tracker, str(args.weights_dir), args.confidence)
             directory, summary = run_cases(cases, options, args.output.resolve())
             print_processing_report(directory, summary)
             if summary["status"] != "completed":

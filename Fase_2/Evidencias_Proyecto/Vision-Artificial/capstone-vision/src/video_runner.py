@@ -1,6 +1,7 @@
 """Orquestación secuencial MP4: sesiones independientes, baseline sin tuning."""
 
 import gc
+import math
 import platform
 import sys
 import time
@@ -24,6 +25,7 @@ class RunOptions:
     device: str
     tracker: str = "bytetrack"
     weights_dir: str | None = None
+    confidence: float | None = None
 
 
 @dataclass(frozen=True)
@@ -44,6 +46,7 @@ class PreparedRun:
     confidence_override: float | None = None
     weights: tuple = ()
     working_directory: Path | None = None
+    experimental_botsort: bool = False
 
     def synchronize(self, device):
         if device.startswith("cuda:"):
@@ -69,7 +72,17 @@ def prepare_runtime(options: RunOptions) -> PreparedRun:
             raise RuntimeError(f"Faltan pesos locales no vacíos: {model_path}. No se descargarán.")
         weights = [{"role": "detector", "path": str(model_path), "sha256": file_sha256(model_path)}]
     tracker_path = resolve_tracker_path(tracking["tracker_config"]) if tracking else None
-    tracker_params = load_tracker_config(tracker_path) if tracker_path else None
+    no_reid = selection is not None and selection.name == "botsort"
+    tracker_params = ((load_tracker_config(tracker_path, allow_botsort_no_reid=True) if no_reid
+                       else load_tracker_config(tracker_path)) if tracker_path else None)
+    confidence = selection.confidence_override if selection else None
+    experimental = no_reid
+    if options.confidence is not None:
+        if (selection is None or tracker_params["tracker_type"] != "botsort"
+                or type(options.confidence) not in (int, float)
+                or not math.isfinite(options.confidence) or not 0 <= options.confidence <= 1):
+            raise ValueError("--confidence requiere BoT-SORT y un número finito entre 0 y 1.")
+        confidence, experimental = options.confidence, True
     model_path = Path(weights[0]["path"])
     if options.weights_dir:
         detection = {**detection, "model": str(model_path)}
@@ -101,7 +114,9 @@ def prepare_runtime(options: RunOptions) -> PreparedRun:
         "opencv_version": cv2.__version__, "ultralytics_version": versions["ultralytics"],
         "tracker_name": selection.name if selection else None,
         "backend_class": backend_class,
-        "confidence_override": selection.confidence_override if selection else None,
+        "confidence_override": confidence,
+        "experimental_botsort": experimental,
+        "tracking_confidence_effective": confidence if confidence is not None else detection["confidence_threshold"],
         "weights_verified_local": weights,
         "config_files": {
             "detection": {"path": str(DETECTION_CONFIG_PATH), "sha256": file_sha256(DETECTION_CONFIG_PATH)},
@@ -110,8 +125,9 @@ def prepare_runtime(options: RunOptions) -> PreparedRun:
         },
     }
     return PreparedRun(detection, tracking, provenance, torch,
-                       selection.confidence_override if selection else None,
-                       tuple(weights), weights_root if selection and selection.name == "botsort_reid" else None)
+                       confidence,
+                       tuple(weights), weights_root if selection and selection.name == "botsort_reid" else None,
+                       experimental)
 
 
 def process_case(case: VideoCase, options: RunOptions, prepared: PreparedRun,
@@ -145,6 +161,8 @@ def process_case(case: VideoCase, options: RunOptions, prepared: PreparedRun,
                 else:
                     constructor_options = ({} if prepared.confidence_override is None else
                                            {"tracking_confidence_override": prepared.confidence_override})
+                    if prepared.experimental_botsort:
+                        constructor_options["experimental_botsort"] = True
                     engine = PersonTracker(prepared.detection, prepared.tracking,
                                            device_override=options.device, **constructor_options)
                     process = engine.track

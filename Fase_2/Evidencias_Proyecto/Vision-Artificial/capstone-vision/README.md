@@ -22,11 +22,17 @@ repetir inferencia. Cada ejecución crea resultados propios. Las zonas del video
 se calibran con `src.calibrate_mp4_zones` y se vinculan al hash del MP4.
 `src.view_count_results` reproduce el conteo guardado con cajas, IDs, confianza,
 trayectorias, zonas, motivos por ID y contadores IN/OUT, sin repetir inferencia.
+`--tracker botsort` selecciona BoT-SORT sin ReID; `botsort_reid` conserva apariencia.
+Ambas variantes admiten `--confidence 0.25` como override experimental de sesión.
+`src.compare_mp4_trackers` acepta pares MP4/JSON arbitrarios, ejecuta las variantes
+solicitadas secuencialmente y genera un informe JSON/CSV/Markdown sin elegir ganador.
 
 Consulte [comandos, calibración y resultados H5.2](docs/HITO5_2_MP4_TRACKERS.md).
 La primera prueba ByteTrack de `prueba_02.mp4` completó 690/690 frames en RTX 5060,
-`cuda:0`. Su conteo real está pendiente de zonas manuales. No hay descargas de
-pesos, selección automática del mejor tracker ni comparación de eventos anotados.
+`cuda:0`. Posteriormente se verificaron perfiles para los tres MP4 y se generaron
+tracking y conteos reales BoT-SORT sin ReID con confianza 0.25. ReID queda pendiente
+por falta del clasificador local. La precisión de los conteos requiere anotaciones
+y aceptación visual. No hay descargas de pesos ni selección automática de ganador.
 
 ## INICIO RÁPIDO — MP4 y visualización offline
 

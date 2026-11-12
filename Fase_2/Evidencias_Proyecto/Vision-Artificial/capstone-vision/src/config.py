@@ -80,7 +80,8 @@ def load_bytetrack_config(path: Path) -> dict:
     return load_tracker_config(path, allowed_types=("bytetrack",))
 
 
-def load_tracker_config(path: Path, *, allowed_types: tuple[str, ...] = ("bytetrack", "fasttrack", "botsort")) -> dict:
+def load_tracker_config(path: Path, *, allowed_types: tuple[str, ...] = ("bytetrack", "fasttrack", "botsort"),
+                        allow_botsort_no_reid: bool = False) -> dict:
     """Valida solo los trackers integrados usados en esta comparación."""
     try:
         import yaml
@@ -130,7 +131,8 @@ def load_tracker_config(path: Path, *, allowed_types: tuple[str, ...] = ("bytetr
             value = data[key]
             if type(value) not in (int, float) or not 0 <= value <= 1 or not math.isfinite(value):
                 raise ValueError(f"{key} debe ser un número finito entre 0 y 1.")
-        if type(data["with_reid"]) is not bool or not data["with_reid"]:
+        if (type(data["with_reid"]) is not bool
+                or not data["with_reid"] and allow_botsort_no_reid is not True):
             raise ValueError("with_reid debe ser true para el experimento BoT-SORT + ReID.")
         if not isinstance(data["gmc_method"], str) or data["gmc_method"] not in (
                 "none", "sparseOptFlow", "orb", "sift", "ecc"):

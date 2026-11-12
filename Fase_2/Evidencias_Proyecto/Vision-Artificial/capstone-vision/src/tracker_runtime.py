@@ -7,6 +7,8 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 from .counting_config import select_tracker
+from .counting_config import TrackerSelection
+from .config import load_tracking_config, load_tracker_config, resolve_tracker_path
 from .detector import _load_yolo
 from .video_source import file_sha256
 
@@ -17,6 +19,17 @@ _hook_installed = False
 
 def canonical_tracker(name):
     return ALIASES.get(name, name)
+
+
+def select_mp4_tracker(name):
+    if name != "botsort":
+        return select_tracker(name)
+    path = "config/botsort_no_reid_capstone.yaml"
+    params = load_tracker_config(resolve_tracker_path(path), allow_botsort_no_reid=True)
+    if params["tracker_type"] != "botsort" or params.get("with_reid") is not False:
+        raise ValueError("La variante botsort debe desactivar ReID explícitamente.")
+    return TrackerSelection(name, "BoT-SORT sin ReID",
+                            {**load_tracking_config(), "tracker_config": path}, params, None)
 
 
 def _key(value):
@@ -71,7 +84,7 @@ def local_weights_root(value):
 def resolve_resources(name, weights_root, model):
     """Primero archivos locales, antes de importar/inicializar cualquier backend."""
     name = canonical_tracker(name)
-    selection = select_tracker(name)
+    selection = select_mp4_tracker(name)
     root = local_weights_root(weights_root)
     required = [("detector", root / model)]
     if name == "botsort_reid":

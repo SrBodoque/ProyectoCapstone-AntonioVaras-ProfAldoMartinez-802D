@@ -71,7 +71,10 @@ class PersonTracker:
     def __init__(self, detection_config: DetectionConfig | None = None,
                  tracking_config: TrackingConfig | None = None, *,
                  tracking_confidence_override: float | None = None,
-                 device_override: str | None = None):
+                 device_override: str | None = None,
+                 experimental_botsort: bool = False):
+        if type(experimental_botsort) is not bool:
+            raise ValueError("experimental_botsort debe ser booleano explícito.")
         self.config = dict(detection_config if detection_config is not None else load_detection_config())
         # El override pertenece a esta sesión; nunca altera la confianza general.
         self.tracking_confidence = (self.config["confidence_threshold"]
@@ -84,7 +87,8 @@ class PersonTracker:
         self.tracking_config = validate_tracking_config(
             tracking_config if tracking_config is not None else load_tracking_config())
         self.tracker_path = resolve_tracker_path(self.tracking_config["tracker_config"])
-        self.tracker_params = load_tracker_config(self.tracker_path)
+        self.tracker_params = (load_tracker_config(self.tracker_path, allow_botsort_no_reid=True)
+                               if experimental_botsort else load_tracker_config(self.tracker_path))
         if (tracking_confidence_override is not None
                 and self.tracker_params["new_track_thresh"] < self.tracker_params["track_high_thresh"]):
             raise ValueError("En tracking experimental new_track_thresh debe ser mayor o igual a track_high_thresh.")
@@ -96,7 +100,10 @@ class PersonTracker:
                 LOGGER.info("%s: %s", key, self.tracker_params[key])
         self.tracker_label = {"bytetrack": "ByteTrack", "fasttrack": "FastTracker",
                               "botsort": "BoT-SORT + ReID"}[self.tracker_params["tracker_type"]]
-        if self.tracker_params["tracker_type"] == "botsort" and (
+        with_reid = self.tracker_params.get("with_reid", False)
+        if self.tracker_params["tracker_type"] == "botsort" and not with_reid:
+            self.tracker_label = "BoT-SORT sin ReID"
+        if self.tracker_params["tracker_type"] == "botsort" and with_reid and not experimental_botsort and (
                 tracking_confidence_override is not None or self.tracking_confidence != 0.65):
             raise ValueError("BoT-SORT + ReID requiere confianza general 0.65 y ningún override de Recovery.")
         self._model, self.device_resolution = (load_person_model(self.config)
@@ -104,12 +111,13 @@ class PersonTracker:
         self.config["device"] = self.device_resolution.effective_device
         self.reid_diagnostics = None
         if self.tracker_params["tracker_type"] == "botsort":
-            LOGGER.info("Modo experimental: BoT-SORT + ReID | Detector: %s | Confianza: %.2f | "
-                        "Tracker: botsort | ReID solicitado: True | Modelo ReID configurado: auto | "
+            LOGGER.info("Modo experimental: BoT-SORT | Detector: %s | Confianza: %.2f | "
+                        "Tracker: botsort | ReID solicitado: %s | Modelo ReID configurado: auto | "
                         "Dispositivo efectivo: %s | GMC: %s",
-                        self.config["model"], self.tracking_confidence, self.config["device"],
+                        self.config["model"], self.tracking_confidence, with_reid, self.config["device"],
                         self.tracker_params["gmc_method"])
-            self.reid_diagnostics = ReIDDiagnostics(self._model, self.config["device"])
+            if with_reid:
+                self.reid_diagnostics = ReIDDiagnostics(self._model, self.config["device"])
         LOGGER.info("%s: %s | persist=%s", self.tracker_label, self.tracker_path, self.tracking_config["persist"])
         if self.tracking_confidence >= self.bytetrack_config["track_high_thresh"]:
             LOGGER.warning(

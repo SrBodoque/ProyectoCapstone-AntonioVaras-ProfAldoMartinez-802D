@@ -47,7 +47,9 @@ class SelectionTests(unittest.TestCase):
                 selected = select_tracker(name)
                 with patch.object(tracker, 'load_person_model', return_value=(model, NS(effective_device='cuda:0'))) as loader, \
                      patch.object(tracker, 'ReIDDiagnostics') as reid:
-                    engine = tracker.PersonTracker(load_detection_config(), selected.tracking_config,
+                    # Fixture del contrato histórico, independiente del tuning local del usuario.
+                    detection = {**load_detection_config(), 'confidence_threshold': .65}
+                    engine = tracker.PersonTracker(detection, selected.tracking_config,
                                                    **selected.constructor_options())
                     import numpy as np
                     engine.track(np.zeros((48, 64, 3), dtype=np.uint8))

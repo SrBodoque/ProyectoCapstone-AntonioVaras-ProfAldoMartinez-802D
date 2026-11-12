@@ -38,12 +38,25 @@ Cada video obtiene una sesión nueva. No se cambia la preferencia personal.
 | --- | --- | --- |
 | bytetrack (predeterminado) | bytetrack; config/bytetrack_capstone.yaml según tracking.json | yolo26n.pt |
 | fasttrack o fasttracker | FASTTracker; config/fasttrack_capstone.yaml | yolo26n.pt |
+| botsort | BoT-SORT sin ReID; config/botsort_no_reid_capstone.yaml | yolo26n.pt |
 | botsort_reid | BoT-SORT/ReID; config/botsort_reid_capstone.yaml | yolo26n.pt y yolo26n-cls.pt |
 | recovery | ByteTrack Recovery existente; config/bytetrack_recovery_capstone.yaml | yolo26n.pt |
 
 Se conservan los parámetros de cada YAML. Solo Recovery utiliza su override
 existente de confianza 0.10; los demás conservan la confianza general.
 El alias fasttrack se registra como selección fasttracker y backend fasttrack.
+
+BoT-SORT sin ReID utiliza la clase oficial BOTSORT con with_reid:false y sin
+encoder/diagnósticos de apariencia. Su YAML es independiente y conserva los
+demás parámetros del YAML ReID existente, incluido GMC none. No se modifican
+los YAML de ByteTrack, FastTrack, Recovery ni BoT-SORT/ReID.
+Para ambas variantes BoT-SORT, --confidence 0.25 activa explícitamente el modo
+experimental de la sesión; se registra junto con la confianza efectiva y no
+escribe detection.json. El modo de cámara histórico conserva su validación
+ReID de confianza 0.65 por defecto. Este argumento no se aplica a los otros trackers.
+Con confianza YOLO 0.25 y track_high_thresh 0.25, las detecciones por debajo de
+ese umbral se filtran antes del tracker: la asociación de baja confianza no
+recibe esos candidatos. Esta condición común se conserva y no se optimiza.
 
 Se comprueban archivos locales, dependencias, versión compatible y presencia del
 backend. Un fallo no provoca instalación, descarga, cambio de tracker ni uso de
@@ -174,6 +187,52 @@ No se ejecutó esta aceptación humana durante la implementación. La primera
 inferencia real disponible solo acredita procesamiento ByteTrack/CUDA; falta
 calibrar, ejecutar el conteo y revisar el video con el equipo.
 
+## Matriz explícita con varios MP4 y perfiles
+
+La implementación no depende de nombres de grabaciones. Cada --case recibe
+un MP4 local y su JSON explícito, con validación de hash, orientación y resolución
+antes de inferir. Los perfiles no se inventan, reinterpretan ni modifican.
+Ejemplo con los tres recursos actualmente verificados:
+
+~~~powershell
+& $python -B -m src.compare_mp4_trackers `
+  --case "$origen/videos_testing/exploratory/prueba_01.mp4" results_testing/prueba_01.zones.v2.json `
+  --case "$origen/videos_testing/exploratory/prueba_02.mp4" results_testing/prueba_02.zones.json `
+  --case "$origen/videos_testing/exploratory/prueba_03.mp4" results_testing/prueba_03.zones.json `
+  --tracker botsort --tracker botsort_reid --weights-dir $origen --output results_testing
+~~~
+
+Use --tracker botsort para ejecutar solo la variante sin apariencia. Se exige
+YOLO26n, cuda:0 y confianza experimental 0.25 para esta comparación concreta;
+los comandos track/process individuales siguen permitiendo CPU. Cada par y
+variante crea tracking y conteo nuevos. La ausencia de pesos no provoca fallback
+ni descarga: se registra pending y se continúa con las combinaciones disponibles.
+Un código de salida 1 indica que alguna combinación quedó pendiente o falló;
+130 indica interrupción. No se interpreta una matriz incompleta como aprobada.
+
+La salida queda en results_testing/comparisons/<run_id>/:
+comparison.json conserva entradas/hashes, métricas, configuración efectiva,
+pesos y eventos; comparison.csv resume la matriz; comparison.md es el informe
+legible. runs/ contiene los resultados independientes de tracking y conteo.
+Se registran frames, frames con tracks, cajas sin ID y frames afectados,
+tiempo del tracking, tiempo del conteo, tiempo total y FPS de procesamiento.
+El tiempo de tracking incluye carga del modelo y E/S; el total añade preparación
+del runtime y conteo. No son una medida de precisión ni FPS de cámara.
+
+Validación real disponible del 12 de noviembre de 2026:
+results_testing/comparisons/20261112T060111716332Z-1a9584c5131249a0be4edbfba82af699/.
+BoT-SORT sin ReID completó 734/734, 690/690 y 2349/2349 frames con RTX 5060,
+cuda:0 y confianza 0.25; produjo respectivamente IN/OUT 4/2, 2/1 y 7/15.
+Las tres variantes ReID quedaron pendientes por falta de yolo26n-cls.pt local.
+Se verificó que el lector del visualizador acepta los tres conteos; no se abrió
+su GUI ni se certificó precisión, identidad o correspondencia con eventos reales.
+No se selecciona ganador. La evaluación requiere anotaciones y aceptación visual.
+
+Para visualizar cualquier combinación completa, seleccione counting_directory
+del informe y use el mismo comando de src.view_count_results descrito arriba.
+También puede reutilizar ese tracking con count y otro perfil confirmado del
+mismo video, creando un conteo independiente sin volver a inferir.
+
 ## Resultados y procedencia
 
 El tracking mantiene los formatos v1 existentes: run.json, summary.json y,
@@ -210,22 +269,30 @@ Los IDs son temporales y no representan personas únicas entre ejecuciones.
 ## Validación y pendientes
 
 Primera prueba real: prueba_02.mp4, ByteTrack + yolo26n.pt, RTX 5060 cuda:0,
-690/690 frames, completed. No se ejecutó conteo real porque falta la calibración
-manual; no se inventaron zonas. FastTrack y BoT-SORT/ReID siguen pendientes de
-inferencia real en este flujo. El clasificador ReID no está disponible localmente
-y no se descargó.
+690/690 frames, completed. En esa primera ejecución faltaba la calibración.
+Posteriormente se proporcionaron los tres perfiles y se ejecutó tracking y conteo
+real BoT-SORT sin ReID según la matriz anterior. No se inventaron zonas.
+La aceptación visual de los nuevos conteos, FastTrack y BoT-SORT/ReID siguen
+pendientes. El clasificador ReID no está disponible y no se descargó.
 
 Las pruebas automatizadas usan archivos temporales propios, lectura/dibujo de
 OpenCV y modelos/GUI simulados donde se indica. No equivalen a aceptación visual.
-Tres validaciones finales independientes: 232/232 cada una, sin fallos, errores
-ni omisiones (42 H5.2, 89 MP4, 38 visualizador y 63 contador/configuración).
-Regresión general: 575 descubiertas, 572 registradas por unittest, cero fallos
+Tres validaciones finales independientes: 328/328 cada una, sin fallos, errores
+ni omisiones (55 H5.2, 89 MP4, 38 visualizador, 63 contador/configuración y
+83 contratos históricos de BoT-SORT/ReID, FastTrack y Recovery).
+Regresión general: 588 descubiertas, 585 registradas por unittest, cero fallos
 y errores. Quedan cinco casos sin acreditar: tres de la clase ReID sin pesos
 locales en el worktree, una integración MP4 heredada que exige pesos en su raíz,
 y una comprobación de enlaces simbólicos sin permisos Windows. Son tres entradas
 de omisión; no se consideran aprobadas. La prueba real ByteTrack externa de
 690 frames se informa por separado y no sustituye esas pruebas omitidas.
-La aceptación humana del contador H5.1 y del calibrador MP4 continúa pendiente.
+Los tests históricos usan un fixture explícito 0.65, aislado del tuning local
+de detection.json. Sus expectativas no se debilitaron. Las pruebas nuevas
+verifican por separado la confianza experimental 0.25, nombres/rutas arbitrarios,
+matrices con varios videos, integridad, errores, interrupción y reutilización en
+el visualizador. La inferencia ReID se simula donde faltan recursos y no se
+declara validada en GPU.
+La aceptación humana de precisión e identidades de los nuevos conteos sigue pendiente.
 Conserve los registros MOT17-04 existentes: no son aprobación de conteo de baños.
 
 ~~~powershell
@@ -234,6 +301,9 @@ Conserve los registros MOT17-04 existentes: no son aprobación de conteo de bañ
 & $python -B -m unittest discover -s tests -p 'test_stage15*.py' -v
 & $python -B -m unittest discover -s tests -p 'test_count*.py' -v
 & $python -B -m unittest discover -s tests -p 'test_track_count.py' -v
+& $python -B -m unittest discover -s tests -p 'test_botsort_reid.py' -v
+& $python -B -m unittest discover -s tests -p 'test_fasttracker.py' -v
+& $python -B -m unittest discover -s tests -p 'test_recovery.py' -v
 & $python -B -m unittest discover -s tests -p 'test*.py' -v
 ~~~
 

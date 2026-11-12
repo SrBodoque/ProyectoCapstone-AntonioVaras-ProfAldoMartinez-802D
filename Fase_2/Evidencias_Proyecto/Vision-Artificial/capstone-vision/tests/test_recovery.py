@@ -52,6 +52,15 @@ def ui_and_capture():
     return ui, capture, frame
 
 
+from h52_legacy_detection_fixture import baseline_detection_config as load_detection_config
+
+
+def setUpModule():
+    fixture = patch.object(track, "load_detection_config", side_effect=load_detection_config)
+    fixture.start()
+    unittest.addModuleCleanup(fixture.stop)
+
+
 class RecoveryConfigTests(unittest.TestCase):
     def test_exact_recovery_parameters_and_unchanged_baselines(self):
         params = load_tracker_config(resolve_tracker_path(track_recovery.RECOVERY_CONFIG))
