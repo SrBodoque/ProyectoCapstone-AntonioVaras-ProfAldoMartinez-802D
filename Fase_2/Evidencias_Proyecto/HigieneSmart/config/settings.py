@@ -147,3 +147,17 @@ DEFAULT_FROM_EMAIL = "LimpIA <noreply@LimpIA.local>"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+
+
+# ==========================================
+# CONTEO BIDIRECCIONAL IN / OUT
+# ==========================================
+
+# Desactivado por defecto.
+# Para habilitarlo se requiere la variable
+# de entorno CONTEO_IN_OUT_HABILITADO=1.
+
+CONTEO_IN_OUT_HABILITADO = (
+    os.getenv("CONTEO_IN_OUT_HABILITADO", "0") == "1"
+)

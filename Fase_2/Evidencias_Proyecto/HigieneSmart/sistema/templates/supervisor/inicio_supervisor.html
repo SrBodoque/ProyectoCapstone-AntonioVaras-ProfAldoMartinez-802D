@@ -54,6 +54,7 @@
                 </div>
             </div>
             <div class="resumen-grid">
+                <!-- CONTADOR DEL CICLO DE LIMPIEZA -->
                 <article class="resumen-card">
                     <span class="resumen-label">{{ conteo_demo.bano }}</span>
                     <strong class="resumen-valor" id="conteo-demo-valor">
@@ -67,8 +68,81 @@
                     </strong>
                     <span class="resumen-descripcion">Entradas del ciclo / límite de limpieza</span>
                 </article>
+                <!-- NUEVOS INDICADORES IN / OUT -->
+                {% if conteo_in_out_habilitado %}
+                    <!-- OCUPACIÓN ESTIMADA -->
+                    <article class="resumen-card">
+                        <span class="resumen-label">Ocupación estimada</span>
+                        <strong class="resumen-valor" id="ocupacion-estimada-valor">—</strong>
+                        <span class="resumen-descripcion" id="ocupacion-estado-valor">Esperando actualización</span>
+                    </article>
+                    <!-- MOVIMIENTOS DE LA JORNADA -->
+                    <article class="resumen-card">
+                        <span class="resumen-label">Movimientos de la jornada</span>
+                        <strong class="resumen-valor" id="movimientos-jornada-valor">—</strong>
+                        <span class="resumen-descripcion">Entradas / salidas desde las 06:00</span>
+                    </article>
+                {% endif %}
             </div>
         </section>
+        <!-- VERIFICACIÓN MANUAL DE BAÑO VACÍO -->
+        {% if conteo_in_out_habilitado and conteo_demo.bano_id %}
+            <section class="dashboard-section seccion-verificacion-vacio">
+                <div class="dashboard-section-header">
+                    <div>
+                        <h2>Verificar baño vacío</h2>
+                        <p>
+                            Registrar una nueva referencia
+                            de ocupación para
+                            {{ conteo_demo.bano }}.
+                        </p>
+                    </div>
+                </div>
+                <div class="intervenciones-card">
+                    <form method="post"
+                          action="{% url 'verificar_bano_vacio' conteo_demo.bano_id %}"
+                          style="padding: 20px;
+                                 display: flex;
+                                 flex-direction: column;
+                                 gap: 16px;
+                                 align-items: flex-start">
+                        {% csrf_token %}
+                        <p>
+                            Esta operación establecerá la
+                            ocupación inicial del baño en
+                            <strong>0 personas</strong>.
+                        </p>
+                        <p>
+                            Solo debe realizarse después
+                            de comprobar físicamente que
+                            no queda nadie dentro.
+                        </p>
+                        <!-- CONFIRMACIÓN OBLIGATORIA -->
+                        <label for="confirmo-vacio">
+                            <input type="checkbox"
+                                   id="confirmo-vacio"
+                                   name="confirmo_vacio"
+                                   value="si"
+                                   required>
+                            Confirmo que verifiqué físicamente
+                            que el baño está completamente vacío.
+                        </label>
+                        <!-- OBSERVACIÓN OPCIONAL -->
+                        <label for="observacion-vacio">Observación (opcional)</label>
+                        <textarea id="observacion-vacio"
+                                  name="observacion"
+                                  rows="3"
+                                  maxlength="250"
+                                  placeholder="Ejemplo: baño revisado, sin personas en el interior."
+                                  style="width: 100%;
+                                         max-width: 520px;
+                                         padding: 10px"></textarea>
+                        <!-- BOTÓN DE CONFIRMACIÓN -->
+                        <button type="submit" class="btn-primary">Confirmar baño vacío</button>
+                    </form>
+                </div>
+            </section>
+        {% endif %}
     {% endif %}
     <!-- ÚLTIMAS INTERVENCIONES -->
     <section class="dashboard-section">

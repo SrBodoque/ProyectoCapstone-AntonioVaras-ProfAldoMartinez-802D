@@ -13,10 +13,13 @@ from django.utils.dateparse import parse_date
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
+from django.conf import settings
 
 from usuarios.models import Usuario
 from .forms import LoginForm, BanoForm, TrabajadorForm, ActivarCuentaForm, FinalizarLimpiezaForm
 from .models import Bano, AsignacionBano, Alerta, IntervencionLimpieza, EventoConteo, FuenteConteo
+from sistema.services.resumen_conteo import obtener_resumen_bano
+from sistema.services.referencias_ocupacion import (registrar_verificacion_bano_vacio,)
 
 
 
@@ -159,6 +162,7 @@ def inicio_supervisor(request):
         ).count()
 
         conteo_demo = {
+            "bano_id": bano_demo.id,
             "bano": bano_demo.nombre,
             "entradas": entradas_actuales,
             "limite": bano_demo.umbral_entradas,
@@ -175,6 +179,9 @@ def inicio_supervisor(request):
             "limpiezas_hoy": limpiezas_hoy,
             "ultimas_intervenciones": ultimas_intervenciones,
             "conteo_demo": conteo_demo,
+            "conteo_in_out_habilitado": getattr(
+                settings, "CONTEO_IN_OUT_HABILITADO", False
+            ),
         },
     )
 
@@ -1154,6 +1161,10 @@ def datos_dashboard_supervisor(request):
             "entradas": entradas,
             "limite": bano.umbral_entradas,
         }
+        # Integracion IN/OUT preparada, pero desactivada
+        # hasta que se autorice la migracion principal.
+        if getattr(settings, "CONTEO_IN_OUT_HABILITADO", False):
+            conteo_demo["resumen_in_out"] = obtener_resumen_bano(bano)
 
     respuesta = JsonResponse({
         "alertas_pendientes": alertas_pendientes,
@@ -1286,3 +1297,88 @@ def datos_gestion_banos(request):
     respuesta["Cache-Control"] = "no-store"
 
     return respuesta
+
+
+
+# ==========================================
+# SUPERVISOR - CONFIRMAR BAÑO VACIO
+# ==========================================
+
+@login_required(login_url="login")
+@require_POST
+def verificar_bano_vacio(request, bano_id):
+
+    # 1. Mantener la funcion bloqueada hasta
+    # que se habilite oficialmente IN/OUT.
+    if not getattr(
+        settings,
+        "CONTEO_IN_OUT_HABILITADO",
+        False,
+    ):
+        return JsonResponse(
+            {"error": "Funcionalidad no habilitada."},
+            status=404,
+        )
+
+    # 2. Permitir solamente supervisores activos.
+    if (
+        request.user.rol != Usuario.Rol.SUPERVISOR
+        or not request.user.is_active
+    ):
+        return JsonResponse(
+            {"error": "No autorizado."},
+            status=403,
+        )
+
+    # 3. Exigir confirmacion explicita.
+    if request.POST.get("confirmo_vacio") != "si":
+        return JsonResponse(
+            {
+                "error": (
+                    "Debes confirmar que verificaste "
+                    "fisicamente que el baño esta vacio."
+                )
+            },
+            status=400,
+        )
+
+    # 4. Validar la observacion opcional.
+    observacion = request.POST.get(
+        "observacion",
+        "",
+    ).strip()
+
+    if len(observacion) > 250:
+        return JsonResponse(
+            {
+                "error": (
+                    "La observacion no puede superar "
+                    "los 250 caracteres."
+                )
+            },
+            status=400,
+        )
+
+    # 5. Comprobar que el baño existe y esta activo.
+    bano = get_object_or_404(
+        Bano,
+        id=bano_id,
+        activo=True,
+    )
+
+    # 6. Registrar la referencia verificada.
+    registrar_verificacion_bano_vacio(
+        bano_id=bano.id,
+        supervisor=request.user,
+        observacion=observacion,
+    )
+
+    messages.success(
+        request,
+        (
+            f"Se registro la verificacion de baño "
+            f"vacio para {bano.nombre}."
+        ),
+    )
+
+    return redirect("inicio_supervisor")

@@ -570,3 +570,76 @@
         transform: none;
     }
 }
+
+
+
+/* ==========================================
+   FORMULARIO DE VERIFICACION DE BAÑO VACIO
+   ========================================== */
+
+.dashboard-section form .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 44px;
+    padding: 12px 22px;
+
+    border: none;
+    border-radius: 10px;
+
+    background-color: var(--color-primary);
+    color: #ffffff;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        background-color 200ms ease,
+        transform 200ms ease;
+}
+
+.dashboard-section form .btn-primary:hover {
+    background-color: var(--color-brand-deep);
+    transform: translateY(-2px);
+}
+
+.dashboard-section form .btn-primary:focus-visible {
+    outline: 3px solid var(--color-brand-blue);
+    outline-offset: 3px;
+}
+
+.dashboard-section form textarea {
+    box-sizing: border-box;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+
+    background-color: var(--color-surface);
+    color: var(--color-brand-deep);
+
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.dashboard-section form textarea:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dashboard-section form .btn-primary {
+        transition: none;
+    }
+
+    .dashboard-section form .btn-primary:hover {
+        transform: none;
+    }
+}
+
+/* Separación entre verificación y últimas intervenciones */
+.seccion-verificacion-vacio {
+    margin-bottom: 36px;
+}

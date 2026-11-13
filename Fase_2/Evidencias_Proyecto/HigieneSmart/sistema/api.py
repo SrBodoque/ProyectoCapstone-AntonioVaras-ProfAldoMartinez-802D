@@ -116,9 +116,14 @@ def recibir_evento_conteo(request):
 
     # 3. Validar el tipo de evento.
 
-    if datos.get("tipo") != EventoConteo.Tipo.ENTRADA:
+    tipo_evento = datos.get("tipo")
+
+    if tipo_evento not in (
+        EventoConteo.Tipo.ENTRADA,
+        EventoConteo.Tipo.SALIDA,
+    ):
         return JsonResponse(
-            {"error": "Solamente se aceptan eventos ENTRADA."},
+            {"error": "Solamente se aceptan eventos ENTRADA o SALIDA."},
             status=400,
         )
 
@@ -201,13 +206,13 @@ def recibir_evento_conteo(request):
             defaults={
                 "bano": bano,
                 "fuente": fuente,
-                "tipo": EventoConteo.Tipo.ENTRADA,
+                "tipo": tipo_evento,
                 "origen": EventoConteo.Origen.VISION,
                 "fecha_evento": fecha_evento,
             },
         )
 
-        if creado:
+        if creado and tipo_evento == EventoConteo.Tipo.ENTRADA:
             verificar_alerta_por_entradas(
                 bano_id=evento.bano_id,
                 fecha_evento=evento.fecha_evento,
@@ -220,7 +225,7 @@ def recibir_evento_conteo(request):
             coincide = (
                 evento.bano_id == bano.id
                 and evento.fuente_id == fuente.id
-                and evento.tipo == EventoConteo.Tipo.ENTRADA
+                and evento.tipo == tipo_evento
                 and evento.origen == EventoConteo.Origen.VISION
                 and evento.fecha_evento == fecha_evento
             )
