@@ -3,6 +3,7 @@
 import argparse
 import logging
 import os
+import sqlite3
 import sys
 import textwrap
 import time
@@ -18,6 +19,7 @@ from .track import draw_tracks
 from .track_zones import draw_positions
 from .tracker import PersonTracker, TrackHistory
 from .zones import ZoneStore, ZoneObservations, bottom_center, draw_regions
+
 
 LOGGER = logging.getLogger(__name__)
 WINDOW = "LimpIA - ENTRADAS / SALIDAS - q / ESC"
@@ -37,7 +39,7 @@ def frame_observations(tracks, width, height):
     return tuple(result)
 
 
-def run_count(cv2, camera_config, detection_config, selection, counter, *, clock=None):
+def run_count(cv2, camera_config, detection_config, selection, counter, *, clock=None, registrador=None):
     from .camera import camera_info, camera_session
     clock = time.monotonic if clock is None else clock
     profile = counter.geometry.profile
@@ -69,7 +71,15 @@ def run_count(cv2, camera_config, detection_config, selection, counter, *, clock
                 previous = {identifier: (state.phase, state.reason, state.episode, state.reset_reason)
                             for identifier, state in counter.states.items()}
                 events = counter.update(now, frame_observations(result.tracks, w, h))
+
+                # Integracion opcional H5.2 -> SQLite.
+                # No cambia las decisiones del contador.
+                if registrador is not None and events:
+                    from .count_event_bridge import guardar_eventos_confirmados
+                    guardar_eventos_confirmados(events, registrador)
+
                 for event in events:
+
                     LOGGER.info("Evento %s | %s | ID %s | %s -> %s | t=%.3f",
                                 event.number, event.direction, event.track_id,
                                 event.origin, event.destination, event.timestamp)
@@ -143,35 +153,130 @@ def ensure_local_models(detection_config, selection):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Conteo A exterior -> B puerta (IN), B -> A (OUT).")
-    parser.add_argument("--orientation", type=Path, default=ORIENTATION_PATH)
+    parser = argparse.ArgumentParser(
+        description="Conteo A exterior -> B puerta (IN), B -> A (OUT)."
+    )
+    parser.add_argument(
+        "--orientation",
+        type=Path,
+        default=ORIENTATION_PATH,
+    )
     args = parser.parse_args(argv)
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(levelname)s: %(message)s",
+    )
+
     try:
         source_profile = ZoneStore().load_active()
-        orientation = load_orientation(args.orientation, source_profile)
+        orientation = load_orientation(
+            args.orientation,
+            source_profile,
+        )
         profile = orientation.profile
-        LOGGER.info("%s | perfil SHA-256: %s", orientation.description, orientation.source_hash)
+
+        LOGGER.info(
+            "%s | perfil SHA-256: %s",
+            orientation.description,
+            orientation.source_hash,
+        )
+
         config = load_counting_config()
-        counter = EntryCounter(profile, config.thresholds)
+        counter = EntryCounter(
+            profile,
+            config.thresholds,
+        )
+
         selection = select_tracker(config.tracker)
-        camera_config, detection_config = load_config(), load_detection_config()
-        ensure_local_models(detection_config, selection)
+
+        camera_config = load_config()
+        detection_config = load_detection_config()
+
+        ensure_local_models(
+            detection_config,
+            selection,
+        )
+
         import cv2
-    except (ValueError, OSError, ImportError) as exc:
+
+        # Integracion opcional H5.2 -> SQLite.
+        # Sin LIMPIA_GUARDAR_CONTEOS=1 devuelve None.
+        from .count_outbox_config import (
+            crear_registrador_desde_entorno,
+        )
+
+        registrador = crear_registrador_desde_entorno()
+
+        if registrador is None:
+            LOGGER.info(
+                "Persistencia SQLite desactivada."
+            )
+        else:
+            LOGGER.info(
+                "Persistencia SQLite activada | fuente=%s",
+                registrador.fuente,
+            )
+
+    except (
+        ValueError,
+        OSError,
+        ImportError,
+        sqlite3.Error,
+    ) as exc:
         LOGGER.error("%s", exc)
         return 1
+
     try:
-        if sys.platform.startswith("linux") and not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")):
-            raise RuntimeError("Ejecute track_count en un escritorio con webcam y OpenCV gráfico.")
-        run_count(cv2, camera_config, detection_config, selection, counter)
+        if (
+            sys.platform.startswith("linux")
+            and not (
+                os.environ.get("DISPLAY")
+                or os.environ.get("WAYLAND_DISPLAY")
+            )
+        ):
+            raise RuntimeError(
+                "Ejecute track_count en un escritorio "
+                "con webcam y OpenCV grafico."
+            )
+
+        # El registrador es opcional.
+        # Si es None, H5.2 funciona como antes.
+        run_count(
+            cv2,
+            camera_config,
+            detection_config,
+            selection,
+            counter,
+            registrador=registrador,
+        )
+
     except KeyboardInterrupt:
-        LOGGER.info("Cierre solicitado con Ctrl+C.")
-    except (ValueError, RuntimeError, OSError, cv2.error) as exc:
+        LOGGER.info(
+            "Cierre solicitado con Ctrl+C."
+        )
+
+    except (
+        ValueError,
+        RuntimeError,
+        OSError,
+        sqlite3.Error,
+        cv2.error,
+    ) as exc:
         LOGGER.error("%s", exc)
         return 1
-    LOGGER.info("Totales de sesion | IN=%s | OUT=%s", counter.total_entries, counter.total_exits)
+
+    LOGGER.info(
+        "Totales de sesion | IN=%s | OUT=%s",
+        counter.total_entries,
+        counter.total_exits,
+    )
+
     return 0
+
+
+
+
 
 
 if __name__ == "__main__":
