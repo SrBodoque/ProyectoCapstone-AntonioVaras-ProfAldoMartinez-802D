@@ -33,7 +33,7 @@ def validate_video(video):
     return video,frame.shape[1],frame.shape[0]
 
 
-def edit_profile(frame,camera_index=0,seed=None,camera=False):
+def edit_profile(frame,camera_index=0,seed=None,camera=False,on_save=None):
     """The MP4 editor uses index zero; only transport metadata is adapted here."""
     import cv2
     if seed is not None and (seed.width,seed.height)!=(frame.shape[1],frame.shape[0]):
@@ -46,21 +46,22 @@ def edit_profile(frame,camera_index=0,seed=None,camera=False):
         if seed is not None:
             editing=ZoneProfile.create(seed.name,camera_index if camera else 0,seed.width,seed.height,seed.a,seed.b)
             store.save_and_activate(editing)
-        try:profile=edit_camera_frame(cv2,frame,store,camera_index) if camera else edit_frame(cv2,frame,store)
+        try:profile=edit_camera_frame(cv2,frame,store,camera_index,on_save) if camera or on_save else edit_frame(cv2,frame,store)
         except ValueError:
             if not (store.directory/'active.json').exists():raise Cancelled()
             raise
         return ZoneProfile.create(profile.name,camera_index,profile.width,profile.height,profile.a,profile.b)
 
 
-def edit_camera_frame(cv2,frame,store,index):
+def edit_camera_frame(cv2,frame,store,index,on_save=None):
     """Thin fixed-image host for the existing editor, with the actual camera ID."""
     from .zone_calibrator import CalibrationEditor,preview_size,render_editor
     height,width=frame.shape[:2]
     editor=CalibrationEditor(store,index,width,height)
-    editor.status='CAMARA CONGELADA: A exterior / B puerta. S guarda; Q cierra.'
+    editor.status='A exterior / B puerta. S guarda version nueva; W Guardar como; Q cancela.'
+    saved=[]
     display=preview_size(frame)
-    window='LimpIA - Calibrar frame de camara congelado'
+    window='LimpIA - Calibrar zonas A exterior / B puerta' if on_save else 'LimpIA - Calibrar frame de camara congelado'
     def mouse(event,x,y,flags,param):
         actions={cv2.EVENT_LBUTTONDOWN:'down',cv2.EVENT_LBUTTONUP:'up',cv2.EVENT_MOUSEMOVE:'move',cv2.EVENT_RBUTTONDOWN:'right'}
         if event in actions:editor.mouse(actions[event],x,y,*display)
@@ -71,7 +72,15 @@ def edit_camera_frame(cv2,frame,store,index):
         while not editor.exit_requested:
             editor.frozen=True
             cv2.imshow(window,render_editor(cv2,frame,editor))
-            editor.key(cv2.waitKey(20)&255)
+            key=cv2.waitKey(20)&255
+            if on_save and editor.mode=='edit' and key in (ord('s'),ord('S'),ord('w'),ord('W')):
+                try:
+                    profile=editor.profile(editor.name or 'calibracion')
+                    on_save(profile,key in (ord('w'),ord('W')))
+                    saved.append(profile);editor.exit_requested=True
+                except Cancelled:editor.status='Guardado cancelado; zonas conservadas. S reintenta.'
+                except (ValueError,OSError,RuntimeError) as exc:editor.status=f'{exc} | Zonas conservadas; S reintenta.'
+            else:editor.key(key)
             if editor.exit_requested:break
             try:visible=cv2.getWindowProperty(window,cv2.WND_PROP_VISIBLE)
             except cv2.error:visible=-1
@@ -81,6 +90,9 @@ def edit_camera_frame(cv2,frame,store,index):
     finally:
         try:cv2.destroyWindow(window)
         except cv2.error:pass
+    if on_save:
+        if not saved:raise Cancelled()
+        return saved[0]
     return store.load_active()
 
 
@@ -103,11 +115,17 @@ def freeze_camera(index,backend):
         except cv2.error:pass
 
 
-def calibrate_video(video,output,frame_index,reviewer,seed=None):
-    output=new_output(output)
+def calibrate_video(video,output,frame_index,reviewer,seed=None,on_save=None):
+    if output is not None:output=new_output(output)
     case=discover_cases(video=video)[0]
     video=case.path
     frame=reference_frame(video,frame_index)
+    if on_save:
+        def save(profile,advanced):
+            if (profile.width,profile.height)!=(frame.shape[1],frame.shape[0]):raise ValueError('Resolucion del perfil incompatible.')
+            if file_sha256(video)!=case.sha256:raise RuntimeError('El MP4 cambio durante la calibracion.')
+            return on_save(profile,advanced)
+        return edit_profile(frame,seed=seed,on_save=save)
     profile=edit_profile(frame,seed=seed)
     if file_sha256(video)!=case.sha256:
         raise RuntimeError('El MP4 cambio durante la calibracion; no se exportaron zonas.')
@@ -116,7 +134,10 @@ def calibrate_video(video,output,frame_index,reviewer,seed=None):
     return output
 
 
-def calibrate_camera(index,backend,output,reviewer,seed=None):
+def calibrate_camera(index,backend,output,reviewer,seed=None,on_save=None):
+    if on_save:
+        frame=freeze_camera(index,backend)
+        return edit_profile(frame,index,seed,camera=True,on_save=on_save)
     if not isinstance(reviewer,str) or not reviewer.strip():raise ValueError('Indique un responsable.')
     output=new_output(output)
     sidecar=new_output(output.with_name(output.stem+'.provenance.json'))

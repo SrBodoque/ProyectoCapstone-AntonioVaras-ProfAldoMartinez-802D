@@ -170,7 +170,7 @@ class LauncherTests(unittest.TestCase):
     def test_calibration_controller_cancel_after_success_preserves_file(self):
         self.ui.confirm.return_value=False
         args=self.args('--calibrar','--mp4','--video',str(self.video),'--output',str(self.root/'fresh.json'),'--frame','0','--reviewer','TEST')
-        with patch.object(calibration,'edit_profile',return_value=profile()),self.assertRaises(Cancelled):
+        with patch.object(calibration,'edit_profile',side_effect=lambda *a,**kw:kw['on_save'](profile(),False)),self.assertRaises(Cancelled):
             self.controller.prepare(args)
         self.assertTrue((self.root/'fresh.json').is_file())
         self.assertEqual(calibration.load_profile(self.root/'fresh.json','video',self.video),profile())
@@ -281,7 +281,7 @@ class LauncherTests(unittest.TestCase):
         with patch('src.launcher_ui.TkDialogs',return_value=self.ui):self.assertEqual(launcher.main(args),0)
         prepared=self.ui.run_view.call_args.args[0]
         self.assertEqual(prepared.video,self.video);self.assertEqual(prepared.tracker,'bytetrack')
-        self.assertEqual(prepared.zones,self.zones);self.ui.menu.assert_not_called()
+        self.assertEqual(prepared.zones,self.zones);self.ui.menu.assert_called_once()
 
     def test_window_host_starts_session_and_releases_on_close(self):
         from src.launcher_ui import TkDialogs
@@ -302,13 +302,15 @@ class LauncherTests(unittest.TestCase):
 
     def test_calibration_can_select_existing_profile_as_editable_seed(self):
         args=self.video_args();args.output=None
-        self.ui.choose.side_effect=None;self.ui.choose.return_value='edit'
-        self.ui.open_json.side_effect=None;self.ui.open_json.return_value=self.zones
-        self.ui.save_json.side_effect=None;self.ui.save_json.return_value=self.root/'edited.json'
-        with patch.object(launcher,'calibrate_video',return_value=self.root/'edited.json') as calibrate:
-            self.controller.calibrate(args,self.video,None,offer_seed=True)
-        self.assertEqual(calibrate.call_args.args[-1],profile())
-        self.assertEqual(calibrate.call_args.args[1],self.root/'edited.json')
+        self.ui.choose.side_effect=['edit',str(self.zones)]
+        def edit(*args,**kwargs):
+            self.assertEqual(kwargs['seed'],profile())
+            kwargs['on_save'](profile(),False)
+            return profile()
+        with patch.object(calibration,'edit_profile',side_effect=edit),patch('src.launcher_autosave.PROJECT_ROOT',self.root):
+            output=self.controller.calibrate(args,self.video,None,offer_seed=True)
+        self.assertEqual(calibration.load_profile(output,'video',self.video),profile())
+        self.ui.open_json.assert_not_called();self.ui.save_json.assert_not_called()
 
     def test_video_changed_during_edit_is_not_exported(self):
         output=self.root/'changed-source.json'

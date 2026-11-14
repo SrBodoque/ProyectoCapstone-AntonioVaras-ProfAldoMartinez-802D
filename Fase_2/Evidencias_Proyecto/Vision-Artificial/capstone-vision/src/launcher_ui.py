@@ -17,7 +17,7 @@ class TkDialogs:
         self.root.configure(bg=BG)
         self.status=tk.StringVar(value='')
 
-    def choose(self,title,message,choices,cancel_text='Cancelar'):
+    def choose(self,title,message,choices,cancel_text='Volver',escape_back=True):
         top=tk.Toplevel(self.root);top.title('LimpIA - '+title);top.geometry('620x460');top.resizable(False,False);top.configure(bg=BG)
         result=[]
         tk.Label(top,text=title,bg=BG,fg=FG,font=('Segoe UI',22,'bold')).pack(anchor='w',padx=28,pady=(24,10))
@@ -36,12 +36,14 @@ class TkDialogs:
                     button.configure(default='active');button.focus_set()
         tk.Label(top,textvariable=self.status,bg=BG,fg='#a9bbc9',wraplength=550).pack(side='bottom',padx=28)
         ttk.Button(top,text=cancel_text,command=top.destroy).pack(side='bottom',fill='x',padx=28,pady=20)
-        top.protocol('WM_DELETE_WINDOW',top.destroy);top.grab_set();self.root.wait_window(top)
+        top.protocol('WM_DELETE_WINDOW',top.destroy)
+        if escape_back:top.bind('<Escape>',lambda event:top.destroy())
+        top.grab_set();self.root.wait_window(top)
         if not result:raise Cancelled()
         return result[0]
 
     def menu(self):
-        return self.choose('LimpIA','Seleccione una fuente o prepare sus zonas.',[('video','Abrir video MP4'),('camera','Abrir camara'),('calibrate','Calibrar zonas')],cancel_text='Salir')
+        return self.choose('LimpIA','Seleccione una fuente o prepare sus zonas.',[('video','Abrir video MP4'),('camera','Abrir camara'),('calibrate','Calibrar zonas')],cancel_text='Salir',escape_back=False)
 
     def _file(self,dialog,**kwargs):
         result=dialog(parent=self.root,**kwargs)
@@ -74,7 +76,7 @@ class TkDialogs:
         label=tk.Label(top,text=title+'...',bg=BG,fg=FG,font=('Segoe UI',13));label.pack(pady=(20,10))
         tk.Label(top,textvariable=self.status,bg=BG,fg='#a9bbc9',wraplength=460).pack(padx=16,pady=(0,8))
         def stop():cancel.set();label.configure(text='Cancelando y liberando recursos...')
-        ttk.Button(top,text='Cancelar',command=stop).pack();top.protocol('WM_DELETE_WINDOW',stop)
+        ttk.Button(top,text='Cancelar',command=stop).pack();top.protocol('WM_DELETE_WINDOW',stop);top.bind('<Escape>',lambda event:stop())
         def run():
             try:result.put((True,function(cancel)))
             except BaseException as exc:result.put((False,exc))
@@ -122,18 +124,27 @@ class TkDialogs:
             except (ValueError,RuntimeError) as exc:self.status.set(str(exc));return
             result.append((tracker.get(),device.get(),path));top.destroy()
         ttk.Button(top,text='Iniciar visualizador',command=start).pack(side='right',padx=24,pady=22)
-        ttk.Button(top,text='Cancelar',command=top.destroy).pack(side='left',padx=24,pady=22)
+        def back():
+            args.tracker=tracker.get();args.device=device.get();args.weights_dir=Path(weights.get()).expanduser()
+            top.destroy()
+        ttk.Button(top,text='Volver',command=back).pack(side='left',padx=24,pady=22)
+        top.protocol('WM_DELETE_WINDOW',back);top.bind('<Escape>',lambda event:back())
         top.grab_set();self.root.wait_window(top)
         if not result:raise Cancelled()
         return result[0]
 
     def run_view(self,options):
         from .view_presentation import PresentationWindow
+        previous=set(self.root.tk.call('after','info'))
         top=tk.Toplevel(self.root);window=PresentationWindow(top,options)
         top.after(50,window.start)
-        self.root.wait_window(top)
-        window.session.stop()
-        if window.session.thread:window.session.thread.join()
+        try:self.root.wait_window(top)
+        finally:
+            window.session.stop()
+            if window.session.thread:window.session.thread.join()
+            # Timers created by this modal host must not survive its Toplevel.
+            for token in set(self.root.tk.call('after','info'))-previous:
+                self.root.tk.call('after','cancel',token)
         failed=bool(window.session.snapshot().error)
         if failed:self.error('La fuente o el procesamiento fallo. Puede elegir otra fuente desde el menu.')
         return failed

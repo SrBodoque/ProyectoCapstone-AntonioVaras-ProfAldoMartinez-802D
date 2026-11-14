@@ -51,7 +51,7 @@ class Launcher:
                 else:
                     cameras=self.ui.busy(lambda cancel:scan_cameras(args.camera_limit,args.camera_backend,args.probe_timeout,cancel),'Buscando camaras')
                     if not cameras:raise RuntimeError('No se encontro una camara que entregue imagenes correctamente.')
-                    if len(cameras)==1:
+                    if len(cameras)==1 and not getattr(args,'navigate',False):
                         camera=cameras[0];self.ui.notice(f'Se utilizara camara {camera.index} | {camera.backend} | {camera.width}x{camera.height}')
                     else:
                         selected=self.ui.choose('Seleccionar camara','Camaras que entregaron imagenes validas',[(c.index,f'{c.index} | {c.backend} | {c.width}x{c.height}') for c in cameras])
@@ -61,30 +61,79 @@ class Launcher:
                 LOGGER.warning('Camara: %s',exc)
                 choice=self.ui.choose('Camara no disponible',str(exc),[('retry','Reintentar deteccion'),('manual','Indice y backend manual'),('video','Cambiar a MP4')])
                 if choice=='retry':index=None
-                elif choice=='manual':index,args.camera_backend=self.ui.manual_camera(args.camera_backend)
+                elif choice=='manual':
+                    try:index,args.camera_backend=self.ui.manual_camera(args.camera_backend)
+                    except Cancelled:continue
                 elif choice=='video':
                     args.camara=False;args.mp4=True;args.tracking_only=False;args.confirm_camera_zones=False;args.zones=None
                     return None
 
     def calibrate(self,args,video,camera,seed=None,offer_seed=False):
+        if not getattr(args,'navigate',False):return self._calibrate_once(args,video,camera,seed,offer_seed)
+        if seed is not None or args.output is not None:
+            try:return self._calibrate_once(args,video,camera,seed,False)
+            except Cancelled:pass
+        while True:
+            args._stage='base'
+            base=self.ui.choose('Base de calibracion','Dibujar zonas nuevas o modificar un perfil existente',[('new','Dibujar zonas nuevas'),('edit','Modificar JSON existente')])
+            try:
+                return self._calibrate_once(args,video,camera,None,False,base)
+            except Cancelled:
+                # Editor and profile-list cancellation return here, never to main.
+                continue
+
+    def _calibrate_once(self,args,video,camera,seed=None,offer_seed=False,base=None):
+        source='video' if args.mp4 else 'camera'
+        catalog=self.ui.busy(lambda cancel:resources.profiles(source,video,camera),'Buscando perfiles compatibles')
         if offer_seed and seed is None and args.output is None:
             base=self.ui.choose('Base de calibracion','Dibujar zonas nuevas o modificar un perfil existente',[('new','Dibujar zonas nuevas'),('edit','Modificar JSON existente')])
-            if base=='edit':
-                path=self.ui.open_json()
-                seed=load_profile(path,'video' if args.mp4 else 'camera',video,True)
-        output=args.output or self.ui.save_json()
-        output=new_output(output)
-        reviewer=args.reviewer or self.ui.text('Responsable','Nombre de quien revisa la orientacion A exterior / B puerta')
-        if not reviewer.strip():raise ValueError('Indique un responsable de la revision.')
-        if args.mp4:
-            frame=args.frame if args.frame is not None else self.ui.integer('Frame de referencia','Indice desde cero',0)
-            return calibrate_video(video,output,frame,reviewer,seed)
-        self.ui.notice('Vista previa: Espacio congela una imagen; Esc cancela. Dibuje A exterior y B puerta. Recalibre al cambiar el encuadre.')
-        return calibrate_camera(camera.index,args.camera_backend,output,reviewer,seed)
+        if base=='edit':
+            choice=self.ui.choose('Perfiles compatibles','Seleccione el perfil que desea modificar',[(str(p),f'{name} | {p}') for p,name in catalog]+[('external','Buscar otro JSON...')])
+            path=self.ui.open_json() if choice=='external' else Path(choice)
+            seed=load_profile(path,source,video,True)
+        if args.output is not None:new_output(args.output)
+        from .launcher_autosave import save_calibration
+        saved=[]
+        frame=args.frame if args.frame is not None else 0
+        def save(profile,advanced=False):
+            output=args.output or (self.ui.save_json() if advanced else None)
+            reviewer=args.reviewer or self.ui.text('Responsable','Nombre de quien revisa la orientacion A exterior / B puerta')
+            path=save_calibration(profile,source,video,camera,args.camera_backend,frame,reviewer,output,catalog)
+            saved.append(path)
+            return path
+        if args.mp4:calibrate_video(video,args.output,frame,args.reviewer,seed,on_save=save)
+        else:
+            self.ui.notice('Espacio congela; Esc cancela. S guarda version nueva; W Guardar como. Conteo fisico sin validar.')
+            calibrate_camera(camera.index,args.camera_backend,args.output,args.reviewer,seed,on_save=save)
+        if not saved:raise Cancelled()
+        self.ui.notice(f'Perfil creado: {saved[-1]}')
+        return saved[-1]
 
     def prepare(self,args):
+        if not getattr(args,'navigate',False):return self._prepare_once(args)
+        while True:
+            try:return self._prepare_once(args)
+            except Cancelled:
+                stage=getattr(args,'_stage','source')
+                if stage=='source':raise
+                if stage=='base' and not args.calibrar:
+                    args.zones=None;args.tracking_only=False
+                elif stage in ('base','zones'):
+                    args.video=None;args.camera_index=None;args.zones=None
+                    args.tracking_only=False;args.confirm_camera_zones=False
+                    args._calibrated_profile=None
+                elif stage in ('settings','profile'):
+                    if getattr(args,'_calibrated_profile',None):args._resume_confirmation=True
+                    else:args.zones=None;args.tracking_only=False
+                elif stage=='confirmation':
+                    args.calibrar=True;args.zones=None;args.output=None
+                    args._calibrated_profile=None;args._resume_confirmation=False
+                else:raise
+
+    def _prepare_once(self,args):
         validate_args(args)
         if args.weights_dir is None:args.weights_dir=resources.default_weights()
+        args._stage='source'
         camera=None;video=None;profile=None
         review_needed=getattr(args,'review',False) or (args.zones is None and not args.tracking_only)
         if args.camara:
@@ -93,28 +142,46 @@ class Launcher:
         if args.mp4:
             if args.video:video=args.video
             else:
-                catalog=self.ui.busy(lambda cancel:resources.videos(),'Buscando videos')
-                choice=self.ui.choose('Videos disponibles','Seleccione un video o busque otro archivo',[(str(p),f'{p.name} | {p.parent}') for p in catalog]+[('external','Buscar otro archivo...')])
-                video=Path(choice) if choice in [str(p) for p in catalog] else self.ui.open_video()
+                while True:
+                    catalog=self.ui.busy(lambda cancel:resources.videos(),'Buscando videos')
+                    choice=self.ui.choose('Videos disponibles','Seleccione un video o busque otro archivo',[(str(p),f'{p.name} | {p.parent}') for p in catalog]+[('external','Buscar otro archivo...')])
+                    if choice in [str(p) for p in catalog]:video=Path(choice);break
+                    try:video=self.ui.open_video();break
+                    except Cancelled:continue
             video,width,height=self.ui.busy(lambda cancel:validate_video(video),'Comprobando video')
             args.video=video
         zones=args.zones
+        if getattr(args,'_resume_confirmation',False):
+            zones=args._calibrated_profile
+            args._stage='confirmation'
+            if not self.ui.confirm('Perfil guardado',f'{zones}\nIniciar ahora el visualizador con este perfil?'):raise Cancelled()
+            args._resume_confirmation=False
         if args.calibrar:
             if zones is not None:profile=load_profile(zones,'video' if args.mp4 else 'camera',video,True)
+            args._stage='base'
             zones=self.calibrate(args,video,camera,profile,offer_seed=True)
+            args._calibrated_profile=zones
             args.calibrar=False
-            if not self.ui.confirm('Perfil guardado',f'{zones.name}\nIniciar ahora el visualizador con este perfil?'):raise Cancelled()
+            args.output=None
+            args._stage='confirmation'
+            if not self.ui.confirm('Perfil guardado',f'{zones}\nIniciar ahora el visualizador con este perfil?'):raise Cancelled()
         if zones is None and not args.tracking_only:
-            catalog=self.ui.busy(lambda cancel:resources.profiles('video' if args.mp4 else 'camera',video,camera),'Buscando perfiles compatibles')
-            choices=[(str(p),f'{name} | {p}') for p,name in catalog]+[('existing','Buscar otro JSON...'),('new','Calibrar nuevas zonas...')]
-            if len(catalog)==1:self.ui.notice(f'Perfil compatible predeterminado: {catalog[0][1]}')
-            if args.camara:choices.append(('tracking','Solo tracking (conteo deshabilitado)'))
-            choice=self.ui.choose('Zonas de transicion','Seleccione o cree un perfil para esta fuente',choices)
-            if choice=='existing':zones=self.ui.open_json()
-            elif choice=='new':zones=self.calibrate(args,video,camera)
-            elif choice=='tracking':args.tracking_only=True
-            else:zones=Path(choice)
+            args._stage='zones'
+            while True:
+                catalog=self.ui.busy(lambda cancel:resources.profiles('video' if args.mp4 else 'camera',video,camera),'Buscando perfiles compatibles')
+                choices=[(str(p),f'{name} | {p}') for p,name in catalog]+[('existing','Buscar otro JSON...'),('new','Calibrar nuevas zonas...')]
+                if len(catalog)==1:self.ui.notice(f'Perfil compatible predeterminado: {catalog[0][1]}')
+                if args.camara:choices.append(('tracking','Solo tracking (conteo deshabilitado)'))
+                choice=self.ui.choose('Zonas de transicion','Seleccione o cree un perfil para esta fuente',choices)
+                if choice=='existing':
+                    try:zones=self.ui.open_json()
+                    except Cancelled:continue
+                elif choice=='new':zones=self.calibrate(args,video,camera)
+                elif choice=='tracking':args.tracking_only=True
+                else:zones=Path(choice)
+                break
         if zones is not None:
+            args._stage='profile'
             while True:
                 try:
                     profile=self.ui.busy(lambda cancel:load_profile(zones,'video' if args.mp4 else 'camera',video,True),'Validando perfil')
@@ -131,6 +198,7 @@ class Launcher:
                     if args.zones is not None:raise
                     self.ui.error(str(exc))
                     zones=self.ui.open_json()
+        args._stage='settings'
         from .devices import load_device_preference,validate_device
         if args.device is None:
             args.device=resources.load_preferences().get('device')
@@ -177,33 +245,36 @@ def main(argv=None):
     root_logger.addHandler(handler);root_logger.setLevel(logging.INFO)
     from .launcher_ui import TkDialogs
     ui=TkDialogs();controller=Launcher(ui)
-    menu=not(args.mp4 or args.camara)
+    args.navigate=True
+    stage='prepare' if args.mp4 or args.camara else ('source' if args.calibrar else 'menu')
     try:
         while True:
-            choosing_menu=not(args.mp4 or args.camara)
             try:
-                if choosing_menu:
-                    args.review=True
-                    action='calibrate' if args.calibrar else ui.menu()
-                    if action=='calibrate':
-                        source=ui.choose('Calibrar zonas','Elegir fuente',[('video','Video MP4'),('camera','Camara')])
-                        args.mp4=source=='video';args.camara=source=='camera';args.calibrar=True
-                    else:
-                        args.mp4=action=='video';args.camara=action=='camera';args.calibrar=False
-                choosing_menu=False
+                if stage=='menu':
+                    action=ui.menu()
+                    args.calibrar=action=='calibrate'
+                    if args.calibrar:stage='source';continue
+                    args.mp4=action=='video';args.camara=action=='camera'
+                elif stage=='source':
+                    source=ui.choose('Calibrar zonas','Elegir fuente',[('video','Video MP4'),('camera','Camara')])
+                    args.mp4=source=='video';args.camara=source=='camera'
+                stage='prepare'
                 options=controller.prepare(args)
-                failed=ui.run_view(options)
-                if not menu and not failed:return 0
+                ui.run_view(options)
+                stage='menu'
             except Cancelled:
-                if choosing_menu or not menu:return 0
+                if stage=='menu':return 0
+                stage='menu' if stage=='source' else ('source' if args.calibrar else 'menu')
             except (ValueError,OSError,RuntimeError,ImportError) as exc:
                 LOGGER.exception('No se pudo completar el flujo del lanzador')
-                ui.error(str(exc))
-                if not menu and not args.camara:return 1
-            preferences=(args.tracker,args.device,args.weights_dir)
-            args=parser().parse_args([])
-            args.tracker,args.device,args.weights_dir=preferences
-            menu=True
-    except Cancelled:return 0
+                ui.error(str(exc));stage='menu'
+            if stage=='menu':
+                preferences=(args.tracker,args.device,args.weights_dir)
+                args=parser().parse_args([])
+                args.tracker,args.device,args.weights_dir=preferences
+                args.navigate=True
+            elif stage=='source':
+                args.mp4=False;args.camara=False;args.video=None;args.camera_index=None
+                args.zones=None;args.tracking_only=False;args.confirm_camera_zones=False
     finally:
         ui.close();root_logger.removeHandler(handler);root_logger.setLevel(previous_level);handler.close()

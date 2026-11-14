@@ -1,0 +1,7 @@
+# Runtime tested locally. Torch/vision selected separately with constraints.
+opencv-python==4.14.0.94
+ultralytics==8.4.163
+lap==0.5.12
+numpy==2.5.2
+pillow==12.3.0
+PyYAML==6.0.3
