@@ -801,7 +801,7 @@ Selección inteligente de videos/perfiles y resolución de pesos externos:
 
 ### Calibracion desde el lanzador: guardado automatico
 
-`python ejecutable.py --calibrar --mp4`: seleccione el video y **Dibujar zonas nuevas**. El editor abre directamente en el frame 0 (o `--frame`), sin pedir una ruta JSON. Dibuje A/B, cierre cada poligono y pulse **S**. Se solicita el responsable de la revision si no se indico `--reviewer`; se valida y guarda una version nueva en `results_testing/calibration_profiles/<video>.zones.vN.json`, y se ofrece iniciar el visualizador con ese perfil. La ubicacion completa aparece en la confirmacion. Para otra carpeta use **W (Guardar como...)** dentro del editor. Un error o la cancelacion del guardado conserva las zonas para reintentar; salir sin S/W no exporta un perfil.
+`python ejecutable.py --calibrar --mp4`: seleccione el video y **Dibujar zonas nuevas**. El editor abre directamente en el frame 0 (o `--frame`), sin pedir una ruta JSON. Dibuje A/B, cierre cada poligono y pulse **S**. Se solicita el responsable de la revision si no se indico `--reviewer`; se valida y guarda una version nueva en `results_testing/calibration_profiles/<video>.zones.vN.json`, y se ofrece iniciar el visualizador con ese perfil. El nombre del archivo aparece en la confirmacion. La ubicacion completa se consulta pasando el cursor sobre el estado de guardado. Para otra carpeta use **W (Guardar como...)** dentro del editor. Un error o la cancelacion del guardado conserva las zonas para reintentar; salir sin S/W no exporta un perfil.
 
 **Modificar JSON existente** utiliza el catalogo compatible; **Buscar otro JSON...** queda como alternativa. El original se conserva y S crea otra version. Camara aplica la misma politica y genera su archivo `.provenance.json`; el conteo fisico sigue sin considerarse validado. `--output` explicito se respeta sin sobrescribir archivos. Los comandos de calibracion tecnicos y sus controles permanecen intactos.
 
@@ -810,6 +810,35 @@ Selección inteligente de videos/perfiles y resolución de pesos externos:
 
 El menu principal es el punto de retorno, tambien al ejecutar `python ejecutable.py --calibrar --mp4` o `--calibrar --camara`. Esc, Volver/Cancelar y X en dialogos secundarios regresan al paso anterior; en el editor, Esc/Q/X conservan la confirmacion de descarte de cambios. Cancelar el editor o la lista de JSON regresa a Base de calibracion; desde alli se vuelve a elegir entrada. El selector de entrada permite regresar al selector de fuente o menu. Preparar sesion conserva tracker, dispositivo y pesos al volver; si se acaba de guardar un perfil, vuelve a la confirmacion de uso sin volver a dibujarlo. Cerrar el visualizador libera la sesion y regresa al menu, permitiendo otra ejecucion en el mismo proceso. Solo Salir o X en el menu principal termina la aplicacion; Esc en el menu no la cierra. Los controles y comandos tecnicos independientes permanecen intactos.
 
+
+### Interfaz del lanzador
+
+Las ventanas utilizan una paleta oscura, botones uniformes y paneles adaptables.
+Los catálogos muestran nombres de videos y perfiles con selección, desplazamiento
+y detalle al pie. Enter, doble clic o **Seleccionar** aceptan la entrada elegida.
+Los textos largos se abrevian según el ancho disponible. Pase el cursor sobre
+el detalle o el estado para consultar el texto completo. **Preparar sesión**
+alinea Video/Cámara, Perfil, Tracker, Dispositivo y Pesos locales. La carpeta de
+pesos admite edición y desplazamiento horizontal en su campo.
+
+Para revisar manualmente, ejecute `python ejecutable.py` con el entorno existente.
+Recorra Abrir video MP4, el catálogo de perfiles, Calibrar zonas y Preparar sesión.
+Pruebe nombres largos, cambie el tamaño de cada ventana y compruebe los detalles
+al pasar el cursor. Preparar sesión tiene un mínimo de 580 × 540 píxeles y los
+selectores de 580 × 480. Compruebe Volver, Esc y X en cada paso y la conservación
+de los ajustes al regresar. Para cámara, seleccione Abrir cámara y revise su
+resumen. La revisión de guardado usa un perfil nuevo creado con S o W en el editor.
+
+Las pruebas de interfaz con nombres sintéticos están en `tests/test_launcher_ui.py`.
+Desde este directorio, con `$python` apuntando al intérprete del entorno existente,
+ejecute la batería de launcher, arranque Tk y presentación en un proceso nuevo.
+Repita el comando tres veces para reproducir la validación.
+
+```powershell
+& $python -B -m unittest discover -s tests -p 'test_launcher*.py' -v
+& $python -B -m unittest discover -s tests -p 'test_tk_startup.py' -v
+& $python -B -m unittest discover -s tests -p 'test_presentation.py' -v
+```
 
 ### Inicio Windows portable
 
