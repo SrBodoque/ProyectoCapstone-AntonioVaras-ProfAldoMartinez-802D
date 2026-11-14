@@ -129,7 +129,7 @@ def inicio_supervisor(request):
         FuenteConteo.objects
         .select_related("bano")
         .filter(
-            identificador="droidcam-demo",
+            identificador=settings.CONTEO_DASHBOARD_FUENTE,
             activa=True,
             bano__activo=True,
         )
@@ -1119,7 +1119,7 @@ def datos_dashboard_supervisor(request):
         FuenteConteo.objects
         .select_related("bano")
         .filter(
-            identificador="droidcam-demo",
+            identificador=settings.CONTEO_DASHBOARD_FUENTE,
             activa=True,
             bano__activo=True,
         )

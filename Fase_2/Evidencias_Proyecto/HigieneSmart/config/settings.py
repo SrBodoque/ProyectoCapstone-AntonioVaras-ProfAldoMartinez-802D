@@ -161,3 +161,8 @@ MEDIA_ROOT = BASE_DIR / "media"
 CONTEO_IN_OUT_HABILITADO = (
     os.getenv("CONTEO_IN_OUT_HABILITADO", "0") == "1"
 )
+
+# Fuente visible en el dashboard de supervisor.
+CONTEO_DASHBOARD_FUENTE = os.getenv(
+    "CONTEO_DASHBOARD_FUENTE", "droidcam-demo"
+)
