@@ -771,3 +771,29 @@ Queda pendiente la aceptación en cámara según la guía de Hito 5.1.
 ## Proyecto CAPSTONE
 
 **limpIA** busca utilizar datos de uso real para apoyar la gestión de limpieza de servicios higiénicos, reduciendo la dependencia de frecuencias fijas y permitiendo una gestión basada en demanda.
+
+## Visualizador de presentación unificado
+
+MP4 con inferencia nueva, cámara en vivo y reproducción opcional de tracking:
+consulte [PRESENTATION.md](PRESENTATION.md) para arquitectura, comandos,
+pruebas, evidencia CUDA y calibración de cámara. Entrada: `python -m src.view_presentation`.
+El visualizador técnico `src.view_count_results` se conserva íntegramente.
+
+Revisión de fluidez y tarjeta flotante: [PRESENTATION_PERFORMANCE.md](PRESENTATION_PERFORMANCE.md).
+Incluye cámara sin calibrar (`--tracking-only`), captura configurable y validación real por triplicado.
+
+La revisión vigente respeta FPS nativos de cámara y timestamps de MP4, elimina las opciones
+`--camera-fps` / `--unpaced` y amplía la tarjeta: ver la última sección de la guía de fluidez.
+
+Revisión vigente de cadencia y tarjeta compacta: [PRESENTATION_CADENCE.md](PRESENTATION_CADENCE.md).
+Compara el reproductor técnico anterior y verifica cada frame realmente dibujado.
+
+## Lanzador unificado
+
+Ejecutar `python ejecutable.py`: menú de video, cámara y calibración.
+También admite `--mp4`, `--camara`, `--calibrar --mp4` y `--calibrar --camara`.
+Ver [LAUNCHER.md](LAUNCHER.md) para comandos, selección de perfiles, calibración,
+validación y estado del empaquetado Windows (preparado; EXE todavía no construido).
+
+Selección inteligente de videos/perfiles y resolución de pesos externos:
+[LAUNCHER_RESOURCES.md](LAUNCHER_RESOURCES.md).
