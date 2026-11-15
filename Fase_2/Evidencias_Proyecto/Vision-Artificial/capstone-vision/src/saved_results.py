@@ -17,9 +17,11 @@ class ResultsError(ValueError):
 class Notices:
     messages: list[str] = field(default_factory=list)
     count: int = 0
+    codes: set[str] = field(default_factory=set)
 
-    def add(self, message):
+    def add(self, message, code="data_quality"):
         self.count += 1
+        self.codes.add(code)
         if len(self.messages) < 20 and message not in self.messages:
             self.messages.append(message)
 
@@ -45,6 +47,8 @@ class SavedFrame:
     detections: tuple[Observation, ...] = ()
     untracked: tuple[Observation, ...] = ()
     available: bool = True
+    timestamp_ms: float | None = None
+    timestamp_source: str | None = None
 
 
 @dataclass
@@ -141,7 +145,7 @@ def load_case(directory) -> SavedCase:
                 if "schema_version" in row and (type(row["schema_version"]) is not int or row["schema_version"] != 1):
                     raise ResultsError(f"{context}: esquema de predicciones no compatible.")
                 if index < previous:
-                    notices.add("JSONL desordenado: se indexa por frame_index, sin alterar el archivo.")
+                    notices.add("JSONL desordenado: se indexa por frame_index, sin alterar el archivo.", "out_of_order")
                 previous = index
                 groups = {}
                 ids = set()
@@ -161,9 +165,17 @@ def load_case(directory) -> SavedCase:
                         valid.append(item)
                     groups[group] = valid
                 without_id = [item for item in groups["tracks"] if item.track_id is None]
+                timestamp = row.get("timestamp_ms")
+                if timestamp is not None and (not number(timestamp) or timestamp < 0):
+                    notices.add(f"{context}: timestamp_ms inválido; se requiere una temporización alternativa.", "timestamp")
+                    timestamp = None
+                timestamp_source = row.get("timestamp_source")
+                if not isinstance(timestamp_source, str):
+                    timestamp_source = None
                 frames[index] = SavedFrame(index,
                     tuple(item for item in groups["tracks"] if item.track_id is not None),
-                    tuple(groups["detections"]), tuple(groups["untracked_detections"] + without_id))
+                    tuple(groups["detections"]), tuple(groups["untracked_detections"] + without_id),
+                    timestamp_ms=timestamp, timestamp_source=timestamp_source)
     except (OSError, UnicodeError) as exc:
         raise ResultsError(f"No se puede leer predictions.jsonl: {exc}") from exc
     if not frames:

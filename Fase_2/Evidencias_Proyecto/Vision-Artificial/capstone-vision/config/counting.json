@@ -1,0 +1,9 @@
+{
+  "tracker": "botsort_reid",
+  "thresholds": {
+    "zone_dwell_seconds": 0.12,
+    "min_observations": 2,
+    "max_gap_seconds": 2.0,
+    "state_ttl_seconds": 30.0
+  }
+}

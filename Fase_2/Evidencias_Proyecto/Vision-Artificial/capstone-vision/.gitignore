@@ -19,6 +19,8 @@ Thumbs.db
 *.onnx
 runs/
 config/device.local.json
+config/counting.local.json
+config/counting.*.local.json
 .ultralytics/
 videos_testing/
 results_testing/

@@ -25,6 +25,15 @@ def fast_config():
     return {**load_tracking_config(), "tracker_config": track_fast.FASTTRACK_CONFIG}
 
 
+from h52_legacy_detection_fixture import baseline_detection_config as load_detection_config
+
+
+def setUpModule():
+    fixture = patch.object(track, "load_detection_config", side_effect=load_detection_config)
+    fixture.start()
+    unittest.addModuleCleanup(fixture.stop)
+
+
 class ConfigTests(unittest.TestCase):
     def setUp(self):
         self.base_path = resolve_tracker_path(load_tracking_config()["tracker_config"])

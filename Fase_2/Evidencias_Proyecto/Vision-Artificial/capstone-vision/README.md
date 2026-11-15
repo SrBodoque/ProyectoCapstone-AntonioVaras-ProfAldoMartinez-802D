@@ -14,6 +14,26 @@ El sistema está diseñado bajo principios de privacidad:
 
 ---
 
+## Hito 5.2 — MP4 con tracker seleccionable
+
+El flujo independiente `src.count_mp4` permite generar tracking con ByteTrack,
+FastTrack o BoT-SORT/ReID, elegir CPU/CUDA y contar predicciones guardadas sin
+repetir inferencia. Cada ejecución crea resultados propios. Las zonas del video
+se calibran con `src.calibrate_mp4_zones` y se vinculan al hash del MP4.
+`src.view_count_results` reproduce el conteo guardado con cajas, IDs, confianza,
+trayectorias, zonas, motivos por ID y contadores IN/OUT, sin repetir inferencia.
+`--tracker botsort` selecciona BoT-SORT sin ReID; `botsort_reid` conserva apariencia.
+Ambas variantes admiten `--confidence 0.25` como override experimental de sesión.
+`src.compare_mp4_trackers` acepta pares MP4/JSON arbitrarios, ejecuta las variantes
+solicitadas secuencialmente y genera un informe JSON/CSV/Markdown sin elegir ganador.
+
+Consulte [comandos, calibración y resultados H5.2](docs/HITO5_2_MP4_TRACKERS.md).
+La primera prueba ByteTrack de `prueba_02.mp4` completó 690/690 frames en RTX 5060,
+`cuda:0`. Posteriormente se verificaron perfiles para los tres MP4 y se generaron
+tracking y conteos reales BoT-SORT sin ReID con confianza 0.25. ReID queda pendiente
+por falta del clasificador local. La precisión de los conteos requiere anotaciones
+y aceptación visual. No hay descargas de pesos ni selección automática de ganador.
+
 ## INICIO RÁPIDO — MP4 y visualización offline
 
 Desde la raíz del repositorio, en PowerShell:
@@ -139,13 +159,21 @@ la desaparición temporal de los recursos locales sigue indeterminada.
 
 ## Estado actual
 
+Hito 5.1 en validación: **A exterior → B puerta = IN; B → A = OUT**.
+Solo cuenta cambios estables del mismo ID. No utiliza línea final ni requiere
+salir de B. La aceptación en cámara de la corrección sigue pendiente.
+Consulte [diagnóstico, orientación de perfiles y aceptación](docs/hito5_1_conteo_entradas.md).
+Antes de ejecutar `python -m src.track_count` se debe confirmar explícitamente la
+orientación del perfil con `python -m src.count_orientation`; un perfil H4 antiguo
+no se reinterpreta automáticamente. Los perfiles y pesos son recursos locales.
+
 | Hito | Funcionalidad                     | Estado       |
 | ---- | --------------------------------- | ------------ |
 | 1    | Webcam + OpenCV                   | ✅           |
 | 2    | Detección de personas con YOLO26n | ✅           |
 | 3    | Tracking temporal con ByteTrack   | ✅           |
-| 4    | Zona B + Zona A + línea final     | ⏳ Siguiente |
-| 5    | Máquina de estados IN/OUT         | ⏳           |
+| 4    | Calibrador y zonas A/B            | Implementado |
+| 5    | Transiciones estables IN/OUT      | En validación |
 | 6    | Robustez del conteo               | ⏳           |
 | 7    | Pruebas formales                  | ⏳           |
 | 8    | Portabilidad entre ubicaciones    | ⏳           |
@@ -175,11 +203,9 @@ Webcam
    ↓
 YOLO + ByteTrack
    ↓
-Zona B
+Zona A exterior
    ↓
-Zona A
-   ↓
-Línea final
+Zona B puerta
    ↓
 Máquina de estados
    ↓
@@ -654,11 +680,9 @@ El sistema final no contará una persona solamente porque YOLO genere una detecc
 Para producir un evento válido será necesario cumplir una trayectoria:
 
 ```text
-Zona B
+Zona A exterior estable
    ↓
-Zona A
-   ↓
-Cruce de línea
+Zona B puerta estable
    ↓
 IN
 ```
@@ -718,18 +742,16 @@ Los siguientes hitos continuarán esta estructura.
 
 # Próximo paso
 
-## Hito 4 — Calibración espacial
+## Validación Hito 5.1 — Dos zonas
 
-El siguiente objetivo será definir gráficamente:
+El calibrador H4 conserva sus perfiles. El contador usa orientación confirmada:
 
 ```text
               INTERIOR
 
-══════════ LÍNEA FINAL ══════════
+               ZONA B — PUERTA
 
-               ZONA A
-
-               ZONA B
+               ZONA A — EXTERIOR
 
               EXTERIOR
 ```
@@ -737,17 +759,87 @@ El siguiente objetivo será definir gráficamente:
 Cada `track_id` podrá determinar:
 
 ```text
-ID 4 → Zona B
-ID 4 → Zona A
-ID 4 → Cruce de línea
+ID 4 → A estable → B estable → IN
+ID 4 → B estable → A estable → OUT
 ```
 
-Todavía no se generarán eventos `IN/OUT`.
-
-La máquina de estados será implementada en el siguiente hito.
+El contador comienza en cero por sesión, sin persistencia ni ocupación.
+Queda pendiente la aceptación en cámara según la guía de Hito 5.1.
 
 ---
 
 ## Proyecto CAPSTONE
 
 **limpIA** busca utilizar datos de uso real para apoyar la gestión de limpieza de servicios higiénicos, reduciendo la dependencia de frecuencias fijas y permitiendo una gestión basada en demanda.
+
+## Visualizador de presentación unificado
+
+MP4 con inferencia nueva, cámara en vivo y reproducción opcional de tracking:
+consulte [PRESENTATION.md](PRESENTATION.md) para arquitectura, comandos,
+pruebas, evidencia CUDA y calibración de cámara. Entrada: `python -m src.view_presentation`.
+El visualizador técnico `src.view_count_results` se conserva íntegramente.
+
+Revisión de fluidez y tarjeta flotante: [PRESENTATION_PERFORMANCE.md](PRESENTATION_PERFORMANCE.md).
+Incluye cámara sin calibrar (`--tracking-only`), captura configurable y validación real por triplicado.
+
+La revisión vigente respeta FPS nativos de cámara y timestamps de MP4, elimina las opciones
+`--camera-fps` / `--unpaced` y amplía la tarjeta: ver la última sección de la guía de fluidez.
+
+Revisión vigente de cadencia y tarjeta compacta: [PRESENTATION_CADENCE.md](PRESENTATION_CADENCE.md).
+Compara el reproductor técnico anterior y verifica cada frame realmente dibujado.
+
+## Lanzador unificado
+
+Ejecutar `python ejecutable.py`: menú de video, cámara y calibración.
+También admite `--mp4`, `--camara`, `--calibrar --mp4` y `--calibrar --camara`.
+Ver [LAUNCHER.md](LAUNCHER.md) para comandos, selección de perfiles, calibración,
+validación y estado del empaquetado Windows (preparado; EXE todavía no construido).
+
+Selección inteligente de videos/perfiles y resolución de pesos externos:
+[LAUNCHER_RESOURCES.md](LAUNCHER_RESOURCES.md).
+
+
+### Calibracion desde el lanzador: guardado automatico
+
+`python ejecutable.py --calibrar --mp4`: seleccione el video y **Dibujar zonas nuevas**. El editor abre directamente en el frame 0 (o `--frame`), sin pedir una ruta JSON. Dibuje A/B, cierre cada poligono y pulse **S**. Se solicita el responsable de la revision si no se indico `--reviewer`; se valida y guarda una version nueva en `results_testing/calibration_profiles/<video>.zones.vN.json`, y se ofrece iniciar el visualizador con ese perfil. El nombre del archivo aparece en la confirmacion. La ubicacion completa se consulta pasando el cursor sobre el estado de guardado. Para otra carpeta use **W (Guardar como...)** dentro del editor. Un error o la cancelacion del guardado conserva las zonas para reintentar; salir sin S/W no exporta un perfil.
+
+**Modificar JSON existente** utiliza el catalogo compatible; **Buscar otro JSON...** queda como alternativa. El original se conserva y S crea otra version. Camara aplica la misma politica y genera su archivo `.provenance.json`; el conteo fisico sigue sin considerarse validado. `--output` explicito se respeta sin sobrescribir archivos. Los comandos de calibracion tecnicos y sus controles permanecen intactos.
+
+
+### Navegacion del lanzador
+
+El menu principal es el punto de retorno, tambien al ejecutar `python ejecutable.py --calibrar --mp4` o `--calibrar --camara`. Esc, Volver/Cancelar y X en dialogos secundarios regresan al paso anterior; en el editor, Esc/Q/X conservan la confirmacion de descarte de cambios. Cancelar el editor o la lista de JSON regresa a Base de calibracion; desde alli se vuelve a elegir entrada. El selector de entrada permite regresar al selector de fuente o menu. Preparar sesion conserva tracker, dispositivo y pesos al volver; si se acaba de guardar un perfil, vuelve a la confirmacion de uso sin volver a dibujarlo. Cerrar el visualizador libera la sesion y regresa al menu, permitiendo otra ejecucion en el mismo proceso. Solo Salir o X en el menu principal termina la aplicacion; Esc en el menu no la cierra. Los controles y comandos tecnicos independientes permanecen intactos.
+
+
+### Interfaz del lanzador
+
+Las ventanas utilizan una paleta oscura, botones uniformes y paneles adaptables.
+Los catálogos muestran nombres de videos y perfiles con selección, desplazamiento
+y detalle al pie. Enter, doble clic o **Seleccionar** aceptan la entrada elegida.
+Los textos largos se abrevian según el ancho disponible. Pase el cursor sobre
+el detalle o el estado para consultar el texto completo. **Preparar sesión**
+alinea Video/Cámara, Perfil, Tracker, Dispositivo y Pesos locales. La carpeta de
+pesos admite edición y desplazamiento horizontal en su campo.
+
+Para revisar manualmente, ejecute `python ejecutable.py` con el entorno existente.
+Recorra Abrir video MP4, el catálogo de perfiles, Calibrar zonas y Preparar sesión.
+Pruebe nombres largos, cambie el tamaño de cada ventana y compruebe los detalles
+al pasar el cursor. Preparar sesión tiene un mínimo de 580 × 540 píxeles y los
+selectores de 580 × 480. Compruebe Volver, Esc y X en cada paso y la conservación
+de los ajustes al regresar. Para cámara, seleccione Abrir cámara y revise su
+resumen. La revisión de guardado usa un perfil nuevo creado con S o W en el editor.
+
+Las pruebas de interfaz con nombres sintéticos están en `tests/test_launcher_ui.py`.
+Desde este directorio, con `$python` apuntando al intérprete del entorno existente,
+ejecute la batería de launcher, arranque Tk y presentación en un proceso nuevo.
+Repita el comando tres veces para reproducir la validación.
+
+```powershell
+& $python -B -m unittest discover -s tests -p 'test_launcher*.py' -v
+& $python -B -m unittest discover -s tests -p 'test_tk_startup.py' -v
+& $python -B -m unittest discover -s tests -p 'test_presentation.py' -v
+```
+
+### Inicio Windows portable
+
+Doble clic en `Iniciar_LimpIA.bat`. Preparacion/reutilizacion CPU o CUDA con consentimiento; no construye EXE ni cambia el entorno existente. Consulte [BOOTSTRAP_WINDOWS.md](BOOTSTRAP_WINDOWS.md) para requisitos, configuracion de interprete externo, recuperacion y limites de validacion. La instalacion nueva real requiere autorizacion para descargas.

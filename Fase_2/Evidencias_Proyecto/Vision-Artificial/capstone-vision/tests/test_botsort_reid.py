@@ -26,6 +26,16 @@ def parameters():
     return load_tracker_config(resolve_tracker_path(entry.BOTSORT_CONFIG))
 
 
+from h52_legacy_detection_fixture import baseline_detection_config as load_detection_config
+
+
+def setUpModule():
+    # Mantiene el contrato histórico; no modifica el tuning local del usuario.
+    fixture = patch.object(track, "load_detection_config", side_effect=load_detection_config)
+    fixture.start()
+    unittest.addModuleCleanup(fixture.stop)
+
+
 class ConfigTests(unittest.TestCase):
     def load(self, data, loader=load_tracker_config):
         with tempfile.TemporaryDirectory() as directory:
