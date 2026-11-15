@@ -9,6 +9,7 @@ urlpatterns = [
     path("supervisor/banos/crear/", views.crear_bano, name="crear_bano"),
     path("supervisor/banos/<int:bano_id>/editar/", views.editar_bano, name="editar_bano"),
     path("supervisor/banos/datos/", views.datos_gestion_banos, name="datos_gestion_banos"),
+    path("supervisor/banos/<int:bano_id>/verificar-vacio/", views.verificar_bano_vacio, name="verificar_bano_vacio"),
     path("supervisor/trabajadores/", views.gestion_trabajadores, name="gestion_trabajadores"),
     path("supervisor/trabajadores/agregar/", views.agregar_trabajador, name="agregar_trabajador"),
     path("supervisor/trabajadores/<int:trabajador_id>/estado/", views.cambiar_estado_trabajador, name="cambiar_estado_trabajador"),

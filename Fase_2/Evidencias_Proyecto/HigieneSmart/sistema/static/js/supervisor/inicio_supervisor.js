@@ -10,6 +10,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const urlDatos = encabezado.dataset.datosUrl;
 
+    // ==========================================
+    // INDICADORES EXISTENTES
+    // ==========================================
+
     const alertasElemento = document.getElementById(
         "alertas-pendientes-valor"
     );
@@ -19,17 +23,104 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     const limpiezasHoyElemento = document.getElementById(
-    "limpiezas-hoy-valor"
+        "limpiezas-hoy-valor"
     );
 
     const conteoElemento = document.getElementById(
         "conteo-demo-valor"
     );
 
+    // ==========================================
+    // NUEVOS INDICADORES IN / OUT
+    // ==========================================
+
+    const ocupacionElemento = document.getElementById(
+        "ocupacion-estimada-valor"
+    );
+
+    const estadoOcupacionElemento = document.getElementById(
+        "ocupacion-estado-valor"
+    );
+
+    const movimientosElemento = document.getElementById(
+        "movimientos-jornada-valor"
+    );
+
     let consultaEnCurso = false;
 
+    // ==========================================
+    // MOSTRAR EL ESTADO DE OCUPACION
+    // ==========================================
+
+    function actualizarOcupacion(resumen) {
+        if (!ocupacionElemento || !estadoOcupacionElemento) {
+            return;
+        }
+
+        const estado = resumen?.ocupacion_estado;
+        const ocupacion = resumen?.ocupacion_estimada;
+
+        if (
+            estado === "CONOCIDA" &&
+            Number.isInteger(ocupacion) &&
+            ocupacion >= 0
+        ) {
+            ocupacionElemento.textContent =
+                `${ocupacion} ${ocupacion === 1 ? "persona" : "personas"}`;
+
+            estadoOcupacionElemento.textContent =
+                "Ocupación estimada con referencia verificada";
+
+        } else if (estado === "INCONSISTENTE") {
+            ocupacionElemento.textContent = "—";
+
+            estadoOcupacionElemento.textContent =
+                "Conteo inconsistente: requiere verificación";
+
+        } else if (estado === "DESCONOCIDA") {
+            ocupacionElemento.textContent = "—";
+
+            estadoOcupacionElemento.textContent =
+                "Ocupación desconocida: requiere verificación";
+
+        } else {
+            ocupacionElemento.textContent = "—";
+
+            estadoOcupacionElemento.textContent =
+                "Sin datos de ocupación disponibles";
+        }
+    }
+
+    // ==========================================
+    // MOSTRAR MOVIMIENTOS DE LA JORNADA
+    // ==========================================
+
+    function actualizarMovimientos(resumen) {
+        if (!movimientosElemento) {
+            return;
+        }
+
+        const entradas = resumen?.entradas_jornada;
+        const salidas = resumen?.salidas_jornada;
+
+        if (
+            Number.isInteger(entradas) &&
+            Number.isInteger(salidas)
+        ) {
+            movimientosElemento.textContent =
+                `${entradas} / ${salidas}`;
+        } else {
+            movimientosElemento.textContent = "—";
+        }
+    }
+
+    // ==========================================
+    // ACTUALIZACION AUTOMATICA DEL DASHBOARD
+    // ==========================================
+
     async function actualizarDashboard() {
-        // Evitar consultas simultáneas.
+        // Evitar consultas simultaneas y consultas
+        // innecesarias cuando la pestaña esta oculta.
         if (consultaEnCurso || document.hidden) {
             return;
         }
@@ -54,25 +145,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const datos = await respuesta.json();
 
-            // Actualizar las alertas pendientes.
+            // Actualizar alertas pendientes.
             if (alertasElemento) {
                 alertasElemento.textContent =
                     datos.alertas_pendientes;
             }
 
-            // Actualizar las limpiezas en curso.
+            // Actualizar limpiezas en curso.
             if (limpiezasElemento) {
                 limpiezasElemento.textContent =
                     datos.limpiezas_en_curso;
             }
 
-            // Actualizar las limpiezas realizadas hoy.
+            // Actualizar limpiezas realizadas hoy.
             if (limpiezasHoyElemento) {
                 limpiezasHoyElemento.textContent =
                     datos.limpiezas_hoy;
             }
 
-            // Actualizar el contador de DroidCam.
+            // ==========================================
+            // CONTADOR EXISTENTE DE DROIDCAM
+            // ==========================================
+
             if (conteoElemento && datos.conteo_demo) {
                 const entradas =
                     datos.conteo_demo.entradas;
@@ -83,6 +177,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 conteoElemento.textContent =
                     `${entradas} / ${limite}`;
             }
+
+            // ==========================================
+            // NUEVOS CONTADORES IN / OUT
+            // ==========================================
+
+            // El resumen solo estará disponible cuando
+            // la funcionalidad esté habilitada.
+            const resumen =
+                datos.conteo_demo?.resumen_in_out;
+
+            actualizarOcupacion(resumen);
+            actualizarMovimientos(resumen);
 
         } catch (error) {
             console.warn(
@@ -98,6 +204,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // Primera consulta al abrir el dashboard.
     actualizarDashboard();
 
-    // Consultar automáticamente cada 3 segundos.
+    // Consultar automaticamente cada 3 segundos.
     setInterval(actualizarDashboard, 3000);
 });

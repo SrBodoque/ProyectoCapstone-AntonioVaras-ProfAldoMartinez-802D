@@ -288,3 +288,58 @@ class EventoConteo(models.Model):
             f"{self.get_tipo_display()} - "
             f"{self.fecha_evento:%d/%m/%Y %H:%M:%S}"
         )
+
+
+class ReferenciaOcupacion(models.Model):
+    bano = models.ForeignKey(
+        Bano,
+        on_delete=models.PROTECT,
+        related_name="referencias_ocupacion",
+    )
+
+    ocupacion_inicial = models.PositiveIntegerField(
+        help_text="Cantidad de personas verificada en el baño.",
+    )
+
+    fecha_referencia = models.DateTimeField(
+        default=timezone.now,
+        db_index=True,
+    )
+
+    verificada_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="referencias_ocupacion",
+    )
+
+    vigente = models.BooleanField(
+        default=True,
+    )
+
+    fecha_invalidacion = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    motivo_invalidacion = models.CharField(
+        max_length=250,
+        blank=True,
+    )
+
+    observacion = models.CharField(
+        max_length=250,
+        blank=True,
+    )
+
+    fecha_registro = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    class Meta:
+        ordering = ["-fecha_referencia", "-id"]
+
+    def __str__(self):
+        return (
+            f"{self.bano.nombre} - "
+            f"Ocupacion inicial: {self.ocupacion_inicial}"
+        )

@@ -11,7 +11,7 @@ from .track_fast import FASTTRACK_CONFIG
 from .track_recovery import RECOVERY_CONFIG, RECOVERY_CONFIDENCE, RECOVERY_LABEL
 
 COUNTING_PATH = PROJECT_ROOT / "config" / "counting.json"
-TRACKERS = ("botsort_reid", "fasttracker", "bytetrack", "recovery")
+TRACKERS = ("botsort_reid", "botsort_no_reid", "fasttracker", "bytetrack", "recovery")
 
 
 @dataclass(frozen=True)
@@ -29,8 +29,11 @@ class TrackerSelection:
     confidence_override: float | None
 
     def constructor_options(self):
-        return ({} if self.confidence_override is None
-                else {"tracking_confidence_override": self.confidence_override})
+        options = ({} if self.confidence_override is None
+                   else {"tracking_confidence_override": self.confidence_override})
+        if self.name == "botsort_no_reid":
+            options["experimental_botsort"] = True
+        return options
 
 
 def _unique(pairs):
@@ -64,12 +67,13 @@ def select_tracker(name):
     base = load_tracking_config()
     choices = {
         "botsort_reid": (BOTSORT_CONFIG, BOTSORT_LABEL, "botsort", None),
+        "botsort_no_reid": ("config/botsort_no_reid_capstone.yaml", "BoT-SORT sin ReID", "botsort", None),
         "fasttracker": (FASTTRACK_CONFIG, "FastTracker", "fasttrack", None),
         "bytetrack": (base["tracker_config"], "ByteTrack", "bytetrack", None),
         "recovery": (RECOVERY_CONFIG, RECOVERY_LABEL, "bytetrack", RECOVERY_CONFIDENCE),
     }
     path, label, expected, confidence = choices[name]
-    params = load_tracker_config(resolve_tracker_path(path))
+    params = load_tracker_config(resolve_tracker_path(path), allow_botsort_no_reid=(name == "botsort_no_reid"))
     if params["tracker_type"] != expected:
         raise ValueError(f"El YAML de {name} no corresponde al backend {expected}; revise la configuración original.")
     if name == "bytetrack" and resolve_tracker_path(path) == resolve_tracker_path(RECOVERY_CONFIG):
