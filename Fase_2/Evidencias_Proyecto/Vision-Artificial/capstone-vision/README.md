@@ -771,3 +771,75 @@ Queda pendiente la aceptación en cámara según la guía de Hito 5.1.
 ## Proyecto CAPSTONE
 
 **limpIA** busca utilizar datos de uso real para apoyar la gestión de limpieza de servicios higiénicos, reduciendo la dependencia de frecuencias fijas y permitiendo una gestión basada en demanda.
+
+## Visualizador de presentación unificado
+
+MP4 con inferencia nueva, cámara en vivo y reproducción opcional de tracking:
+consulte [PRESENTATION.md](PRESENTATION.md) para arquitectura, comandos,
+pruebas, evidencia CUDA y calibración de cámara. Entrada: `python -m src.view_presentation`.
+El visualizador técnico `src.view_count_results` se conserva íntegramente.
+
+Revisión de fluidez y tarjeta flotante: [PRESENTATION_PERFORMANCE.md](PRESENTATION_PERFORMANCE.md).
+Incluye cámara sin calibrar (`--tracking-only`), captura configurable y validación real por triplicado.
+
+La revisión vigente respeta FPS nativos de cámara y timestamps de MP4, elimina las opciones
+`--camera-fps` / `--unpaced` y amplía la tarjeta: ver la última sección de la guía de fluidez.
+
+Revisión vigente de cadencia y tarjeta compacta: [PRESENTATION_CADENCE.md](PRESENTATION_CADENCE.md).
+Compara el reproductor técnico anterior y verifica cada frame realmente dibujado.
+
+## Lanzador unificado
+
+Ejecutar `python ejecutable.py`: menú de video, cámara y calibración.
+También admite `--mp4`, `--camara`, `--calibrar --mp4` y `--calibrar --camara`.
+Ver [LAUNCHER.md](LAUNCHER.md) para comandos, selección de perfiles, calibración,
+validación y estado del empaquetado Windows (preparado; EXE todavía no construido).
+
+Selección inteligente de videos/perfiles y resolución de pesos externos:
+[LAUNCHER_RESOURCES.md](LAUNCHER_RESOURCES.md).
+
+
+### Calibracion desde el lanzador: guardado automatico
+
+`python ejecutable.py --calibrar --mp4`: seleccione el video y **Dibujar zonas nuevas**. El editor abre directamente en el frame 0 (o `--frame`), sin pedir una ruta JSON. Dibuje A/B, cierre cada poligono y pulse **S**. Se solicita el responsable de la revision si no se indico `--reviewer`; se valida y guarda una version nueva en `results_testing/calibration_profiles/<video>.zones.vN.json`, y se ofrece iniciar el visualizador con ese perfil. El nombre del archivo aparece en la confirmacion. La ubicacion completa se consulta pasando el cursor sobre el estado de guardado. Para otra carpeta use **W (Guardar como...)** dentro del editor. Un error o la cancelacion del guardado conserva las zonas para reintentar; salir sin S/W no exporta un perfil.
+
+**Modificar JSON existente** utiliza el catalogo compatible; **Buscar otro JSON...** queda como alternativa. El original se conserva y S crea otra version. Camara aplica la misma politica y genera su archivo `.provenance.json`; el conteo fisico sigue sin considerarse validado. `--output` explicito se respeta sin sobrescribir archivos. Los comandos de calibracion tecnicos y sus controles permanecen intactos.
+
+
+### Navegacion del lanzador
+
+El menu principal es el punto de retorno, tambien al ejecutar `python ejecutable.py --calibrar --mp4` o `--calibrar --camara`. Esc, Volver/Cancelar y X en dialogos secundarios regresan al paso anterior; en el editor, Esc/Q/X conservan la confirmacion de descarte de cambios. Cancelar el editor o la lista de JSON regresa a Base de calibracion; desde alli se vuelve a elegir entrada. El selector de entrada permite regresar al selector de fuente o menu. Preparar sesion conserva tracker, dispositivo y pesos al volver; si se acaba de guardar un perfil, vuelve a la confirmacion de uso sin volver a dibujarlo. Cerrar el visualizador libera la sesion y regresa al menu, permitiendo otra ejecucion en el mismo proceso. Solo Salir o X en el menu principal termina la aplicacion; Esc en el menu no la cierra. Los controles y comandos tecnicos independientes permanecen intactos.
+
+
+### Interfaz del lanzador
+
+Las ventanas utilizan una paleta oscura, botones uniformes y paneles adaptables.
+Los catálogos muestran nombres de videos y perfiles con selección, desplazamiento
+y detalle al pie. Enter, doble clic o **Seleccionar** aceptan la entrada elegida.
+Los textos largos se abrevian según el ancho disponible. Pase el cursor sobre
+el detalle o el estado para consultar el texto completo. **Preparar sesión**
+alinea Video/Cámara, Perfil, Tracker, Dispositivo y Pesos locales. La carpeta de
+pesos admite edición y desplazamiento horizontal en su campo.
+
+Para revisar manualmente, ejecute `python ejecutable.py` con el entorno existente.
+Recorra Abrir video MP4, el catálogo de perfiles, Calibrar zonas y Preparar sesión.
+Pruebe nombres largos, cambie el tamaño de cada ventana y compruebe los detalles
+al pasar el cursor. Preparar sesión tiene un mínimo de 580 × 540 píxeles y los
+selectores de 580 × 480. Compruebe Volver, Esc y X en cada paso y la conservación
+de los ajustes al regresar. Para cámara, seleccione Abrir cámara y revise su
+resumen. La revisión de guardado usa un perfil nuevo creado con S o W en el editor.
+
+Las pruebas de interfaz con nombres sintéticos están en `tests/test_launcher_ui.py`.
+Desde este directorio, con `$python` apuntando al intérprete del entorno existente,
+ejecute la batería de launcher, arranque Tk y presentación en un proceso nuevo.
+Repita el comando tres veces para reproducir la validación.
+
+```powershell
+& $python -B -m unittest discover -s tests -p 'test_launcher*.py' -v
+& $python -B -m unittest discover -s tests -p 'test_tk_startup.py' -v
+& $python -B -m unittest discover -s tests -p 'test_presentation.py' -v
+```
+
+### Inicio Windows portable
+
+Doble clic en `Iniciar_LimpIA.bat`. Preparacion/reutilizacion CPU o CUDA con consentimiento; no construye EXE ni cambia el entorno existente. Consulte [BOOTSTRAP_WINDOWS.md](BOOTSTRAP_WINDOWS.md) para requisitos, configuracion de interprete externo, recuperacion y limites de validacion. La instalacion nueva real requiere autorizacion para descargas.
