@@ -1,0 +1,78 @@
+LIMPIAVISION - LANZADOR OPERATIVO v0.5 MEJORADA
+============================================
+
+Este paquete reemplaza SOLAMENTE los archivos de nuestra subcarpeta:
+
+  capstone-vision\LimpIA_Operativo\
+    Iniciar_LimpIA_Operativo.bat
+    preparar_limpia_operativa.py
+    lanzador_operativo.py
+    gestion_procesos.py            (NUEVO)
+    emisor_operativo.py            (NUEVO respecto de v0.3.1)
+    LEEME_ANTES_DE_INICIAR.txt
+
+No reemplaces capstone-vision\Iniciar_LimpIA.bat de tu companero.
+No reemplaces capstone-vision\instalar_limpia.py ni la carpeta src o config.
+NO instales tambien el ZIP v0.4/v0.5 antiguo: este paquete ya los sustituye.
+
+1. PRIMER ENSAYO SIN CAMBIAR POSTGRESQL
+--------------------------------------
+- Cierra la camara, lanzador y cualquier emisor antiguo.
+- Si tienes Django abierto manualmente en una terminal, detenlo con Ctrl+C
+  para comprobar que este lanzador puede iniciarlo sin una consola propia.
+- Desde PowerShell, dentro de capstone-vision:
+
+  .\LimpIA_Operativo\Iniciar_LimpIA_Operativo.bat --verificar
+
+- La comprobacion solo lee configuraciones y comprueba dependencias.
+- Despues haz doble clic en Iniciar_LimpIA_Operativo.bat.
+  Una consola de comprobacion puede mostrarse brevemente al inicio;
+  se cierra luego de abrir la interfaz grafica.
+- Deja Modo: Pruebas (sin enviar). Verifica perfil A/B, tracker y cuda:0.
+- Presiona INICIAR SISTEMA: abre ventana OpenCV y la web de HigieneSmart.
+- Django corre sin consola adicional si lo inicia este lanzador.
+- Los contadores en la camara NO se guardan ni se envian a PostgreSQL
+  durante las pruebas.
+- Pulsa Q en la ventana de camara: el lanzador tambien detendra el emisor
+  y Django propios. O pulsa el boton Detener.
+- El navegador puede seguir abierto despues de detener; sin servidor
+  Django la pagina local dejara de responder.
+
+2. MODO OPERACION REAL
+----------------------
+ATENCION: crea registros REALES en capstone_db y puede generar alertas.
+- Usa solamente el perfil de zonas fisicamente verificado en el bano.
+- Para iniciar, confirma la ubicacion real y proporciona el token de
+  droidcam-demo en el dialogo enmascarado. NO lo pongas en archivos.
+- Deten previamente cualquier emisor manual antiguo de la cola operacion_v2.
+- El emisor exige que dicha cola exista, sin pendientes antiguos ni conflictos.
+- Los movimientos se guardan en SQLite y se envian a Django automaticamente.
+- Si cierras la camara con Q, el lanzador intenta vaciar lo pendiente
+  antes de detener el emisor. Si el cierre no alcanza, los eventos quedan
+  pendientes en SQLite para revision, nunca se descartan voluntariamente.
+- La aplicacion NO registra limpiezas por ti. La alerta al llegar al
+  umbral sigue administrandose desde HigieneSmart.
+
+3. RESTRICCIONES Y RECUPERACION
+-------------------------------
+- Al arrancar se reutiliza el --check del instalador de tu companero.
+  No fuerza reinstalar CUDA/PyTorch si el entorno pasa la comprobacion.
+- Django se inicia en 127.0.0.1:8000; si ya corre se reutiliza sin cerrarlo.
+  Si ese Django fue abierto por una terminal ajena, dicha terminal SI debe
+  permanecer activa; cerrarla puede detener la web.
+- No convierte Django en servicio de Windows ni lo deja activo si cierras
+  voluntariamente el lanzador. Es un controlador de aplicaciones locales.
+- El boton Ver registros abre los archivos de diagnostico en:
+    %LOCALAPPDATA%\HigieneSmart\lanzador_operativo\logs
+- Antes de compartir registros, revisa que no contengan datos personales.
+- Cada inicio conserva el historial y calibraciones de los otros perfiles.
+- BoT-SORT disponible: SOLO BoT-SORT SIN ReID, ademas de ByteTrack.
+- Para elegir una calibracion: selecciona perfil, pulsa Activar perfil;
+  confirma A/B solo si fue creado o editado.
+- Si falla una comprobacion en Windows, comparte el MENSAJE y no tu token.
+
+4. DESINSTALACION
+-----------------
+Borrar solamente la carpeta LimpIA_Operativo elimina la interfaz, no el
+codigo original ni los registros de Django o la cola de eventos.
+No borres los datos de %LOCALAPPDATA% mientras tengas eventos pendientes.

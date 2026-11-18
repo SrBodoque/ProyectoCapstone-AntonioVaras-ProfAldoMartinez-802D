@@ -1,5 +1,5 @@
 {
-  "tracker": "botsort_reid",
+  "tracker": "bytetrack",
   "thresholds": {
     "zone_dwell_seconds": 0.12,
     "min_observations": 2,

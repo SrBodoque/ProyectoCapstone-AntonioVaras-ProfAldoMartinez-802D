@@ -7,17 +7,16 @@ from sistema.models import EventoConteo, ReferenciaOcupacion
 def calcular_ocupacion(bano_id):
     """
     Calcula la ocupacion estimada desde la ultima
-    referencia registrada para un baño.
+    referencia verificada para un baño.
 
-    Estados posibles:
-    - CONOCIDA
-    - DESCONOCIDA
-    - INCONSISTENTE
+    La ocupacion nunca baja de cero.
+
+    Si hay salidas excedentes, mantiene el calculo
+    funcionando, pero informa que fue ajustado.
 
     No modifica la base de datos.
     """
 
-    # Buscar la referencia mas reciente del baño.
     referencia = (
         ReferenciaOcupacion.objects
         .filter(bano_id=bano_id)
@@ -25,8 +24,6 @@ def calcular_ocupacion(bano_id):
         .first()
     )
 
-    # Sin referencia inicial no podemos calcular
-    # una ocupacion confiable.
     if referencia is None:
         return {
             "estado": "DESCONOCIDA",
@@ -34,7 +31,6 @@ def calcular_ocupacion(bano_id):
             "motivo": "Sin referencia inicial verificada.",
         }
 
-    # No utilizar referencias invalidadas.
     if not referencia.vigente:
         return {
             "estado": "DESCONOCIDA",
@@ -42,25 +38,23 @@ def calcular_ocupacion(bano_id):
             "motivo": "La ultima referencia fue invalidada.",
         }
 
-    # Evitar utilizar referencias con fecha futura.
-    if referencia.fecha_referencia > timezone.now():
+    ahora = timezone.now()
+
+    if referencia.fecha_referencia > ahora:
         return {
             "estado": "DESCONOCIDA",
             "ocupacion": None,
             "motivo": "La referencia tiene una fecha futura.",
         }
 
-    # Comenzar desde la ocupacion verificada.
     ocupacion = referencia.ocupacion_inicial
 
-    # Consultar entradas y salidas posteriores
-    # a esa referencia, en orden cronologico.
     eventos = (
         EventoConteo.objects
         .filter(
             bano_id=bano_id,
             fecha_evento__gt=referencia.fecha_referencia,
-            fecha_evento__lte=timezone.now(),
+            fecha_evento__lte=ahora,
         )
         .order_by("fecha_evento", "id")
         .values_list("tipo", flat=True)
@@ -68,7 +62,7 @@ def calcular_ocupacion(bano_id):
 
     entradas = 0
     salidas = 0
-    inconsistente = False
+    salidas_excedentes = 0
 
     for tipo in eventos:
         if tipo == EventoConteo.Tipo.ENTRADA:
@@ -77,29 +71,29 @@ def calcular_ocupacion(bano_id):
 
         elif tipo == EventoConteo.Tipo.SALIDA:
             salidas += 1
-            ocupacion -= 1
 
-            # Una ocupacion negativa indica una
-            # contradiccion en los eventos.
-            if ocupacion < 0:
-                inconsistente = True
+            if ocupacion > 0:
+                ocupacion -= 1
+            else:
+                # Nunca mostrar ocupacion negativa.
+                # Conservar un aviso del desajuste.
+                salidas_excedentes += 1
 
-    if inconsistente:
-        return {
-            "estado": "INCONSISTENTE",
-            "ocupacion": None,
-            "motivo": (
-                "Los eventos registrados producen "
-                "una ocupacion negativa."
-            ),
-            "entradas": entradas,
-            "salidas": salidas,
-        }
+    if salidas_excedentes:
+        motivo = (
+            "Estimacion ajustada: se detectaron "
+            f"{salidas_excedentes} salidas sin entradas "
+        )
+    else:
+        motivo = None
 
     return {
+        # Compatible con el dashboard actual.
         "estado": "CONOCIDA",
         "ocupacion": ocupacion,
-        "motivo": None,
+        "motivo": motivo,
         "entradas": entradas,
         "salidas": salidas,
+        "estimacion_ajustada": salidas_excedentes > 0,
+        "salidas_excedentes": salidas_excedentes,
     }

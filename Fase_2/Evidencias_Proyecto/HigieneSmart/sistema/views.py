@@ -20,6 +20,10 @@ from .forms import LoginForm, BanoForm, TrabajadorForm, ActivarCuentaForm, Final
 from .models import Bano, AsignacionBano, Alerta, IntervencionLimpieza, EventoConteo, FuenteConteo
 from sistema.services.resumen_conteo import obtener_resumen_bano
 from sistema.services.referencias_ocupacion import (registrar_verificacion_bano_vacio,)
+from sistema.services.historial_conteos import (obtener_historial_conteos,)
+
+from datetime import timedelta
+
 
 
 
@@ -808,10 +812,15 @@ def cerrar_sesion(request):
     logout(request)
     return redirect("login")
 
+
 @login_required(login_url="login")
 def historial_limpiezas(request):
     if request.user.rol != Usuario.Rol.SUPERVISOR:
         return redirect("inicio_trabajador")
+
+    # ==========================================
+    # 1. HISTORIAL ORIGINAL DE LIMPIEZAS
+    # ==========================================
 
     intervenciones = (
         IntervencionLimpieza.objects
@@ -849,8 +858,15 @@ def historial_limpiezas(request):
             fecha_fin__isnull=True
         )
 
-    fecha_desde_valida = parse_date(fecha_desde) if fecha_desde else None
-    fecha_hasta_valida = parse_date(fecha_hasta) if fecha_hasta else None
+    fecha_desde_valida = (
+        parse_date(fecha_desde)
+        if fecha_desde else None
+    )
+
+    fecha_hasta_valida = (
+        parse_date(fecha_hasta)
+        if fecha_hasta else None
+    )
 
     if fecha_desde_valida:
         intervenciones = intervenciones.filter(
@@ -881,10 +897,154 @@ def historial_limpiezas(request):
         .order_by("nombre")
     )
 
+    # ==========================================
+    # 2. HISTORIAL DIARIO DE CONTEOS
+    # ==========================================
+
+    hoy_conteo = timezone.localdate()
+
+    # Incluir tambien baños inactivos para
+    # conservar sus registros historicos.
+    banos_conteo = list(
+        Bano.objects.all().order_by("nombre", "id")
+    )
+
+    # Buscar el baño asociado a DroidCam.
+    fuente_conteo_id = (
+        FuenteConteo.objects
+        .filter(
+            identificador=settings.CONTEO_DASHBOARD_FUENTE,
+            activa=True,
+        )
+        .values_list("bano_id", flat=True)
+        .first()
+    )
+
+    # Filtro independiente del historial
+    # de limpiezas.
+    filtro_conteo_bano = (
+        request.GET.get("conteo_bano") or ""
+    ).strip()
+
+    # Seleccionar DroidCam por defecto.
+    if not filtro_conteo_bano and fuente_conteo_id:
+        filtro_conteo_bano = str(fuente_conteo_id)
+
+    # Si no hay DroidCam, usar el primer baño.
+    if not filtro_conteo_bano and banos_conteo:
+        filtro_conteo_bano = str(banos_conteo[0].id)
+
+    # Identificar el baño seleccionado.
+    bano_conteo_seleccionado = next(
+        (
+            bano
+            for bano in banos_conteo
+            if str(bano.id) == filtro_conteo_bano
+        ),
+        None,
+    )
+
+    error_conteos = None
+
+    if (
+        filtro_conteo_bano
+        and bano_conteo_seleccionado is None
+    ):
+        error_conteos = (
+            "El baño seleccionado no existe."
+        )
+
+    # ==========================================
+    # 3. FILTROS DE FECHAS DEL CONTEO
+    # ==========================================
+
+    texto_conteo_desde = (
+        request.GET.get("conteo_desde") or ""
+    ).strip()
+
+    texto_conteo_hasta = (
+        request.GET.get("conteo_hasta") or ""
+    ).strip()
+
+    # Por defecto mostrar los ultimos 7 dias.
+    try:
+        conteo_desde = (
+            parse_date(texto_conteo_desde)
+            if texto_conteo_desde
+            else hoy_conteo - timedelta(days=6)
+        )
+
+        conteo_hasta = (
+            parse_date(texto_conteo_hasta)
+            if texto_conteo_hasta
+            else hoy_conteo
+        )
+
+    except ValueError:
+        conteo_desde = None
+        conteo_hasta = None
+
+    # Validar el intervalo solicitado.
+    if conteo_desde is None or conteo_hasta is None:
+        error_conteos = (
+            "Ingresa fechas validas."
+        )
+
+    elif conteo_desde > conteo_hasta:
+        error_conteos = (
+            "La fecha inicial no puede ser "
+            "posterior a la fecha final."
+        )
+
+    elif conteo_hasta > hoy_conteo:
+        error_conteos = (
+            "No se pueden consultar fechas futuras."
+        )
+
+    elif (conteo_hasta - conteo_desde).days > 366:
+        error_conteos = (
+            "El periodo maximo de consulta "
+            "es de 367 dias."
+        )
+
+    # ==========================================
+    # 4. CONSULTAR MOVIMIENTOS HISTORICOS
+    # ==========================================
+
+    historial_diario_conteos = []
+
+    if (
+        bano_conteo_seleccionado is not None
+        and error_conteos is None
+    ):
+        historial_diario_conteos = (
+            obtener_historial_conteos(
+                bano_id=bano_conteo_seleccionado.id,
+                fecha_inicio=conteo_desde,
+                fecha_fin=conteo_hasta,
+            )
+        )
+
+    # Calcular los totales del periodo.
+    total_entradas_conteo = sum(
+        dia["entradas"]
+        for dia in historial_diario_conteos
+    )
+
+    total_salidas_conteo = sum(
+        dia["salidas"]
+        for dia in historial_diario_conteos
+    )
+
+    # ==========================================
+    # 5. ENVIAR DATOS AL HTML
+    # ==========================================
+
     return render(
         request,
         "supervisor/historial_limpiezas.html",
         {
+            # Historial original de limpiezas.
             "intervenciones": intervenciones,
             "trabajadores": trabajadores,
             "banos": banos,
@@ -893,8 +1053,36 @@ def historial_limpiezas(request):
             "filtro_estado": estado or "",
             "filtro_fecha_desde": fecha_desde or "",
             "filtro_fecha_hasta": fecha_hasta or "",
+
+            # Historial diario de conteos.
+            "banos_conteo": banos_conteo,
+            "bano_conteo_seleccionado": (
+                bano_conteo_seleccionado
+            ),
+            "historial_diario_conteos": (
+                historial_diario_conteos
+            ),
+            "filtro_conteo_bano": filtro_conteo_bano,
+            "filtro_conteo_desde": (
+                conteo_desde.isoformat()
+                if conteo_desde
+                else texto_conteo_desde
+            ),
+            "filtro_conteo_hasta": (
+                conteo_hasta.isoformat()
+                if conteo_hasta
+                else texto_conteo_hasta
+            ),
+            "total_entradas_conteo": (
+                total_entradas_conteo
+            ),
+            "total_salidas_conteo": (
+                total_salidas_conteo
+            ),
+            "error_conteos": error_conteos,
         },
     )
+
 
 
 # =========================
@@ -1382,3 +1570,4 @@ def verificar_bano_vacio(request, bano_id):
     )
 
     return redirect("inicio_supervisor")
+

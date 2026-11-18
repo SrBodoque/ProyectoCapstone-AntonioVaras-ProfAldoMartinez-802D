@@ -131,5 +131,104 @@
                 </div>
             {% endif %}
         </section>
+        <!-- HISTORIAL DIARIO DE CONTEOS -->
+        <header id="historial-conteos"
+                class="historial-header"
+                style="margin-top: 36px">
+            <div>
+                <h2>Historial diario de conteos</h2>
+                <p>
+                    Entradas y salidas detectadas por día.
+                    Los días sin movimientos registrados
+                    se muestran con cero.
+                </p>
+            </div>
+        </header>
+        <form method="get"
+              action="{% url 'historial_limpiezas' %}#historial-conteos"
+              class="filtros-form">
+            <!-- Mantener los filtros de limpiezas -->
+            <input type="hidden" name="trabajador" value="{{ filtro_trabajador }}">
+            <input type="hidden" name="bano" value="{{ filtro_bano }}">
+            <input type="hidden" name="estado" value="{{ filtro_estado }}">
+            <input type="hidden" name="fecha_desde" value="{{ filtro_fecha_desde }}">
+            <input type="hidden" name="fecha_hasta" value="{{ filtro_fecha_hasta }}">
+            <div class="filtro-grupo">
+                <label for="conteo-bano">Baño</label>
+                <select name="conteo_bano" id="conteo-bano" class="filtro-select">
+                    {% for bano in banos_conteo %}
+                        <option value="{{ bano.id }}"
+                                {% if filtro_conteo_bano == bano.id|stringformat:"s" %} selected {% endif %}>
+                            {{ bano.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filtro-grupo">
+                <label for="conteo-desde">Desde</label>
+                <input type="date"
+                       name="conteo_desde"
+                       id="conteo-desde"
+                       class="filtro-input"
+                       value="{{ filtro_conteo_desde }}">
+            </div>
+            <div class="filtro-grupo">
+                <label for="conteo-hasta">Hasta</label>
+                <input type="date"
+                       name="conteo_hasta"
+                       id="conteo-hasta"
+                       class="filtro-input"
+                       value="{{ filtro_conteo_hasta }}">
+            </div>
+            <div class="filtros-acciones">
+                <button type="submit" class="btn-filtrar">Filtrar conteos</button>
+                <a href="{% url 'historial_limpiezas' %}?trabajador={{ filtro_trabajador|urlencode }}&amp;bano={{ filtro_bano|urlencode }}&amp;estado={{ filtro_estado|urlencode }}&amp;fecha_desde={{ filtro_fecha_desde|urlencode }}&amp;fecha_hasta={{ filtro_fecha_hasta|urlencode }}#historial-conteos"
+                   class="btn-limpiar">Limpiar filtros</a>
+            </div>
+        </form>
+        <section class="historial-card">
+            {% if error_conteos %}
+                <div class="sin-registros">
+                    <p>{{ error_conteos }}</p>
+                </div>
+            {% elif historial_diario_conteos %}
+                <div class="tabla-conteos-scroll"
+                     tabindex="0"
+                     aria-label="Historial diario de conteos">
+                    <table class="historial-table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Entradas</th>
+                                <th>Salidas</th>
+                                <th>Total de movimientos</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dia in historial_diario_conteos %}
+                                <tr>
+                                    <td>{{ dia.fecha|date:"d/m/Y" }}</td>
+                                    <td>{{ dia.entradas }}</td>
+                                    <td>{{ dia.salidas }}</td>
+                                    <td>{{ dia.total_movimientos }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th>Total del período</th>
+                                <th>{{ total_entradas_conteo }}</th>
+                                <th>{{ total_salidas_conteo }}</th>
+                                <th>{{ total_entradas_conteo|add:total_salidas_conteo }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            {% else %}
+                <div class="sin-registros">
+                    <p>No hay baños disponibles para consultar.</p>
+                </div>
+            {% endif %}
+        </section>
     </main>
 {% endblock %}

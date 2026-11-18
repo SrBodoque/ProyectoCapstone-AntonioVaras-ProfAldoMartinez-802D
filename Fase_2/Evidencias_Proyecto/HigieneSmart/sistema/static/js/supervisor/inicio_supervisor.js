@@ -52,6 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // MOSTRAR EL ESTADO DE OCUPACION
     // ==========================================
 
+    
     function actualizarOcupacion(resumen) {
         if (!ocupacionElemento || !estadoOcupacionElemento) {
             return;
@@ -59,19 +60,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const estado = resumen?.ocupacion_estado;
         const ocupacion = resumen?.ocupacion_estimada;
+        const motivo = resumen?.ocupacion_motivo;
 
         if (
             estado === "CONOCIDA" &&
             Number.isInteger(ocupacion) &&
             ocupacion >= 0
         ) {
+            // Mostrar el numero incluso cuando
+            // existieron salidas excedentes.
             ocupacionElemento.textContent =
                 `${ocupacion} ${ocupacion === 1 ? "persona" : "personas"}`;
 
-            estadoOcupacionElemento.textContent =
-                "Ocupación estimada con referencia verificada";
+            // Mostrar advertencia si Python informo
+            // que la estimacion tuvo que ajustarse.
+            if (
+                typeof motivo === "string" &&
+                motivo.trim().length > 0
+            ) {
+                estadoOcupacionElemento.textContent =
+                    `⚠️ ${motivo}`;
+            } else {
+                estadoOcupacionElemento.textContent =
+                    "Ocupación estimada con referencia verificada";
+            }
 
         } else if (estado === "INCONSISTENTE") {
+            // Compatibilidad con estados antiguos.
             ocupacionElemento.textContent = "—";
 
             estadoOcupacionElemento.textContent =
@@ -90,6 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 "Sin datos de ocupación disponibles";
         }
     }
+
 
     // ==========================================
     // MOSTRAR MOVIMIENTOS DE LA JORNADA

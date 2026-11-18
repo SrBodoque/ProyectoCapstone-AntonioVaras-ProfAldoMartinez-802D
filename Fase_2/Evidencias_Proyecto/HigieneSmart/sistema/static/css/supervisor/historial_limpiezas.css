@@ -521,3 +521,41 @@
         transform: none;
     }
 }
+
+
+
+/* ==========================================
+   HISTORIAL DIARIO - TABLA CON SCROLL
+   ========================================== */
+
+.tabla-conteos-scroll {
+    max-height: 390px;
+    overflow-y: auto;
+    overflow-x: auto;
+    width: 100%;
+    scrollbar-width: thin;
+}
+
+/* Mantener visibles los encabezados
+   mientras se recorren los registros. */
+
+.tabla-conteos-scroll .historial-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: #edf7fc;
+}
+
+
+/* ==========================================
+   TOTAL DEL PERIODO FIJO ABAJO
+   ========================================== */
+
+.tabla-conteos-scroll .historial-table tfoot th,
+.tabla-conteos-scroll .historial-table tfoot td {
+    position: sticky;
+    bottom: 0;
+    z-index: 3;
+    background-color: #edf7fc;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.08);
+}
