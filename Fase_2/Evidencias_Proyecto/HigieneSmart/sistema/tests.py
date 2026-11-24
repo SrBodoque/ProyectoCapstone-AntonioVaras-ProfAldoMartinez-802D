@@ -142,7 +142,7 @@ class PruebasOcupacion(TestCase):
         self.assertIsNone(resultado["ocupacion"])
 
     # PRUEBA 4: MÁS SALIDAS QUE PERSONAS
-    def test_ocupacion_inconsistente(self):
+    def test_ocupacion_con_salidas_excedentes_se_ajusta_a_cero(self):
         self.crear_referencia(ocupacion=0)
 
         self.crear_evento(
@@ -154,9 +154,11 @@ class PruebasOcupacion(TestCase):
 
         self.assertEqual(
             resultado["estado"],
-            "INCONSISTENTE",
+            "CONOCIDA",
         )
-        self.assertIsNone(resultado["ocupacion"])
+        self.assertEqual(resultado["ocupacion"], 0)
+        self.assertTrue(resultado["estimacion_ajustada"])
+        self.assertEqual(resultado["salidas_excedentes"], 1)
 
     # PRUEBA 5: EVENTOS QUE LLEGAN DESORDENADOS
     def test_eventos_atrasados_ordenados_por_fecha(self):
@@ -589,8 +591,8 @@ class PruebasResumenConteo(TestCase):
             resumen["ocupacion_estimada"]
         )
 
-    # PRUEBA 17: UNA INCONSISTENCIA NO ALTERA LIMPIEZA
-    def test_inconsistencia_no_altera_conteos(self):
+    # PRUEBA 17: EL SALDO DE OCUPACION NO ALTERA LIMPIEZA
+    def test_saldo_de_ocupacion_no_altera_conteos(self):
         self.crear_referencia(ocupacion_inicial=0)
 
         # Se registra una salida con ocupacion cero.
@@ -598,8 +600,7 @@ class PruebasResumenConteo(TestCase):
             EventoConteo.Tipo.SALIDA, 9, 10
         )
 
-        # Una entrada posterior no elimina
-        # la inconsistencia anterior.
+        # Una entrada posterior compensa la salida en el saldo.
         self.crear_evento(
             EventoConteo.Tipo.ENTRADA, 9, 20
         )
@@ -612,11 +613,9 @@ class PruebasResumenConteo(TestCase):
 
         self.assertEqual(
             resumen["ocupacion_estado"],
-            "INCONSISTENTE",
+            "CONOCIDA",
         )
-        self.assertIsNone(
-            resumen["ocupacion_estimada"]
-        )
+        self.assertEqual(resumen["ocupacion_estimada"], 0)
 
 
 
@@ -744,6 +743,29 @@ class PruebasDashboardInOut(TestCase):
             resumen["ocupacion_estimada"],
             1,
         )
+
+    @override_settings(CONTEO_IN_OUT_HABILITADO=True)
+    def test_dashboard_muestra_cero_con_tres_entradas_y_tres_salidas(self):
+        self.client.force_login(self.supervisor)
+        ReferenciaOcupacion.objects.create(
+            bano=self.bano,
+            ocupacion_inicial=0,
+            fecha_referencia=self.fecha(8, 15),
+            verificada_por=self.supervisor,
+            vigente=True,
+        )
+
+        for minuto in (0, 20, 40):
+            self.crear_evento(EventoConteo.Tipo.SALIDA, 9, minuto)
+            self.crear_evento(EventoConteo.Tipo.ENTRADA, 9, minuto + 10)
+
+        respuesta = self.consultar_dashboard()
+        self.assertEqual(respuesta.status_code, 200)
+        resumen = respuesta.json()["conteo_demo"]["resumen_in_out"]
+        self.assertEqual(resumen["entradas_jornada"], 3)
+        self.assertEqual(resumen["salidas_jornada"], 3)
+        self.assertEqual(resumen["ocupacion_estado"], "CONOCIDA")
+        self.assertEqual(resumen["ocupacion_estimada"], 0)
 
     # PRUEBA 20: UN TRABAJADOR NO PUEDE ACCEDER
     @override_settings(CONTEO_IN_OUT_HABILITADO=True)
@@ -1405,8 +1427,8 @@ class PruebasEventosAtrasadosOcupacion(TestCase):
         )
 
     # PRUEBA 39
-    # UNA SALIDA ATRASADA REVELA UNA INCONSISTENCIA.
-    def test_salida_atrasada_revela_inconsistencia(self):
+    # UNA SALIDA ATRASADA SE RESTA DEL SALDO.
+    def test_salida_atrasada_se_resta_del_saldo(self):
 
         # Llega primero una entrada que ocurrio
         # 20 segundos despues de la referencia.
@@ -1424,17 +1446,13 @@ class PruebasEventosAtrasadosOcupacion(TestCase):
 
         resultado = calcular_ocupacion(self.bano.id)
 
-        # Cronologicamente hubo una salida
-        # cuando la ocupacion inicial era cero.
+        # El saldo incluye la salida anterior a la entrada.
         self.assertEqual(
             resultado["estado"],
-            "INCONSISTENTE",
+            "CONOCIDA",
         )
 
-        # No debemos mostrar un numero engañoso.
-        self.assertIsNone(
-            resultado["ocupacion"],
-        )
+        self.assertEqual(resultado["ocupacion"], 0)
 
 
 # ==========================================

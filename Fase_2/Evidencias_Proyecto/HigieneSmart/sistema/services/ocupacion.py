@@ -9,10 +9,8 @@ def calcular_ocupacion(bano_id):
     Calcula la ocupacion estimada desde la ultima
     referencia verificada para un baño.
 
-    La ocupacion nunca baja de cero.
-
-    Si hay salidas excedentes, mantiene el calculo
-    funcionando, pero informa que fue ajustado.
+    El saldo final se limita a cero si las salidas
+    superan la ocupacion inicial mas las entradas.
 
     No modifica la base de datos.
     """
@@ -47,8 +45,6 @@ def calcular_ocupacion(bano_id):
             "motivo": "La referencia tiene una fecha futura.",
         }
 
-    ocupacion = referencia.ocupacion_inicial
-
     eventos = (
         EventoConteo.objects
         .filter(
@@ -56,28 +52,20 @@ def calcular_ocupacion(bano_id):
             fecha_evento__gt=referencia.fecha_referencia,
             fecha_evento__lte=ahora,
         )
-        .order_by("fecha_evento", "id")
         .values_list("tipo", flat=True)
     )
 
     entradas = 0
     salidas = 0
-    salidas_excedentes = 0
 
     for tipo in eventos:
         if tipo == EventoConteo.Tipo.ENTRADA:
             entradas += 1
-            ocupacion += 1
-
         elif tipo == EventoConteo.Tipo.SALIDA:
             salidas += 1
 
-            if ocupacion > 0:
-                ocupacion -= 1
-            else:
-                # Nunca mostrar ocupacion negativa.
-                # Conservar un aviso del desajuste.
-                salidas_excedentes += 1
+    saldo = referencia.ocupacion_inicial + entradas - salidas
+    salidas_excedentes = max(0, -saldo)
 
     if salidas_excedentes:
         motivo = (
@@ -90,7 +78,7 @@ def calcular_ocupacion(bano_id):
     return {
         # Compatible con el dashboard actual.
         "estado": "CONOCIDA",
-        "ocupacion": ocupacion,
+        "ocupacion": max(0, saldo),
         "motivo": motivo,
         "entradas": entradas,
         "salidas": salidas,
