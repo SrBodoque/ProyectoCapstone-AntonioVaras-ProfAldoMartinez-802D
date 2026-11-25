@@ -1,0 +1,79 @@
+<mxfile host="app.diagrams.net" agent="ChatGPT">
+  <diagram id="LimpIA_Casos_de_Uso_Trabajador" name="Casos de uso">
+    <mxGraphModel dx="1414" dy="760" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=24;fontStyle=1;" value="Diagrama de Casos de Uso — Trabajador" vertex="1">
+          <mxGeometry height="45" width="650" x="390" y="25" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=12;fontColor=#666666;" value="Sistema LimpIA" vertex="1">
+          <mxGeometry height="30" width="510" x="460" y="65" as="geometry" />
+        </mxCell>
+        <mxCell id="system" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#1F4E79;strokeWidth=2;fontStyle=1;fontSize=18;verticalAlign=top;spacingTop=10;" value="LimpIA" vertex="1">
+          <mxGeometry height="530" width="920" x="280" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="actor" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fontSize=16;fontStyle=1;" value="Trabajador" vertex="1">
+          <mxGeometry height="160" width="100" x="55" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="w_activate" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF2F8;strokeColor=#1F4E79;strokeWidth=1.5;fontSize=13;fontStyle=1;" value="Activar cuenta" vertex="1">
+          <mxGeometry height="72" width="220" x="330" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="w_login" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF2F8;strokeColor=#1F4E79;strokeWidth=1.5;fontSize=13;fontStyle=1;" value="Iniciar sesión" vertex="1">
+          <mxGeometry height="72" width="220" x="340" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="w_panel" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF2F8;strokeColor=#1F4E79;strokeWidth=1.5;fontSize=13;fontStyle=1;" value="Consultar panel de trabajo" vertex="1">
+          <mxGeometry height="72" width="220" x="360" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="w_bano" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5B9BD5;strokeWidth=1.3;fontSize=12;" value="Ver baño asignado" vertex="1">
+          <mxGeometry height="72" width="210" x="530" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="w_alerta" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5B9BD5;strokeWidth=1.3;fontSize=12;" value="Ver alerta pendiente" vertex="1">
+          <mxGeometry height="72" width="210" x="300" y="530" as="geometry" />
+        </mxCell>
+        <mxCell id="w_start" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF2F8;strokeColor=#1F4E79;strokeWidth=1.5;fontSize=13;fontStyle=1;" value="Iniciar limpieza" vertex="1">
+          <mxGeometry height="72" width="220" x="660" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="w_finish" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF2F8;strokeColor=#1F4E79;strokeWidth=1.5;fontSize=13;fontStyle=1;" value="Finalizar limpieza" vertex="1">
+          <mxGeometry height="72" width="220" x="710" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="w_evidence" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#5B9BD5;strokeWidth=1.3;fontSize=12;" value="Adjuntar evidencia fotográfica" vertex="1">
+          <mxGeometry height="72" width="210" x="980" y="332" as="geometry" />
+        </mxCell>
+        <mxCell id="w_logout" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EAF2F8;strokeColor=#1F4E79;strokeWidth=1.5;fontSize=13;fontStyle=1;" value="Cerrar sesión" vertex="1">
+          <mxGeometry height="72" width="220" x="760" y="458" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc1" edge="1" parent="1" source="actor" style="endArrow=none;html=1;rounded=0;strokeWidth=1.5;" target="w_activate" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc2" edge="1" parent="1" source="actor" style="endArrow=none;html=1;rounded=0;strokeWidth=1.5;" target="w_login" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc3" edge="1" parent="1" source="actor" style="endArrow=none;html=1;rounded=0;strokeWidth=1.5;" target="w_panel" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc4" edge="1" parent="1" source="actor" style="endArrow=none;html=1;rounded=0;strokeWidth=1.5;" target="w_start" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc5" edge="1" parent="1" source="actor" style="endArrow=none;html=1;rounded=0;strokeWidth=1.5;" target="w_finish" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="assoc6" edge="1" parent="1" source="actor" style="endArrow=none;html=1;rounded=0;strokeWidth=1.5;" target="w_logout" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc1" edge="1" parent="1" source="w_panel" style="endArrow=open;endFill=0;html=1;rounded=0;dashed=1;strokeColor=#666666;fontSize=10;" target="w_bano" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc2" edge="1" parent="1" source="w_panel" style="endArrow=open;endFill=0;html=1;rounded=0;dashed=1;strokeColor=#666666;fontSize=10;" target="w_alerta" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc3" edge="1" parent="1" source="w_finish" style="endArrow=open;endFill=0;html=1;rounded=0;dashed=1;strokeColor=#666666;fontSize=10;" target="w_evidence" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="note" parent="1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#BDB76B;fontSize=11;" value="El Trabajador consulta su asignación y las alertas asociadas al baño asignado; puede iniciar y finalizar una intervención, dejando evidencia fotográfica." vertex="1">
+          <mxGeometry height="120" width="230" x="20" y="580" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

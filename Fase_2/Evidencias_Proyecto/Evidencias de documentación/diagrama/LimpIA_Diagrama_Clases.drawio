@@ -1,0 +1,220 @@
+<mxfile host="app.diagrams.net" agent="ChatGPT">
+  <diagram id="limpia-class-diagram-corrected" name="Diagrama de clases corregido">
+    <mxGraphModel dx="2087" dy="1101" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2000" pageHeight="1250" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=24;fontStyle=1;" value="Diagrama de clases — LimpIA" vertex="1">
+          <mxGeometry height="40" width="800" x="600" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=12;fontColor=#666666;" value="Basada en usuarios/models.py y sistema/models.py" vertex="1">
+          <mxGeometry height="28" width="960" x="520" y="58" as="geometry" />
+        </mxCell>
+        <mxCell id="dom_users" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#B0BEC5;dashed=1;strokeWidth=1.2;fontSize=14;fontStyle=1;verticalAlign=top;spacingTop=8;" value="Usuarios y operación" vertex="1">
+          <mxGeometry height="1030" width="620" x="35" y="105" as="geometry" />
+        </mxCell>
+        <mxCell id="dom_core" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#B0BEC5;dashed=1;strokeWidth=1.2;fontSize=14;fontStyle=1;verticalAlign=top;spacingTop=8;" value="Gestión de limpieza" vertex="1">
+          <mxGeometry height="1030" width="610" x="680" y="105" as="geometry" />
+        </mxCell>
+        <mxCell id="dom_count" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#B0BEC5;dashed=1;strokeWidth=1.2;fontSize=14;fontStyle=1;verticalAlign=top;spacingTop=8;" value="Conteo y ocupación" vertex="1">
+          <mxGeometry height="1030" width="560" x="1315" y="105" as="geometry" />
+        </mxCell>
+        <mxCell id="AbstractUser" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#7B1FA2;strokeWidth=1.3;fontSize=11;align=left;verticalAlign=top;spacing=8;dashed=1;" value="&lt;div style=&#39;text-align:center;font-weight:bold;font-size:14px;&#39;&gt;&lt;span style=&#39;font-weight:normal;font-size:11px;&#39;&gt;&amp;lt;&amp;lt;framework Django&amp;gt;&amp;gt;&lt;/span&gt;&lt;br&gt;AbstractUser&lt;/div&gt;&lt;div style=&#39;border-top:1px solid #777;padding-top:5px;margin-top:5px;&#39;&gt;+ username: str&lt;br&gt;+ password: str&lt;br&gt;+ is_active: bool&lt;br&gt;… atributos de autenticación Django&lt;/div&gt;&lt;div style=&#39;border-top:1px solid #777;padding-top:5px;margin-top:5px;&#39;&gt;&lt;span style=&#39;color:#777&#39;&gt;—&lt;/span&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry height="180" width="300" x="95" y="145" as="geometry" />
+        </mxCell>
+        <mxCell id="Usuario" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#EAF2F8;strokeColor=#1F4E79;strokeWidth=1.5;fontSize=11;align=left;verticalAlign=top;spacing=8;" value="&lt;div style=&#39;text-align:center;font-weight:bold;font-size:14px;&#39;&gt;Usuario&lt;/div&gt;&lt;div style=&#39;border-top:1px solid #777;padding-top:5px;margin-top:5px;&#39;&gt;+ email: EmailField {unique}&lt;br&gt;+ rol: CharField&lt;br&gt;  {SUPERVISOR, TRABAJADOR}&lt;/div&gt;&lt;div style=&#39;border-top:1px solid #777;padding-top:5px;margin-top:5px;&#39;&gt;+ __str__(): str&lt;/div&gt;" vertex="1">
+          <mxGeometry height="185" width="300" x="95" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="AsignacionBano" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=1.5;fontSize=11;align=left;verticalAlign=top;spacing=8;" value="&lt;div style=&#39;text-align:center;font-weight:bold;font-size:14px;&#39;&gt;AsignacionBano&lt;/div&gt;&lt;div style=&#39;border-top:1px solid #777;padding-top:5px;margin-top:5px;&#39;&gt;+ trabajador: FK&amp;lt;Usuario&amp;gt;&lt;br&gt;+ bano: FK&amp;lt;Bano&amp;gt;&lt;br&gt;+ fecha_asignacion: DateTimeField&lt;br&gt;+ fecha_fin: DateTimeField?&lt;br&gt;+ activa: BooleanField&lt;/div&gt;&lt;div style=&#39;border-top:1px solid #777;padding-top:5px;margin-top:5px;&#39;&gt;+ __str__(): str&lt;/div&gt;" vertex="1">
+          <mxGeometry height="185" width="330" x="55" y="690" as="geometry" />
+        </mxCell>
+        <mxCell id="IntervencionLimpieza" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=1.5;fontSize=11;align=left;verticalAlign=top;spacing=8;" value="&lt;div style=&#39;text-align:center;font-weight:bold;font-size:14px;&#39;&gt;IntervencionLimpieza&lt;/div&gt;&lt;div style=&#39;border-top:1px solid #777;padding-top:5px;margin-top:5px;&#39;&gt;+ alerta: OneToOne&amp;lt;Alerta&amp;gt;&lt;br&gt;+ trabajador: FK&amp;lt;Usuario&amp;gt;&lt;br&gt;+ bano: FK&amp;lt;Bano&amp;gt;&lt;br&gt;+ fecha_inicio: DateTimeField&lt;br&gt;+ fecha_fin: DateTimeField?&lt;br&gt;+ evidencia: ImageField?&lt;br&gt;/ duracion: timedelta?&lt;br&gt;/ duracion_formateada: str&lt;/div&gt;&lt;div style=&#39;border-top:1px solid #777;padding-top:5px;margin-top:5px;&#39;&gt;+ __str__(): str&lt;/div&gt;" vertex="1">
+          <mxGeometry height="225" width="250" x="400" y="675" as="geometry" />
+        </mxCell>
+        <mxCell id="Bano" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=1.5;fontSize=11;align=left;verticalAlign=top;spacing=8;" value="&lt;div style=&#39;text-align:center;font-weight:bold;font-size:14px;&#39;&gt;Bano&lt;/div&gt;&lt;div style=&#39;border-top:1px solid #777;padding-top:5px;margin-top:5px;&#39;&gt;+ nombre: CharField&lt;br&gt;+ ubicacion: CharField&lt;br&gt;+ activo: BooleanField&lt;br&gt;+ umbral_entradas: PositiveIntegerField?&lt;br&gt;+ inicio_ciclo_conteo: DateTimeField&lt;/div&gt;&lt;div style=&#39;border-top:1px solid #777;padding-top:5px;margin-top:5px;&#39;&gt;+ __str__(): str&lt;/div&gt;" vertex="1">
+          <mxGeometry height="225" width="330" x="825" y="175" as="geometry" />
+        </mxCell>
+        <mxCell id="Alerta" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=1.5;fontSize=11;align=left;verticalAlign=top;spacing=8;" value="&lt;div style=&#39;text-align:center;font-weight:bold;font-size:14px;&#39;&gt;Alerta&lt;/div&gt;&lt;div style=&#39;border-top:1px solid #777;padding-top:5px;margin-top:5px;&#39;&gt;+ bano: FK&amp;lt;Bano&amp;gt;&lt;br&gt;+ motivo: CharField&lt;br&gt;+ estado: CharField&lt;br&gt;  {PENDIENTE, EN_PROCESO, ATENDIDA}&lt;br&gt;+ fecha_creacion: DateTimeField&lt;/div&gt;&lt;div style=&#39;border-top:1px solid #777;padding-top:5px;margin-top:5px;&#39;&gt;+ __str__(): str&lt;/div&gt;" vertex="1">
+          <mxGeometry height="225" width="330" x="825" y="525" as="geometry" />
+        </mxCell>
+        <mxCell id="FuenteConteo" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#EF6C00;strokeWidth=1.5;fontSize=11;align=left;verticalAlign=top;spacing=8;" value="&lt;div style=&#39;text-align:center;font-weight:bold;font-size:14px;&#39;&gt;FuenteConteo&lt;/div&gt;&lt;div style=&#39;border-top:1px solid #777;padding-top:5px;margin-top:5px;&#39;&gt;+ nombre: CharField&lt;br&gt;+ identificador: SlugField {unique}&lt;br&gt;+ bano: FK&amp;lt;Bano&amp;gt;&lt;br&gt;+ activa: BooleanField&lt;br&gt;+ credencial_hash: CharField? {unique}&lt;br&gt;+ fecha_creacion: DateTimeField&lt;/div&gt;&lt;div style=&#39;border-top:1px solid #777;padding-top:5px;margin-top:5px;&#39;&gt;+ __str__(): str&lt;/div&gt;" vertex="1">
+          <mxGeometry height="220" width="310" x="1390" y="165" as="geometry" />
+        </mxCell>
+        <mxCell id="EventoConteo" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#EF6C00;strokeWidth=1.5;fontSize=11;align=left;verticalAlign=top;spacing=8;" value="&lt;div style=&#39;text-align:center;font-weight:bold;font-size:14px;&#39;&gt;EventoConteo&lt;/div&gt;&lt;div style=&#39;border-top:1px solid #777;padding-top:5px;margin-top:5px;&#39;&gt;+ bano: FK&amp;lt;Bano&amp;gt;&lt;br&gt;+ fuente: FK&amp;lt;FuenteConteo&amp;gt;?&lt;br&gt;+ tipo: CharField {ENTRADA, SALIDA}&lt;br&gt;+ fecha_evento: DateTimeField&lt;br&gt;+ origen: CharField {SIMULADO, VISION}&lt;br&gt;+ referencia_externa: CharField? {unique}&lt;br&gt;+ fecha_registro: DateTimeField&lt;/div&gt;&lt;div style=&#39;border-top:1px solid #777;padding-top:5px;margin-top:5px;&#39;&gt;+ __str__(): str&lt;/div&gt;" vertex="1">
+          <mxGeometry height="225" width="330" x="1380" y="515" as="geometry" />
+        </mxCell>
+        <mxCell id="ReferenciaOcupacion" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#EF6C00;strokeWidth=1.5;fontSize=11;align=left;verticalAlign=top;spacing=8;" value="&lt;div style=&#39;text-align:center;font-weight:bold;font-size:14px;&#39;&gt;ReferenciaOcupacion&lt;/div&gt;&lt;div style=&#39;border-top:1px solid #777;padding-top:5px;margin-top:5px;&#39;&gt;+ bano: FK&amp;lt;Bano&amp;gt;&lt;br&gt;+ ocupacion_inicial: PositiveIntegerField&lt;br&gt;+ fecha_referencia: DateTimeField&lt;br&gt;+ verificada_por: FK&amp;lt;Usuario&amp;gt;&lt;br&gt;+ vigente: BooleanField&lt;br&gt;+ fecha_invalidacion: DateTimeField?&lt;br&gt;+ motivo_invalidacion: CharField&lt;br&gt;+ observacion: CharField&lt;br&gt;+ fecha_registro: DateTimeField&lt;/div&gt;&lt;div style=&#39;border-top:1px solid #777;padding-top:5px;margin-top:5px;&#39;&gt;+ __str__(): str&lt;/div&gt;" vertex="1">
+          <mxGeometry height="220" width="300" x="1400" y="875" as="geometry" />
+        </mxCell>
+        <mxCell id="gen1" edge="1" parent="1" source="Usuario" style="endArrow=block;endFill=0;html=1;rounded=0;strokeWidth=1.3;fontSize=10;" target="AbstractUser" value="hereda">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r1" edge="1" parent="1" source="Usuario" style="endArrow=none;html=1;rounded=0;strokeWidth=1.25;fontSize=10;" target="AsignacionBano" value="trabajador">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="245" y="630" />
+              <mxPoint x="220" y="630" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r1_u" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="1" vertex="1">
+          <mxGeometry height="18" width="28" x="208" y="575" as="geometry" />
+        </mxCell>
+        <mxCell id="r1_a" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="0..*" vertex="1">
+          <mxGeometry height="18" width="40" x="205" y="655" as="geometry" />
+        </mxCell>
+        <mxCell id="r2" edge="1" parent="1" source="Usuario" style="endArrow=none;html=1;rounded=0;strokeWidth=1.25;fontSize=10;" target="IntervencionLimpieza" value="trabajador">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="430" y="520" />
+              <mxPoint x="520" y="520" />
+              <mxPoint x="520" y="675" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r2_u" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="1" vertex="1">
+          <mxGeometry height="18" width="28" x="380" y="500" as="geometry" />
+        </mxCell>
+        <mxCell id="r2_i" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="0..*" vertex="1">
+          <mxGeometry height="18" width="40" x="505" y="650" as="geometry" />
+        </mxCell>
+        <mxCell id="r3" edge="1" parent="1" source="Usuario" style="endArrow=none;html=1;rounded=0;strokeWidth=1.25;fontSize=10;" target="ReferenciaOcupacion" value="verificada_por">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="430" y="470" />
+              <mxPoint x="1260" y="470" />
+              <mxPoint x="1260" y="1015" />
+              <mxPoint x="1370" y="1015" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r3_u" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="1" vertex="1">
+          <mxGeometry height="18" width="28" x="405" y="455" as="geometry" />
+        </mxCell>
+        <mxCell id="r3_ro" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="0..*" vertex="1">
+          <mxGeometry height="18" width="40" x="1330" y="997" as="geometry" />
+        </mxCell>
+        <mxCell id="r4" edge="1" parent="1" source="Bano" style="endArrow=none;html=1;rounded=0;strokeWidth=1.25;fontSize=10;" target="AsignacionBano" value="asignaciones">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="780" y="300" />
+              <mxPoint x="680" y="300" />
+              <mxPoint x="680" y="630" />
+              <mxPoint x="300" y="630" />
+              <mxPoint x="300" y="690" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r4_b" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="1" vertex="1">
+          <mxGeometry height="18" width="28" x="790" y="285" as="geometry" />
+        </mxCell>
+        <mxCell id="r4_a" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="0..*" vertex="1">
+          <mxGeometry height="18" width="40" x="280" y="665" as="geometry" />
+        </mxCell>
+        <mxCell id="r5" edge="1" parent="1" source="Bano" style="endArrow=none;html=1;rounded=0;strokeWidth=1.25;fontSize=10;" target="Alerta" value="alertas">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r5_b" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="1" vertex="1">
+          <mxGeometry height="18" width="28" x="970" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="r5_a" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="0..*" vertex="1">
+          <mxGeometry height="18" width="40" x="960" y="495" as="geometry" />
+        </mxCell>
+        <mxCell id="r6" edge="1" parent="1" source="Bano" style="endArrow=none;html=1;rounded=0;strokeWidth=1.25;fontSize=10;" target="IntervencionLimpieza" value="intervenciones_limpieza">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="790" y="350" />
+              <mxPoint x="760" y="350" />
+              <mxPoint x="760" y="815" />
+              <mxPoint x="735" y="815" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r6_b" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="1" vertex="1">
+          <mxGeometry height="18" width="28" x="790" y="335" as="geometry" />
+        </mxCell>
+        <mxCell id="r6_i" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="0..*" vertex="1">
+          <mxGeometry height="18" width="40" x="735" y="795" as="geometry" />
+        </mxCell>
+        <mxCell id="r7" edge="1" parent="1" source="Alerta" style="endArrow=none;html=1;rounded=0;strokeWidth=1.25;fontSize=10;" target="IntervencionLimpieza" value="intervencion">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="790" y="640" />
+              <mxPoint x="760" y="640" />
+              <mxPoint x="760" y="745" />
+              <mxPoint x="735" y="745" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r7_a" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="1" vertex="1">
+          <mxGeometry height="18" width="28" x="785" y="620" as="geometry" />
+        </mxCell>
+        <mxCell id="r7_i" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="0..1" vertex="1">
+          <mxGeometry height="18" width="42" x="735" y="725" as="geometry" />
+        </mxCell>
+        <mxCell id="r8" edge="1" parent="1" source="Bano" style="endArrow=none;html=1;rounded=0;strokeWidth=1.25;fontSize=10;" target="FuenteConteo" value="fuentes_conteo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r8_b" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="1" vertex="1">
+          <mxGeometry height="18" width="28" x="1170" y="265" as="geometry" />
+        </mxCell>
+        <mxCell id="r8_f" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="0..*" vertex="1">
+          <mxGeometry height="18" width="40" x="1340" y="265" as="geometry" />
+        </mxCell>
+        <mxCell id="r9" edge="1" parent="1" source="Bano" style="endArrow=none;html=1;rounded=0;strokeWidth=1.25;fontSize=10;" target="EventoConteo" value="eventos_conteo">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1160" y="350" />
+              <mxPoint x="1250" y="350" />
+              <mxPoint x="1250" y="655" />
+              <mxPoint x="1380" y="655" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r9_b" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="1" vertex="1">
+          <mxGeometry height="18" width="28" x="1160" y="335" as="geometry" />
+        </mxCell>
+        <mxCell id="r9_e" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="0..*" vertex="1">
+          <mxGeometry height="18" width="40" x="1340" y="637" as="geometry" />
+        </mxCell>
+        <mxCell id="r10" edge="1" parent="1" source="FuenteConteo" style="endArrow=none;html=1;rounded=0;strokeWidth=1.25;fontSize=10;" target="EventoConteo" value="fuente">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r10_f" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="0..1" vertex="1">
+          <mxGeometry height="18" width="42" x="1535" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="r10_e" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="0..*" vertex="1">
+          <mxGeometry height="18" width="40" x="1532" y="485" as="geometry" />
+        </mxCell>
+        <mxCell id="r11" edge="1" parent="1" source="Bano" style="endArrow=none;html=1;rounded=0;strokeWidth=1.25;fontSize=10;" target="ReferenciaOcupacion" value="referencias_ocupacion">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1180" y="390" />
+              <mxPoint x="1220" y="390" />
+              <mxPoint x="1220" y="1000" />
+              <mxPoint x="1370" y="1000" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r11_b" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="1" vertex="1">
+          <mxGeometry height="18" width="28" x="1175" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="r11_ro" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="0..*" vertex="1">
+          <mxGeometry height="18" width="40" x="1330" y="980" as="geometry" />
+        </mxCell>
+        <mxCell id="note_asig" parent="1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#BDB76B;fontSize=10;" value="Restricción del modelo: como máximo una asignación activa por baño y una por trabajador." vertex="1">
+          <mxGeometry height="65" width="520" x="70" y="960" as="geometry" />
+        </mxCell>
+        <mxCell id="note_event" parent="1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#BDB76B;fontSize=10;" value="EventoConteo.fuente es opcional (null=True, blank=True); por eso un evento puede tener 0..1 FuenteConteo." vertex="1">
+          <mxGeometry height="65" width="470" x="1370" y="780" as="geometry" />
+        </mxCell>
+        <mxCell id="note_legend" parent="1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#BDB76B;fontSize=10;" value="Convenciones: FK = ForeignKey · ? = atributo opcional · / = propiedad derivada · {unique} = valor único." vertex="1">
+          <mxGeometry height="50" width="560" x="690" y="1010" as="geometry" />
+        </mxCell>
+        <mxCell id="3LvNacL9FnEfwKaH7jEv-1" edge="1" parent="1" source="ReferenciaOcupacion" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;innerLoopWaypoints=1;exitX=1;exitY=1;exitDx=0;exitDy=0;defaultLabelBackgroundColor=page;labelPadding=0 4;" target="ReferenciaOcupacion">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

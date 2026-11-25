@@ -1,0 +1,214 @@
+<mxfile host="app.diagrams.net" agent="ChatGPT">
+  <diagram id="limpia-general-architecture" name="Arquitectura general">
+    <mxGraphModel dx="2438" dy="1310" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2300" pageHeight="1450" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=25;fontStyle=1;" value="Arquitectura general — LimpIA" vertex="1">
+          <mxGeometry height="42" width="1000" x="650" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=12;fontColor=#666666;" value="Estado actual + arquitectura objetivo de despliegue · basado en el código y configuración vigente" vertex="1">
+          <mxGeometry height="28" width="1120" x="590" y="62" as="geometry" />
+        </mxCell>
+        <mxCell id="zone_edge" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#90A4AE;strokeWidth=1.5;dashed=1;fontStyle=1;fontSize=15;verticalAlign=top;spacingTop=10;" value="1. Sede / equipo local de visión" vertex="1">
+          <mxGeometry height="700" width="760" x="45" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="zone_local" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#90A4AE;strokeWidth=1.5;dashed=1;fontStyle=1;fontSize=15;verticalAlign=top;spacingTop=10;" value="2. Plataforma LimpIA — entorno actual de desarrollo" vertex="1">
+          <mxGeometry height="720" width="1000" x="840" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="zone_users" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#90A4AE;strokeWidth=1.5;dashed=1;fontStyle=1;fontSize=15;verticalAlign=top;spacingTop=10;" value="Usuarios del sistema" vertex="1">
+          <mxGeometry height="705" width="365" x="1870" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="camera" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF8E1;strokeColor=#F9A825;strokeWidth=1.8;fontSize=12;fontStyle=1;" value="Cámara / fuente de video&#xa;DroidCam · cámara local · MP4&#xa;&#xa;ESTADO: implementado;&#xa;validación física final pendiente" vertex="1">
+          <mxGeometry height="130" width="230" x="105" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="vision_pc" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=1.8;fontSize=12;fontStyle=1;" value="Equipo de Visión Artificial (PC local)&#xa;&#xa;Python + OpenCV + YOLO26n&#xa;Tracking + zonas + motor IN/OUT&#xa;Procesamiento local" vertex="1">
+          <mxGeometry height="155" width="300" x="430" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="sqlite" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=1.8;fontStyle=1;fontSize=12;" value="SQLite&#xa;EventOutbox local&#xa;&#xa;UUID + payload + estado&#xa;PENDIENTE / ENTREGADO" vertex="1">
+          <mxGeometry height="130" width="240" x="185" y="420" as="geometry" />
+        </mxCell>
+        <mxCell id="sender" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF8E1;strokeColor=#F9A825;strokeWidth=1.8;fontSize=12;fontStyle=1;" value="DjangoEventSender&#xa;&#xa;Lee outbox y envía eventos&#xa;HTTP/HTTPS + Bearer token" vertex="1">
+          <mxGeometry height="130" width="235" x="500" y="420" as="geometry" />
+        </mxCell>
+        <mxCell id="privacy" parent="1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#BDB76B;fontSize=10;" value="Privacidad&#xa;Sin reconocimiento facial&#xa;IDs temporales&#xa;No guarda video automáticamente" vertex="1">
+          <mxGeometry height="90" width="450" x="165" y="655" as="geometry" />
+        </mxCell>
+        <mxCell id="django" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=1.8;fontSize=12;fontStyle=1;" value="Django 5.2&#xa;Backend + API + autenticación + roles&#xa;Views · Forms · Services · ORM" vertex="1">
+          <mxGeometry height="145" width="300" x="930" y="195" as="geometry" />
+        </mxCell>
+        <mxCell id="webapp" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=1.8;fontSize=12;fontStyle=1;" value="Aplicación Web LimpIA&#xa;&#xa;Templates Django&#xa;HTML + CSS + JavaScript&#xa;Supervisor / Trabajador" vertex="1">
+          <mxGeometry height="145" width="300" x="1320" y="195" as="geometry" />
+        </mxCell>
+        <mxCell id="postgres" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=1.8;fontStyle=1;fontSize=12;" value="PostgreSQL&#xa;Base de datos operacional&#xa;&#xa;Usuarios · baños · asignaciones&#xa;alertas · eventos · intervenciones" vertex="1">
+          <mxGeometry height="150" width="290" x="1000" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="media" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=1.8;fontSize=12;fontStyle=1;" value="Archivos Media locales&#xa;Evidencia fotográfica de limpieza&#xa;MEDIA_ROOT" vertex="1">
+          <mxGeometry height="120" width="260" x="1380" y="485" as="geometry" />
+        </mxCell>
+        <mxCell id="devserver" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF8E1;strokeColor=#F9A825;strokeWidth=1.8;fontSize=12;fontStyle=1;" value="Servidor actual de desarrollo&#xa;python manage.py runserver&#xa;http://127.0.0.1:8000&#xa;DEBUG=True · ALLOWED_HOSTS=[]" vertex="1">
+          <mxGeometry height="135" width="320" x="1135" y="690" as="geometry" />
+        </mxCell>
+        <mxCell id="browser" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF8E1;strokeColor=#F9A825;strokeWidth=1.8;fontSize=12;fontStyle=1;" value="Navegador Web&#xa;Acceso actual en entorno local/de desarrollo" vertex="1">
+          <mxGeometry height="105" width="230" x="1930" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="sup" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fontSize=12;fontStyle=1;" value="Supervisor" vertex="1">
+          <mxGeometry height="140" width="90" x="1930" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="worker" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fontSize=12;fontStyle=1;" value="Trabajador" vertex="1">
+          <mxGeometry height="140" width="90" x="2070" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="camera" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=10;strokeColor=#F9A825;" target="vision_pc" value="frames de video">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="vision_pc" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=10;" target="sqlite" value="eventos IN/OUT confirmados">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="580" y="360" />
+              <mxPoint x="305" y="360" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="sqlite" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=10;" target="sender" value="eventos pendientes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="sender" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=10;strokeColor=#F9A825;" target="django" value="POST JSON + Bearer&#xa;(integración implementada;&#xa;validación operacional en cierre)">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="740" y="485" />
+              <mxPoint x="830" y="485" />
+              <mxPoint x="830" y="270" />
+              <mxPoint x="930" y="270" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="django" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=10;" target="postgres" value="Django ORM / SQL">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="django" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=10;" target="webapp" value="renderiza / procesa acciones">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="django" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=10;" target="media" value="guarda evidencia">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1230" y="300" />
+              <mxPoint x="1270" y="300" />
+              <mxPoint x="1270" y="545" />
+              <mxPoint x="1380" y="545" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="devserver" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=10;" target="django" value="ejecuta aplicación">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1295" y="670" />
+              <mxPoint x="1080" y="670" />
+              <mxPoint x="1080" y="340" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="browser" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=10;strokeColor=#F9A825;" target="devserver" value="HTTP local">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1930" y="350" />
+              <mxPoint x="1760" y="350" />
+              <mxPoint x="1760" y="755" />
+              <mxPoint x="1455" y="755" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="sup" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=10;" target="browser" value="usa">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="worker" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=10;" target="browser" value="usa">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="future_zone" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#90A4AE;strokeWidth=1.5;dashed=1;fontStyle=1;fontSize=15;verticalAlign=top;spacingTop=10;" value="3. Arquitectura objetivo de producción — todavía por implementar" vertex="1">
+          <mxGeometry height="390" width="2190" x="45" y="880" as="geometry" />
+        </mxCell>
+        <mxCell id="internet" parent="1" style="shape=cloud;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#757575;strokeWidth=1.6;fontStyle=1;fontSize=12;dashed=1;" value="Internet" vertex="1">
+          <mxGeometry height="90" width="180" x="120" y="1030" as="geometry" />
+        </mxCell>
+        <mxCell id="domain" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#757575;strokeWidth=1.6;fontSize=12;fontStyle=1;dashed=1;" value="Dominio + DNS + HTTPS/TLS&#xa;&#xa;Nombre público de LimpIA&#xa;Certificado y resolución DNS" vertex="1">
+          <mxGeometry height="130" width="250" x="385" y="1000" as="geometry" />
+        </mxCell>
+        <mxCell id="server" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#757575;strokeWidth=1.6;fontSize=12;fontStyle=1;dashed=1;" value="Servidor / Hosting de producción&#xa;&#xa;SO + firewall + puertos&#xa;Despliegue público" vertex="1">
+          <mxGeometry height="130" width="260" x="720" y="1000" as="geometry" />
+        </mxCell>
+        <mxCell id="docker" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#757575;strokeWidth=1.6;fontSize=12;fontStyle=1;dashed=1;" value="Docker / Docker Compose&#xa;&#xa;NO utilizado actualmente&#xa;Contenerización por implementar" vertex="1">
+          <mxGeometry height="130" width="280" x="1070" y="1000" as="geometry" />
+        </mxCell>
+        <mxCell id="django_prod" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#757575;strokeWidth=1.6;fontSize=12;fontStyle=1;dashed=1;" value="Contenedor Django&#xa;Aplicación LimpIA&#xa;API + Web" vertex="1">
+          <mxGeometry height="110" width="240" x="1435" y="980" as="geometry" />
+        </mxCell>
+        <mxCell id="postgres_prod" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#F5F5F5;strokeColor=#757575;strokeWidth=1.6;fontStyle=1;fontSize=12;dashed=1;" value="PostgreSQL&#xa;Producción&#xa;+ volumen persistente" vertex="1">
+          <mxGeometry height="110" width="240" x="1435" y="1155" as="geometry" />
+        </mxCell>
+        <mxCell id="media_prod" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#757575;strokeWidth=1.6;fontSize=12;fontStyle=1;dashed=1;" value="Volumen / almacenamiento&#xa;Media + evidencias" vertex="1">
+          <mxGeometry height="100" width="230" x="1770" y="1155" as="geometry" />
+        </mxCell>
+        <mxCell id="users_internet" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#757575;strokeWidth=1.6;fontSize=12;fontStyle=1;dashed=1;" value="Supervisor / Trabajador&#xa;Navegador desde Internet" vertex="1">
+          <mxGeometry height="110" width="230" x="1770" y="995" as="geometry" />
+        </mxCell>
+        <mxCell id="f1" edge="1" parent="1" source="users_internet" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.4;fontSize=10;strokeColor=#757575;dashed=1;" target="internet" value="HTTPS">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1770" y="1045" />
+              <mxPoint x="310" y="1045" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f2" edge="1" parent="1" source="internet" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.4;fontSize=10;strokeColor=#757575;dashed=1;" target="domain" value="resuelve dominio">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f3" edge="1" parent="1" source="domain" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.4;fontSize=10;strokeColor=#757575;dashed=1;" target="server" value="HTTPS">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f4" edge="1" parent="1" source="server" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.4;fontSize=10;strokeColor=#757575;dashed=1;" target="docker" value="ejecuta stack">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f5" edge="1" parent="1" source="docker" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.4;fontSize=10;strokeColor=#757575;dashed=1;" target="django_prod" value="contenedor web/API">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f6" edge="1" parent="1" source="django_prod" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.4;fontSize=10;strokeColor=#757575;dashed=1;" target="postgres_prod" value="ORM / SQL">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f7" edge="1" parent="1" source="django_prod" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.4;fontSize=10;strokeColor=#757575;dashed=1;" target="media_prod" value="evidencias / media">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1675" y="1035" />
+              <mxPoint x="1840" y="1035" />
+              <mxPoint x="1840" y="1155" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f8" edge="1" parent="1" source="sender" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.4;fontSize=10;strokeColor=#757575;dashed=1;" target="domain" value="futuro: HTTPS a API pública">
+          <mxGeometry relative="1" x="-0.1429" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="620" y="570" />
+              <mxPoint x="620" y="850" />
+              <mxPoint x="510" y="850" />
+              <mxPoint x="510" y="1000" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="transition_note" parent="1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#BDB76B;fontSize=10;" value="La misma aplicación Django que hoy funciona localmente se desplegaría en el servidor de producción. El cambio principal es infraestructura: dominio/HTTPS, servidor, Docker, configuración segura y acceso por Internet." vertex="1">
+          <mxGeometry height="58" width="1100" x="230" y="1181" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_green" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=1.8;fontSize=12;fontStyle=1;" value="IMPLEMENTADO / FUNCIONA" vertex="1">
+          <mxGeometry height="35" width="210" x="80" y="1295" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_yellow" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF8E1;strokeColor=#F9A825;strokeWidth=1.8;fontSize=12;fontStyle=1;" value="IMPLEMENTADO / EN VALIDACIÓN" vertex="1">
+          <mxGeometry height="35" width="250" x="315" y="1295" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_gray" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#757575;strokeWidth=1.6;fontSize=12;fontStyle=1;dashed=1;" value="PLANIFICADO / POR IMPLEMENTAR" vertex="1">
+          <mxGeometry height="35" width="270" x="590" y="1295" as="geometry" />
+        </mxCell>
+        <mxCell id="legend_desc" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" value="Nota: Docker figura como “opcional / no utilizado actualmente” en el proyecto; el servidor actual es el servidor de desarrollo de Django. El dominio y el acceso público por Internet no aparecen configurados en el código vigente." vertex="1">
+          <mxGeometry height="45" width="1230" x="895" y="1295" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

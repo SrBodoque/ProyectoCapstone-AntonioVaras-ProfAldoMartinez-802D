@@ -1,0 +1,213 @@
+<mxfile host="app.diagrams.net" agent="ChatGPT">
+  <diagram id="limpia-er-postgresql" name="Modelo ER PostgreSQL">
+    <mxGraphModel dx="2397" dy="1288" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="1450" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=25;fontStyle=1;" value="Modelo Entidad–Relación (ER) — PostgreSQL · LimpIA" vertex="1">
+          <mxGeometry height="42" width="1150" x="520" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=12;fontColor=#666666;" value="Derivado de los models.py actuales de Django · PK/FK, tipos PostgreSQL, restricciones y cardinalidades" vertex="1">
+          <mxGeometry height="28" width="1250" x="470" y="62" as="geometry" />
+        </mxCell>
+        <mxCell id="dom_user" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#B0BEC5;strokeWidth=1.2;dashed=1;fontStyle=1;fontSize=14;verticalAlign=top;spacingTop=8;" value="Usuarios" vertex="1">
+          <mxGeometry height="1100" width="480" x="35" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="dom_clean" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#B0BEC5;strokeWidth=1.2;dashed=1;fontStyle=1;fontSize=14;verticalAlign=top;spacingTop=8;" value="Gestión de limpieza" vertex="1">
+          <mxGeometry height="1100" width="790" x="540" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="dom_count" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#B0BEC5;strokeWidth=1.2;dashed=1;fontStyle=1;fontSize=14;verticalAlign=top;spacingTop=8;" value="Conteo y ocupación" vertex="1">
+          <mxGeometry height="1100" width="815" x="1355" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="usuario" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#EAF2F8;strokeColor=#1F4E79;strokeWidth=1.5;align=left;verticalAlign=top;spacing=6;" value="&lt;div style=&#39;text-align:center;font-weight:bold;font-size:14px;&#39;&gt;usuarios_usuario&lt;/div&gt;&lt;div style=&#39;text-align:center;font-size:10px;color:#666;margin-bottom:5px;&#39;&gt;Modelo Django: Usuario&lt;/div&gt;&lt;table style=&#39;width:100%;border-collapse:collapse;font-size:10px;&#39;&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;b&gt;PK&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;id&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;bigint&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · BigAutoField&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;password&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;varchar(128)&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · heredado de AbstractUser&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;last_login&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;timestamptz&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NULL · heredado&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;is_superuser&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;boolean&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · heredado&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;username&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;varchar(150)&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · UNIQUE · heredado&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;first_name&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;varchar(150)&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · heredado&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;last_name&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;varchar(150)&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · heredado&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;is_staff&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;boolean&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · heredado&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;is_active&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;boolean&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · heredado&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;date_joined&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;timestamptz&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · heredado&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;email&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;varchar(254)&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · UNIQUE&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;rol&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;varchar(20)&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · SUPERVISOR | TRABAJADOR&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" vertex="1">
+          <mxGeometry height="455" width="395" x="75" y="165" as="geometry" />
+        </mxCell>
+        <mxCell id="bano" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=1.5;align=left;verticalAlign=top;spacing=6;" value="&lt;div style=&#39;text-align:center;font-weight:bold;font-size:14px;&#39;&gt;sistema_bano&lt;/div&gt;&lt;div style=&#39;text-align:center;font-size:10px;color:#666;margin-bottom:5px;&#39;&gt;Modelo Django: Bano&lt;/div&gt;&lt;table style=&#39;width:100%;border-collapse:collapse;font-size:10px;&#39;&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;b&gt;PK&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;id&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;bigint&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · BigAutoField&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;nombre&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;varchar(100)&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;ubicacion&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;varchar(150)&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;activo&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;boolean&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · default TRUE&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;umbral_entradas&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;integer&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NULL · &amp;gt;= 1&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;inicio_ciclo_conteo&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;timestamptz&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" vertex="1">
+          <mxGeometry height="280" width="370" x="775" y="165" as="geometry" />
+        </mxCell>
+        <mxCell id="asignacion" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=1.5;align=left;verticalAlign=top;spacing=6;" value="&lt;div style=&#39;text-align:center;font-weight:bold;font-size:14px;&#39;&gt;sistema_asignacionbano&lt;/div&gt;&lt;div style=&#39;text-align:center;font-size:10px;color:#666;margin-bottom:5px;&#39;&gt;Modelo Django: AsignacionBano&lt;/div&gt;&lt;table style=&#39;width:100%;border-collapse:collapse;font-size:10px;&#39;&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;b&gt;PK&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;id&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;bigint&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · BigAutoField&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;b&gt;FK&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;trabajador_id&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;bigint&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · → usuarios_usuario.id&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;b&gt;FK&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;bano_id&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;bigint&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · → sistema_bano.id&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;fecha_asignacion&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;timestamptz&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;fecha_fin&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;timestamptz&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NULL&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;activa&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;boolean&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · default TRUE&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;div style=&#39;border-top:1px solid #999;margin-top:5px;padding:5px 6px;font-size:10px;color:#555;&#39;&gt;&lt;b&gt;Restricciones:&lt;/b&gt;&lt;br&gt;UNIQUE(bano_id) WHERE activa = TRUE&lt;br&gt;UNIQUE(trabajador_id) WHERE activa = TRUE&lt;/div&gt;" vertex="1">
+          <mxGeometry height="320" width="370" x="575" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="alerta" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=1.5;align=left;verticalAlign=top;spacing=6;" value="&lt;div style=&#39;text-align:center;font-weight:bold;font-size:14px;&#39;&gt;sistema_alerta&lt;/div&gt;&lt;div style=&#39;text-align:center;font-size:10px;color:#666;margin-bottom:5px;&#39;&gt;Modelo Django: Alerta&lt;/div&gt;&lt;table style=&#39;width:100%;border-collapse:collapse;font-size:10px;&#39;&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;b&gt;PK&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;id&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;bigint&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · BigAutoField&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;b&gt;FK&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;bano_id&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;bigint&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · → sistema_bano.id&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;motivo&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;varchar(200)&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;estado&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;varchar(20)&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · PENDIENTE | EN_PROCESO | ATENDIDA&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;fecha_creacion&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;timestamptz&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" vertex="1">
+          <mxGeometry height="275" width="330" x="965" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="intervencion" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=1.5;align=left;verticalAlign=top;spacing=6;" value="&lt;div style=&#39;text-align:center;font-weight:bold;font-size:14px;&#39;&gt;sistema_intervencionlimpieza&lt;/div&gt;&lt;div style=&#39;text-align:center;font-size:10px;color:#666;margin-bottom:5px;&#39;&gt;Modelo Django: IntervencionLimpieza&lt;/div&gt;&lt;table style=&#39;width:100%;border-collapse:collapse;font-size:10px;&#39;&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;b&gt;PK&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;id&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;bigint&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · BigAutoField&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;b&gt;FK/UQ&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;alerta_id&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;bigint&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · → sistema_alerta.id · UNIQUE&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;b&gt;FK&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;trabajador_id&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;bigint&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · → usuarios_usuario.id&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;b&gt;FK&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;bano_id&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;bigint&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · → sistema_bano.id&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;fecha_inicio&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;timestamptz&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;fecha_fin&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;timestamptz&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NULL&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;evidencia&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;varchar(100)&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NULL · ruta ImageField&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" vertex="1">
+          <mxGeometry height="250" width="430" x="730" y="940" as="geometry" />
+        </mxCell>
+        <mxCell id="fuente" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#EF6C00;strokeWidth=1.5;align=left;verticalAlign=top;spacing=6;" value="&lt;div style=&#39;text-align:center;font-weight:bold;font-size:14px;&#39;&gt;sistema_fuenteconteo&lt;/div&gt;&lt;div style=&#39;text-align:center;font-size:10px;color:#666;margin-bottom:5px;&#39;&gt;Modelo Django: FuenteConteo&lt;/div&gt;&lt;table style=&#39;width:100%;border-collapse:collapse;font-size:10px;&#39;&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;b&gt;PK&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;id&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;bigint&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · BigAutoField&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;b&gt;FK&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;bano_id&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;bigint&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · → sistema_bano.id&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;nombre&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;varchar(100)&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;identificador&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;varchar(80)&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · UNIQUE&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;activa&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;boolean&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · default TRUE&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;credencial_hash&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;varchar(64)&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NULL · UNIQUE&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;fecha_creacion&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;timestamptz&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" vertex="1">
+          <mxGeometry height="325" width="350" x="1400" y="165" as="geometry" />
+        </mxCell>
+        <mxCell id="evento" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#EF6C00;strokeWidth=1.5;align=left;verticalAlign=top;spacing=6;" value="&lt;div style=&#39;text-align:center;font-weight:bold;font-size:14px;&#39;&gt;sistema_eventoconteo&lt;/div&gt;&lt;div style=&#39;text-align:center;font-size:10px;color:#666;margin-bottom:5px;&#39;&gt;Modelo Django: EventoConteo&lt;/div&gt;&lt;table style=&#39;width:100%;border-collapse:collapse;font-size:10px;&#39;&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;b&gt;PK&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;id&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;bigint&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · BigAutoField&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;b&gt;FK&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;bano_id&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;bigint&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · → sistema_bano.id&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;b&gt;FK&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;fuente_id&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;bigint&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NULL · → sistema_fuenteconteo.id&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;tipo&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;varchar(10)&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · ENTRADA | SALIDA&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;fecha_evento&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;timestamptz&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · INDEX&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;origen&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;varchar(20)&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · SIMULADO | VISION&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;referencia_externa&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;varchar(100)&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NULL · UNIQUE&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;fecha_registro&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;timestamptz&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" vertex="1">
+          <mxGeometry height="350" width="350" x="1800" y="165" as="geometry" />
+        </mxCell>
+        <mxCell id="referencia" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#EF6C00;strokeWidth=1.5;align=left;verticalAlign=top;spacing=6;" value="&lt;div style=&#39;text-align:center;font-weight:bold;font-size:14px;&#39;&gt;sistema_referenciaocupacion&lt;/div&gt;&lt;div style=&#39;text-align:center;font-size:10px;color:#666;margin-bottom:5px;&#39;&gt;Modelo Django: ReferenciaOcupacion&lt;/div&gt;&lt;table style=&#39;width:100%;border-collapse:collapse;font-size:10px;&#39;&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;b&gt;PK&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;id&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;bigint&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · BigAutoField&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;b&gt;FK&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;bano_id&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;bigint&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · → sistema_bano.id&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;b&gt;FK&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;verificada_por_id&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;bigint&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · → usuarios_usuario.id&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;ocupacion_inicial&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;integer&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · &amp;gt;= 0&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;fecha_referencia&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;timestamptz&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · INDEX&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;vigente&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;boolean&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL · default TRUE&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;fecha_invalidacion&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;timestamptz&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NULL&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;motivo_invalidacion&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;varchar(250)&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;observacion&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;varchar(250)&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style=&#39;padding:3px 5px;width:44px;&#39;&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;&#39;&gt;&lt;b&gt;fecha_registro&lt;/b&gt;&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#444;&#39;&gt;timestamptz&lt;/td&gt;&lt;td style=&#39;padding:3px 5px;color:#666;&#39;&gt;NOT NULL&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" vertex="1">
+          <mxGeometry height="430" width="430" x="1505" y="760" as="geometry" />
+        </mxCell>
+        <mxCell id="r1" edge="1" parent="1" source="usuario" style="endArrow=none;html=1;rounded=0;strokeWidth=1.4;fontSize=10;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;" target="asignacion" value="trabajador">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="500" y="430" />
+              <mxPoint x="530" y="430" />
+              <mxPoint x="530" y="700" />
+              <mxPoint x="575" y="700" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r1a" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="1" vertex="1">
+          <mxGeometry height="18" width="25" x="495" y="405" as="geometry" />
+        </mxCell>
+        <mxCell id="r1b" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="0..*" vertex="1">
+          <mxGeometry height="18" width="40" x="545" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="r2" edge="1" parent="1" source="bano" style="endArrow=none;html=1;rounded=0;strokeWidth=1.4;fontSize=10;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;" target="asignacion" value="asignaciones">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="735" y="335" />
+              <mxPoint x="700" y="335" />
+              <mxPoint x="700" y="560" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r2a" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="1" vertex="1">
+          <mxGeometry height="18" width="25" x="755" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="r2b" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="0..*" vertex="1">
+          <mxGeometry height="18" width="40" x="685" y="535" as="geometry" />
+        </mxCell>
+        <mxCell id="r3" edge="1" parent="1" source="bano" style="endArrow=none;html=1;rounded=0;strokeWidth=1.4;fontSize=10;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;" target="alerta" value="alertas">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1130" y="450" />
+              <mxPoint x="1130" y="560" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r3a" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="1" vertex="1">
+          <mxGeometry height="18" width="25" x="1115" y="455" as="geometry" />
+        </mxCell>
+        <mxCell id="r3b" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="0..*" vertex="1">
+          <mxGeometry height="18" width="40" x="1112" y="535" as="geometry" />
+        </mxCell>
+        <mxCell id="r4" edge="1" parent="1" source="alerta" style="endArrow=none;html=1;rounded=0;strokeWidth=1.4;fontSize=10;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;" target="intervencion" value="intervencion">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1000" y="860" />
+              <mxPoint x="1000" y="950" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r4a" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="1" vertex="1">
+          <mxGeometry height="18" width="25" x="985" y="835" as="geometry" />
+        </mxCell>
+        <mxCell id="r4b" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="0..1" vertex="1">
+          <mxGeometry height="18" width="42" x="976.5" y="910" as="geometry" />
+        </mxCell>
+        <mxCell id="r5" edge="1" parent="1" source="usuario" style="endArrow=none;html=1;rounded=0;strokeWidth=1.4;fontSize=10;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;" target="intervencion" value="trabajador">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="500" y="500" />
+              <mxPoint x="535" y="500" />
+              <mxPoint x="535" y="1120" />
+              <mxPoint x="730" y="1120" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r5a" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="1" vertex="1">
+          <mxGeometry height="18" width="25" x="495" y="475" as="geometry" />
+        </mxCell>
+        <mxCell id="r5b" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="0..*" vertex="1">
+          <mxGeometry height="18" width="40" x="690" y="1100" as="geometry" />
+        </mxCell>
+        <mxCell id="r6" edge="1" parent="1" source="bano" style="endArrow=none;html=1;rounded=0;strokeWidth=1.4;fontSize=10;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;" target="intervencion" value="intervenciones">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="760" y="390" />
+              <mxPoint x="670" y="390" />
+              <mxPoint x="670" y="1030" />
+              <mxPoint x="730" y="1030" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r6a" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="1" vertex="1">
+          <mxGeometry height="18" width="25" x="750" y="370" as="geometry" />
+        </mxCell>
+        <mxCell id="r6b" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="0..*" vertex="1">
+          <mxGeometry height="18" width="40" x="690" y="1010" as="geometry" />
+        </mxCell>
+        <mxCell id="r7" edge="1" parent="1" source="bano" style="endArrow=none;html=1;rounded=0;strokeWidth=1.4;fontSize=10;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;" target="fuente" value="fuentes_conteo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r7a" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="1" vertex="1">
+          <mxGeometry height="18" width="25" x="1160" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="r7b" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="0..*" vertex="1">
+          <mxGeometry height="18" width="40" x="1360" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="r8" edge="1" parent="1" source="bano" style="endArrow=none;html=1;rounded=0;strokeWidth=1.4;fontSize=10;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;" target="evento" value="eventos_conteo">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1150" y="380" />
+              <mxPoint x="1320" y="380" />
+              <mxPoint x="1320" y="550" />
+              <mxPoint x="1940" y="550" />
+              <mxPoint x="1940" y="515" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r8a" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="1" vertex="1">
+          <mxGeometry height="18" width="25" x="1160" y="365" as="geometry" />
+        </mxCell>
+        <mxCell id="r8b" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="0..*" vertex="1">
+          <mxGeometry height="18" width="40" x="1918" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="r9" edge="1" parent="1" source="fuente" style="endArrow=none;html=1;rounded=0;strokeWidth=1.4;fontSize=10;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;" target="evento" value="fuente">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r9a" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="0..1" vertex="1">
+          <mxGeometry height="18" width="42" x="1740" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="r9b" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="0..*" vertex="1">
+          <mxGeometry height="18" width="40" x="1760" y="347" as="geometry" />
+        </mxCell>
+        <mxCell id="r10" edge="1" parent="1" source="bano" style="endArrow=none;html=1;rounded=0;strokeWidth=1.4;fontSize=10;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;" target="referencia" value="referencias_ocupacion">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1170" y="420" />
+              <mxPoint x="1290" y="420" />
+              <mxPoint x="1290" y="960" />
+              <mxPoint x="1505" y="960" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r10a" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="1" vertex="1">
+          <mxGeometry height="18" width="25" x="1160" y="405" as="geometry" />
+        </mxCell>
+        <mxCell id="r10b" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="0..*" vertex="1">
+          <mxGeometry height="18" width="40" x="1465" y="940" as="geometry" />
+        </mxCell>
+        <mxCell id="r11" edge="1" parent="1" source="usuario" style="endArrow=none;html=1;rounded=0;strokeWidth=1.4;fontSize=10;edgeStyle=orthogonalEdgeStyle;orthogonalLoop=1;jettySize=auto;" target="referencia" value="verificada_por">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="490" y="550" />
+              <mxPoint x="1250" y="550" />
+              <mxPoint x="1250" y="1040" />
+              <mxPoint x="1505" y="1040" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r11a" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="1" vertex="1">
+          <mxGeometry height="18" width="25" x="485" y="530" as="geometry" />
+        </mxCell>
+        <mxCell id="r11b" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fillColor=#FFFFFF;strokeColor=none;" value="0..*" vertex="1">
+          <mxGeometry height="18" width="40" x="1465" y="1020" as="geometry" />
+        </mxCell>
+        <mxCell id="note1" parent="1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#BDB76B;fontSize=10;" value="Alcance del ER: se muestran las 8 tablas principales definidas por los models.py de LimpIA. Django también crea tablas técnicas de auth, admin, sessions y tablas M:N para groups/permissions; se omiten aquí porque no forman parte del dominio funcional del proyecto." vertex="1">
+          <mxGeometry height="80" width="930" x="70" y="1245" as="geometry" />
+        </mxCell>
+        <mxCell id="note2" parent="1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#FFFDE7;strokeColor=#BDB76B;fontSize=10;" value="Tipos PostgreSQL: BigAutoField → bigint; DateTimeField → timestamp with time zone (timestamptz); ImageField almacena la ruta del archivo como varchar. Las FK usan ON DELETE PROTECT según los models.py." vertex="1">
+          <mxGeometry height="80" width="1010" x="1050" y="1245" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

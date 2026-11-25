@@ -1,0 +1,204 @@
+<mxfile host="app.diagrams.net" agent="ChatGPT">
+  <diagram id="limpia-components" name="Diagrama de componentes">
+    <mxGraphModel dx="2087" dy="1101" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1900" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=24;fontStyle=1;" value="Diagrama de componentes — LimpIA" vertex="1">
+          <mxGeometry height="42" width="800" x="530" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=12;fontColor=#666666;" value="Arquitectura lógica basada en el código actualizado de visión artificial y plataforma Django" vertex="1">
+          <mxGeometry height="28" width="900" x="480" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="vision_boundary" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8F9FA;strokeColor=#AAB7B8;strokeWidth=1.5;dashed=1;fontStyle=1;fontSize=15;verticalAlign=top;spacingTop=10;" value="Subsistema de Visión Artificial" vertex="1">
+          <mxGeometry height="820" width="530" x="110" y="125" as="geometry" />
+        </mxCell>
+        <mxCell id="web_boundary" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8F9FA;strokeColor=#AAB7B8;strokeWidth=1.5;dashed=1;fontStyle=1;fontSize=15;verticalAlign=top;spacingTop=10;" value="Subsistema Web LimpIA" vertex="1">
+          <mxGeometry height="820" width="1005" x="780" y="125" as="geometry" />
+        </mxCell>
+        <mxCell id="supervisor" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fontSize=13;fontStyle=1;" value="Supervisor" vertex="1">
+          <mxGeometry height="130" width="85" x="1600" y="185" as="geometry" />
+        </mxCell>
+        <mxCell id="trabajador" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;fontSize=13;fontStyle=1;" value="Trabajador" vertex="1">
+          <mxGeometry height="130" width="85" x="1700" y="185" as="geometry" />
+        </mxCell>
+        <mxCell id="fuente_video" parent="1" style="shape=component;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#EF6C00;strokeWidth=1.5;fontSize=12;fontStyle=1;" value="Fuente de video&#xa;Cámara / MP4" vertex="1">
+          <mxGeometry height="85" width="180" x="110" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="captura" parent="1" style="shape=component;whiteSpace=wrap;html=1;fillColor=#EAF2F8;strokeColor=#1F4E79;strokeWidth=1.5;fontSize=12;fontStyle=1;" value="Captura&#xa;OpenCV" vertex="1">
+          <mxGeometry height="85" width="170" x="340" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="deteccion" parent="1" style="shape=component;whiteSpace=wrap;html=1;fillColor=#EAF2F8;strokeColor=#1F4E79;strokeWidth=1.5;fontSize=12;fontStyle=1;" value="Detección de personas&#xa;YOLO26n" vertex="1">
+          <mxGeometry height="90" width="180" x="110" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="tracking" parent="1" style="shape=component;whiteSpace=wrap;html=1;fillColor=#EAF2F8;strokeColor=#1F4E79;strokeWidth=1.5;fontSize=12;fontStyle=1;" value="Tracking temporal&#xa;ByteTrack / trackers" vertex="1">
+          <mxGeometry height="90" width="190" x="340" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="zonas" parent="1" style="shape=component;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=1.5;fontSize=12;fontStyle=1;" value="Calibración y zonas&#xa;A / B" vertex="1">
+          <mxGeometry height="90" width="180" x="110" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="conteo" parent="1" style="shape=component;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=1.5;fontSize=12;fontStyle=1;" value="Motor de conteo&#xa;IN / OUT" vertex="1">
+          <mxGeometry height="90" width="190" x="340" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="adaptador" parent="1" style="shape=component;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#7B1FA2;strokeWidth=1.5;fontSize=12;fontStyle=1;" value="Adaptador / Recorder&#xa;de eventos" vertex="1">
+          <mxGeometry height="90" width="200" x="110" y="635" as="geometry" />
+        </mxCell>
+        <mxCell id="outbox" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#FFFDE7;strokeColor=#B7950B;strokeWidth=1.5;fontStyle=1;fontSize=12;" value="Outbox persistente&#xa;SQLite" vertex="1">
+          <mxGeometry height="90" width="190" x="365" y="635" as="geometry" />
+        </mxCell>
+        <mxCell id="sender" parent="1" style="shape=component;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#7B1FA2;strokeWidth=1.5;fontSize=12;fontStyle=1;" value="DjangoEventSender&#xa;HTTP + Bearer" vertex="1">
+          <mxGeometry height="90" width="205" x="260" y="790" as="geometry" />
+        </mxCell>
+        <mxCell id="webapp" parent="1" style="shape=component;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#EF6C00;strokeWidth=1.5;fontSize=12;fontStyle=1;" value="Aplicación Web&#xa;HTML · CSS · JavaScript&#xa;Templates Django" vertex="1">
+          <mxGeometry height="105" width="255" x="860" y="185" as="geometry" />
+        </mxCell>
+        <mxCell id="views" parent="1" style="shape=component;whiteSpace=wrap;html=1;fillColor=#EAF2F8;strokeColor=#1F4E79;strokeWidth=1.5;fontSize=12;fontStyle=1;" value="Django Views / Forms&#xa;Autenticación y roles" vertex="1">
+          <mxGeometry height="100" width="245" x="860" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="api" parent="1" style="shape=component;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#7B1FA2;strokeWidth=1.5;fontSize=12;fontStyle=1;" value="API Django&#xa;recepción IN / OUT" vertex="1">
+          <mxGeometry height="100" width="245" x="1190" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="services" parent="1" style="shape=component;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=1.5;fontSize=12;fontStyle=1;" value="Servicios de negocio&#xa;alertas · conteo · ocupación&#xa;historial · resúmenes" vertex="1">
+          <mxGeometry height="120" width="280" x="1020" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="orm" parent="1" style="shape=component;whiteSpace=wrap;html=1;fillColor=#EAF2F8;strokeColor=#1F4E79;strokeWidth=1.5;fontSize=12;fontStyle=1;" value="Modelos Django / ORM&#xa;Usuario · Baño · Alerta&#xa;Intervención · EventoConteo&#xa;FuenteConteo · Asignación" vertex="1">
+          <mxGeometry height="135" width="310" x="1020" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="postgres" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#FFFDE7;strokeColor=#B7950B;strokeWidth=1.5;fontStyle=1;fontSize=12;" value="PostgreSQL&#xa;Datos operacionales" vertex="1">
+          <mxGeometry height="120" width="230" x="1465" y="690" as="geometry" />
+        </mxCell>
+        <mxCell id="media" parent="1" style="shape=component;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#EF6C00;strokeWidth=1.5;fontSize=12;fontStyle=1;" value="Media / Evidencias&#xa;fotográficas" vertex="1">
+          <mxGeometry height="100" width="215" x="1475" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="fuente_video" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=11;" target="captura" value="frames de video">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="captura" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=11;" target="deteccion" value="frames">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="420" y="290" />
+              <mxPoint x="200" y="290" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="deteccion" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=11;" target="tracking" value="detecciones">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="tracking" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=11;" target="zonas" value="trayectorias / IDs">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="440" y="445" />
+              <mxPoint x="200" y="445" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="zonas" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=11;" target="conteo" value="posición por zonas">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="conteo" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=11;" target="adaptador" value="eventos confirmados IN/OUT">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="440" y="600" />
+              <mxPoint x="210" y="600" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="adaptador" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=11;" target="outbox" value="persistir UUID + payload">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="outbox" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=11;" target="sender" value="eventos pendientes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="sender" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=11;" target="api" value="POST JSON / Bearer token">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="570" y="835" />
+              <mxPoint x="735" y="835" />
+              <mxPoint x="735" y="400" />
+              <mxPoint x="1190" y="400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="supervisor" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=11;" target="webapp" value="usa">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1580" y="245" />
+              <mxPoint x="1140" y="245" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="trabajador" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=11;" target="webapp" value="usa">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1680" y="285" />
+              <mxPoint x="1140" y="285" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="webapp" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=11;" target="views" value="HTTP / formularios">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" edge="1" parent="1" source="views" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=11;" target="services" value="invoca">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" edge="1" parent="1" source="api" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=11;" target="services" value="validar / procesar evento">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e15" edge="1" parent="1" source="views" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=11;" target="orm" value="consultas / cambios">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="980" y="470" />
+              <mxPoint x="980" y="760" />
+              <mxPoint x="1020" y="760" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e16" edge="1" parent="1" source="services" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=11;" target="orm" value="reglas de negocio">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" edge="1" parent="1" source="api" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=11;" target="orm" value="crear EventoConteo&#xa;validar FuenteConteo">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1320" y="470" />
+              <mxPoint x="1320" y="760" />
+              <mxPoint x="1330" y="760" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e18" edge="1" parent="1" source="orm" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=11;" target="postgres" value="Django ORM / SQL">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e19" edge="1" parent="1" source="views" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.5;fontSize=11;" target="media" value="guardar evidencia">
+          <mxGeometry relative="1" x="0.2407" y="50" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1110" y="400" />
+              <mxPoint x="1440" y="400" />
+              <mxPoint x="1440" y="570" />
+              <mxPoint x="1475" y="570" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e20" edge="1" parent="1" source="services" style="endArrow=block;endFill=1;html=1;rounded=0;strokeWidth=1.3;fontSize=10;dashed=1;strokeColor=#666666;" target="webapp" value="datos para dashboard,&#xa;alertas e historial">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1150" y="500" />
+              <mxPoint x="1150" y="315" />
+              <mxPoint x="990" y="315" />
+              <mxPoint x="990" y="290" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="cross_note" parent="1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=11;" value="Punto de integración principal:&#xa;Visión artificial genera eventos IN/OUT → Outbox SQLite → DjangoEventSender → API Django → EventoConteo en PostgreSQL." vertex="1">
+          <mxGeometry height="75" width="760" x="545" y="955" as="geometry" />
+        </mxCell>
+        <mxCell id="privacy_note" parent="1" style="shape=note;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#6AA84F;fontSize=11;" value="Privacidad: el módulo de visión procesa trayectorias e IDs temporales; no requiere reconocimiento facial para registrar utilización." vertex="1">
+          <mxGeometry height="70" width="430" x="1330" y="955" as="geometry" />
+        </mxCell>
+        <mxCell id="legend" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=11;fontColor=#555555;" value="Componentes persistentes: PostgreSQL almacena datos de negocio; SQLite funciona como cola local temporal antes del envío a Django." vertex="1">
+          <mxGeometry height="34" width="880" x="610" y="1040" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
